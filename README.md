@@ -21,7 +21,7 @@ Make a note of the username, password, and host name as you will need to use the
 Add this upstream elgg quickstart repo
 
 	cd elgg 
-	git remote add upstream -m master git://github.com/gshipley/elgg-openshift-quickstart.git
+	git remote add upstream -m master git://github.com/openshift/elgg-openshift-quickstart.git
 	git pull -s recursive -X theirs upstream master
 
 Then push the repo upstream to OpenShift
@@ -34,11 +34,11 @@ That's it for the code, you can now install your application at:
 
 When the installation asks you for your data directory, use the same information as for the Elgg installation which should look something like this:
 
-	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/runtime/repo/php/
+	/var/lib/stickshift/$uuid/elgg/runtime/repo/php/
 
 Remove the /runtime/repo/php and add data so it looks like:
 
-	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/data
+	/var/lib/stickshift/$uuid/elgg/data
 
 
 
