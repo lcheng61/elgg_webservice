@@ -32,13 +32,8 @@ That's it for the code, you can now install your application at:
 
 	http://elgg-$yournamespace.rhcloud.com
 
-When the installation asks you for your data directory, use the same information as for the Elgg installation which should look something like this:
-
-	/var/lib/stickshift/$uuid/elgg/runtime/repo/php/
-
-Remove the /runtime/repo/php and add data so it looks like:
-
-	/var/lib/stickshift/$uuid/elgg/data
+When the installation asks you for your data directory, use the value of the
+environment variable $OPENSHIFT_DATA_DIR
 
 
 
