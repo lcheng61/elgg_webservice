@@ -15,7 +15,7 @@ Create a PHP application
 
 Add mysql support to your application
     
-	rhc app cartridge add -a elgg -c mysql-5.1
+	rhc cartridge add -a elgg -c mysql-5.1
 Make a note of the username, password, and host name as you will need to use these to complete the Piwik installation on OpenShift
 
 Add this upstream elgg quickstart repo
