@@ -21,7 +21,7 @@ Add this upstream elgg quickstart repo
 	git remote add upstream -m master git://github.com/openshift/elgg-openshift-quickstart.git
 	git pull -s recursive -X theirs upstream master
 
-Then push the repo upstream to OpenShift
+Push back to your OpenShift repo
 
 	git push
 
