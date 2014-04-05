@@ -18,7 +18,7 @@ Make a note of the mysql, username, password, and host name as you will need to 
 Add this upstream elgg quickstart repo
 
 	cd elgg 
-	git remote add upstream -m master git://github.com/openshift/elgg-openshift-quickstart.git
+	git remote add upstream -m master git://github.com/openshift-quickstart/elgg-openshift-quickstart.git
 	git pull -s recursive -X theirs upstream master
 
 Push back to your OpenShift repo
