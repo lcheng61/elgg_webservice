@@ -15,6 +15,7 @@ echo elgg_view("input/checkboxes", array(
 					   elgg_echo("web_services:group") => 'group',
 					   elgg_echo("web_services:file") => 'file',
 					   elgg_echo("web_services:market") => 'market',
+					   elgg_echo("web_services:ideas") => 'ideas',
 					   elgg_echo("web_services:messages") => 'message'),
 			));
 

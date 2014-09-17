@@ -15,6 +15,7 @@ $english = array(
 	'web_services:file' => "File",
 	'web_services:messages' => "Messages",
 	'web_services:market' => "Market",
+	'web_services:ideas' => "Idea",
 	'web_services:settings_description' => "Select the web services below that you wish to be enabled:",
 	'web_services:selectfeatures' => "Select the features to be enabled",
 	'friends:alreadyadded' => "%s is already added as friend",
