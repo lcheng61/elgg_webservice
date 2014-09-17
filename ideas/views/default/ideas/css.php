@@ -6,7 +6,7 @@
 
 ?>
 
-.ideas_pricetag {
+.ideas_videotag {
 	font-weight: bold;
 	color: #ffffff;
 	background:#00a700;

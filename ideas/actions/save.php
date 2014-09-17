@@ -37,14 +37,14 @@ $values = array(
 	'ideas_type' => '',
 	'custom' => '',
 	'description' => '',
-	'price' => '',
+	'video' => '',
 	'access_id' => ACCESS_DEFAULT,
 	'tags' => '',
 	'container_guid' => (int)get_input('container_guid'),
 	);
 
 // fail if a required entity isn't set
-$required = array('title', 'ideascategory', 'ideas_type', 'description', 'price');
+$required = array('title', 'ideascategory', 'ideas_type', 'description', 'video');
 
 // load from POST and do sanity and access checking
 foreach ($values as $name => $default) {

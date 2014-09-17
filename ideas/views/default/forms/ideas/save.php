@@ -97,11 +97,11 @@ if ($allowhtml != 'yes') {
 }
 echo "</label></div>";
 
-echo "<div><label>" . elgg_echo("ideas:price");
-echo "<span class='elgg-subtext mlm'>" . elgg_echo("ideas:price:help", array($currency)) . "</span>";
+echo "<div><label>" . elgg_echo("ideas:video");
+echo "<span class='elgg-subtext mlm'>" . elgg_echo("ideas:video:help", array($currency)) . "</span>";
 echo elgg_view("input/text", array(
-				"name" => "price",
-				"value" => $vars['price'],
+				"name" => "video",
+				"value" => $vars['video'],
 				'required' => true,
 				));
 			
