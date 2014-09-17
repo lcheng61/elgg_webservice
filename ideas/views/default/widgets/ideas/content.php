@@ -24,7 +24,7 @@ if (is_array($posts) && sizeof($posts) > 0) {
 			echo "<li class=\"pvs\">";
 			$category = "<b>" . elgg_echo('ideas:category') . ":</b> " . elgg_echo('ideas:category:' . $post->ideascategory);
 			$type = "<b>" . elgg_echo('ideas:type') . ":</b> " . elgg_echo("ideas:type:{$post->ideas_type}");
-			$video = "<b>" . elgg_echo('ideas:video') . ":</b> {$post->video}";
+			$video = "<b>" . elgg_echo('ideas:video') . ":</b> <a href={$post->video}>Video</a>";
 			$comments_count = $post->countComments();
 			$text = elgg_echo("comments") . " ($comments_count)";
 			$comments_link = elgg_view('output/url', array(

@@ -67,7 +67,7 @@ $metadata = elgg_view_menu('entity', array(
 if ($full) {
 	$post_body = '';
 
-	$post_body .= "<div class='mbm mts'><span class='ideas_videotag'><b>" . elgg_echo('ideas:video') . "</b> {$currency} {$post->video}</span></div>";
+	$post_body .= "<div class='mbm mts'><span class='ideas_videotag'><b>" . elgg_echo('ideas:video') . "</b> <a href={$post->video}>video link</a></span></div>";
 
 	$img = elgg_view('output/img', array(
 				'src' => "ideas/image/{$post->guid}/1/large/{$tu}",
@@ -146,7 +146,7 @@ if ($full) {
 
 	$subtitle = "{$author_text} {$date} {$comments_link}";
 	$subtitle .= "<br>{$category}<br>{$type}<br>";
-	$subtitle .= "<b>" . elgg_echo('ideas:video') . ":</b> {$currency} {$post->video}{$custom}";
+	$subtitle .= "<b>" . elgg_echo('ideas:video') . ":</b> <a href={$post->video}>video link</a>{$custom}";
 
 	if (elgg_in_context('widgets')) {
 		$metadata = '';
