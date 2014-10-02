@@ -18,6 +18,7 @@ function market_prepare_form_vars($post = NULL) {
 		'title' => NULL,
 		'description' => NULL,
 		'price' => NULL,
+		'sold_count' => NULL,
 		'access_id' => ACCESS_DEFAULT,
 		'marketcategory' => NULL,
 		'market_type' => NULL,
@@ -25,6 +26,8 @@ function market_prepare_form_vars($post = NULL) {
 		'tags' => NULL,
 		'container_guid' => elgg_get_page_owner_guid(),
 		'guid' => NULL,
+		'tips_number' => NULL, // number of tips for this product
+		'tips' => NULL,  // related tips to this product
 	);
 
 	if ($post) {
