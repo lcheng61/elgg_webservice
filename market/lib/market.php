@@ -27,7 +27,8 @@ function market_prepare_form_vars($post = NULL) {
 		'container_guid' => elgg_get_page_owner_guid(),
 		'guid' => NULL,
 		'tips_number' => NULL, // number of tips for this product
-		'tips' => NULL,  // related tips to this product
+		'tips' => NULL,  // related tips (array) to this product
+                'images_urls' => NULL, // array of image URLs
 	);
 
 	if ($post) {
@@ -153,10 +154,16 @@ function market_add_image($post = NULL, $data = NULL, $imagenum = 0) {
 	$filehandler->write($data);
 	$filehandler->close();
 		
-	$small = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),40,40, true);
-	$medium = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),153,153, true);
-	$large = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),200,200, false);
-	$master = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),600,800, false);
+//	$small = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),40,40, true);
+//	$medium = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),153,153, true);
+//	$large = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),200,200, false);
+//	$master = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),600,800, false);
+
+        // for better display on APP
+	$small = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),40,61, true);
+	$medium = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),153,233, true);
+	$large = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),210,320, false);
+	$master = get_resized_image_from_existing_file($filehandler->getFilenameOnFilestore(),420,640, false);
 
 	if ($small) {
 	
@@ -243,4 +250,64 @@ function market_delete_image($post = NULL, $imagenum) {
 	$post->images = serialize($new_array);
 	$post->save();
 	return true;
+}
+
+/**
+ * Add one tip to a product post.
+ *
+ * @param Market $post
+ * @return if we can add a tip
+ */
+function market_add_tip($post = NULL, $tip_id = 0) {
+
+    if (!$post || $tip_id == 0) {
+	return false;
+    }
+
+	// Check tips metadata, if empty create initial array
+    if ($post->tips == '') {
+	$post->tips = array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0, 8 => 0, 9 => 0, 10 => 0);
+    }
+	
+    foreach ($post->tips as $key => $value) {
+	if ($value == 0) {
+            // found a valid tip number and set it
+            $post->tips[$key] = $tip_id;
+	    $post->tips_number ++;
+            return true;
+	}
+    }
+
+    return false;
+}
+
+/**
+ * Delete one tip from market post
+ *
+ * @param Market $post
+ * @return if we can add a tip
+ */
+function market_delete_tip($post = NULL, $tip_id = 0) {
+
+    if (!$post || $tip_id == 0) {
+	return false;
+    }
+
+    foreach ($post->tips as $key => $value) {
+	if ($value == $tip_id) {
+            // Found the requested tip number and delete it
+	    // Unlink the tip to this post
+
+            $post->tips[$key] = 0;
+	    $post->tips_number --;
+            if ($post->tips_number < 0) {
+                return false;
+            } else {
+                return true;
+            }
+
+	}
+    }
+    // Can't found the requested tip to delete.
+    return false;
 }

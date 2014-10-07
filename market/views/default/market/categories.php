@@ -9,7 +9,6 @@
  */
 
 $selected_category = get_input('cat', 'all');
-
 $categories = string_to_tag_array(elgg_get_plugin_setting('market_categories', 'market'));
 
 if (!empty($categories)) {

@@ -58,6 +58,7 @@ function web_services_test($hook, $type, $value, $params) {
 	$value[] = elgg_get_plugins_path() . 'web_services/tests/messages.php';
 	$value[] = elgg_get_plugins_path() . 'web_services/tests/market.php';
 	$value[] = elgg_get_plugins_path() . 'web_services/tests/ideas.php';
+	$value[] = elgg_get_plugins_path() . 'web_services/tests/likes.php';
 	return $value;
 }
 

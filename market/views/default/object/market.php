@@ -68,6 +68,7 @@ if ($full) {
 	$post_body = '';
 
 	$post_body .= "<div class='mbm mts'><span class='market_pricetag'><b>" . elgg_echo('market:price') . "</b> {$currency} {$post->price}</span></div>";
+	$post_body .= "<div class='mbm mts'><span class='market_soldcounttag'><b>" . elgg_echo('market:sold_count') . "</b> {$post->sold_count}</span></div>";
 
 	$img = elgg_view('output/img', array(
 				'src' => "market/image/{$post->guid}/1/large/{$tu}",
@@ -146,7 +147,8 @@ if ($full) {
 
 	$subtitle = "{$author_text} {$date} {$comments_link}";
 	$subtitle .= "<br>{$category}<br>{$type}<br>";
-	$subtitle .= "<b>" . elgg_echo('market:price') . ":</b> {$currency} {$post->price}{$custom}";
+	$subtitle .= "<b>" . elgg_echo('market:price') . ":</b> {$currency} {$post->price}{$custom}"."<br>";
+	$subtitle .= "<b>" . elgg_echo('market:sold_count') . ":</b> {$post->sold_count}{$custom}";
 
 	if (elgg_in_context('widgets')) {
 		$metadata = '';

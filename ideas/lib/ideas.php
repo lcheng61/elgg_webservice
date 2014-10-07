@@ -25,6 +25,8 @@ function ideas_prepare_form_vars($post = NULL) {
 		'tags' => NULL,
 		'container_guid' => elgg_get_page_owner_guid(),
 		'guid' => NULL,
+		'products_number' => NULL, // number of products linked to this tip
+		'products' => NULL,  // products related to this tip
 	);
 
 	if ($post) {
@@ -241,3 +243,66 @@ function ideas_delete_image($post = NULL, $imagenum) {
 	$post->save();
 	return true;
 }
+
+/**
+ * Add one tip with multiple pages and a selection of products
+ *
+ * @param Market $post
+ * @return if we can add a tip
+ */
+/*
+function ideas_add_tip($post = NULL, $tip_id = 0) {
+
+    if (!$post || $tip_id == 0) {
+	return false;
+    }
+
+	// Check images metadata, if empty create initial array
+    if ($post->tips == '') {
+	$post->tips = array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0, 8 => 0, 9 => 0, 10 => 0);
+    }
+	
+    foreach ($post->tips as $key => $value) {
+	if ($value == 0) {
+            // found a valid tip number and set it
+            $post->tips[$key] = $tip_id;
+	    $post->tips_number ++;
+            return true;
+	}
+    }
+
+    return false;
+}
+*/
+/**
+ * Delete one tip from market post
+ *
+ * @param Market $post
+ * @return if we can add a tip
+ */
+/*
+function market_delete_tip($post = NULL, $tip_id = 0) {
+
+    if (!$post || $tip_id == 0) {
+	return false;
+    }
+
+    foreach ($post->tips as $key => $value) {
+	if ($value == $tip_id) {
+            // Found the requested tip number and delete it
+	    // Unlink the tip to this post
+
+            $post->tips[$key] = 0;
+	    $post->tips_number --;
+            if ($post->tips_number < 0) {
+                return false;
+            } else {
+                return true;
+            }
+
+	}
+    }
+    // Can't found the requested tip to delete.
+    return false;
+}
+*/

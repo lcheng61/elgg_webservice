@@ -107,6 +107,7 @@ echo elgg_view("input/text", array(
 			
 echo "</label></div>";
 
+
 echo "<div><label>" . elgg_echo("market:tags");
 echo "<span class='elgg-subtext mlm'>" . elgg_echo("market:tags:help") . "</span>";
 echo elgg_view("input/tags", array(

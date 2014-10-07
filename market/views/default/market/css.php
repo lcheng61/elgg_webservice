@@ -18,6 +18,18 @@
 	padding: 2px 10px 2px 10px;
 	margin:10px 0 10px 0;
 }
+.market_soldcounttag {
+	font-weight: bold;
+	color: #ffffff;
+	background:#00a700;
+	border: 1px solid #00a700;
+	-webkit-border-radius: 4px; 
+	-moz-border-radius: 4px;
+	width: auto;
+	height: 12px;
+	padding: 2px 10px 2px 10px;
+	margin:10px 0 10px 0;
+}
 .market-image-popup {
 	max-width: 100%;
 }

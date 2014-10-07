@@ -40,6 +40,7 @@ $english = array(
 	'market:none:found' => 'No market post found',
 	'market:pmbuttontext' => "Send Private Message",
 	'market:price' => "Price",
+	'market:sold_count' => "Sold count",
 	'market:price:help' => "(in %s)",
 	'market:text:help' => "(No HTML and max. 250 characters)",
 	'market:title:help' => "(1-3 words)",
