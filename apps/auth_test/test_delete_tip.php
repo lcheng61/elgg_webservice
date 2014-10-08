@@ -1,0 +1,26 @@
+<?php
+
+include 'ElggApiClient.php';
+
+   $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+   $result = $client->obtainAuthToken('leo123', 'password123');
+   if (!$result) {
+       echo "Error in getting auth token!\n";
+   }
+
+   $blog['title'] = 'My idea test';
+   $blog['tip_text'] = 'text of test blog post';
+   $blog['tip_tags'] = 'tags1, tags2';
+   $blog['access'] = 2;
+
+   $params = array('username' => "leo123",
+                   'tip_id' => 316,
+                  );
+   $result = $client->post('ideas.delete_tip', $params);
+
+   if (!$result) {
+       echo "Error in saving post!\n";
+   }
+
+?>
+
