@@ -8,7 +8,7 @@ include 'ElggApiClient.php';
        echo "Error in getting auth token!\n";
    }
 
-   $params = array('entity_guid' => 274);
+   $params = array('entity_guid' => 323);
    $result = $client->post('likes.add', $params);
 
    if (!$result) {

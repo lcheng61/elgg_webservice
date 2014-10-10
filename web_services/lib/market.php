@@ -21,7 +21,7 @@
  * @return array $file Array of files uploaded
  */
 
-function product_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
+function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $category, $username) {
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -67,6 +67,10 @@ function product_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $ca
     }
     
     if($latest_blogs) {
+        $return['total_number'] = count($latest_blogs);
+        $return['category'] = $category;
+        $return['offset'] = $offset;
+                 
         foreach($latest_blogs as $single ) {
             if (($single->marketcategory == $category) || 
                     ($category == "all")) {
@@ -86,6 +90,8 @@ function product_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $ca
 //              $blog['product_description'] = $single->description;
                  $blog['product_price'] = $single->price;
                  $blog['tips_number'] = $single->tips_number;
+		 //XXX: hard-code sold_count;		 		 
+                 $single->sold_count = 0;
                  $blog['sold_number'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
 //                $blog['market_type'] = $single->market_type;

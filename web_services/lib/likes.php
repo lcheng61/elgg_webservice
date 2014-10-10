@@ -176,8 +176,8 @@ function likes_getitems($entity_guid, $subtype) {
 
     $user = get_entity($entity_guid);
 
-//    echo ("liked_products = ".$user->liked_products."<br>");
-//    echo ("liked_ideas = ".$user->liked_ideas."<br>");
+    echo ("liked_products = ".$user->liked_products."<br>");
+    echo ("liked_ideas = ".$user->liked_ideas."<br>");
 
     if ($subtype == "ideas") { 
         $objs_array = explode(",", $user->liked_ideas);
@@ -203,6 +203,8 @@ function likes_getitems($entity_guid, $subtype) {
                  $blog['product_name'] = $obj_post->title;
                  $blog['product_price'] = $obj_post->price;
                  $blog['tips_number'] = $obj_post->tips_number;
+		 //XXX: hard-code sold_count;		 		 
+                 $single->sold_count = 0;
                  $blog['sold_number'] = $obj_post->sold_count;
                  $blog['product_category'] = $obj_post->marketcategory;
                  $blog['product_image'] = elgg_normalize_url("market/image/".$obj_post->guid."/1/"."large/");

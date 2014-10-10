@@ -14,7 +14,7 @@ include 'ElggApiClient.php';
    $blog['access'] = 2;
 
    $params = array('username' => "leo123",
-                   'tip_id' => 316,
+                   'tip_id' => 324,
                   );
    $result = $client->post('ideas.delete_tip', $params);
 

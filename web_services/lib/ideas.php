@@ -64,11 +64,12 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'market', $limit, $offset);
     }
+
+    $return['total_number'] = count($latest_blogs);
+    $return['category'] = $category;
+    $return['offset'] = $offset;
     
     if($latest_blogs) {
-        $blog['category'] = $cateogry;
-        $blog['total_number'] = count($latest_blogs);
-        $blog['offset'] = $offset;
         foreach($latest_blogs as $single ) {
             if (($single->ideascategory == $category) || 
                     ($category == "all")) {
@@ -86,6 +87,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
 
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
+//                 $blog['tip_category'] = $single->tip_category;
                  $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
 //                         elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
@@ -99,7 +101,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
-                 $blog['products_number'] = $single->products_number;
+                 $blog['products_number'] = $single->products;
 
 //                $blog['container_guid'] = $single->container_guid;
 //                $blog['access_id'] = $single->access_id;
@@ -163,7 +165,7 @@ function tip_get_detail($tip_id) {
     $return['tip_notes'] =           $blog->tip_notes;
     $return['products'] =            $blog->products;
 
-    $owner = get_entity($tip_id);
+    $owner = get_entity($blog->owner_guid);
     $return['tip_author']['user_id'] = $owner->guid;
     $return['tip_author']['user_name'] = $owner->username;
     $return['tip_author']['is_seller'] = $owner->is_seller;
@@ -207,6 +209,7 @@ function ideas_post_tip($title,
                     $tip_text,
                     $tip_notes,
                     $tip_tags,
+                    $tip_category,
                     $products,
                     $access) {
 
@@ -233,6 +236,7 @@ function ideas_post_tip($title,
     $obj->tip_image_caption =       strip_tags($tip_image_caption);
     $obj->tip_text =                strip_tags($tip_text);
     $obj->tip_notes =               strip_tags($tip_notes);
+    $obj->ideascategory =           strip_tags($tip_category);
     $obj->products =                strip_tags($products);
 
     $guid = $obj->save();
@@ -259,10 +263,10 @@ function ideas_post_tip($title,
         }
     }
 
-    echo ("product_post->tips = $product_post->tips\n");
+//    echo ("product_post->tips = $product_post->tips\n");
 
-    echo ("product_post->tips_number = $product_post->tips_number");
-    echo ("guid = $guid, product_post->tips = $product_post->tips\n");
+//    echo ("product_post->tips_number = $product_post->tips_number");
+//    echo ("guid = $guid, product_post->tips = $product_post->tips\n");
 
     $return['success'] = true;
     $return['message'] = elgg_echo('ideas:message:saved');
@@ -281,6 +285,7 @@ expose_function('ideas.post_tip',
                         'tip_text' => array ('type' => 'string', 'required' => false),
                         'tip_notes' => array ('type' => 'string', 'required' => false),
                         'tip_tags' => array ('type' => 'string', 'required' => false, 'default' => "blog"),
+                        'tip_category' => array ('type' => 'string', 'required' => false),
                         'products' => array ('type' => 'string', 'required' => false),
                         'access' => array ('type' => 'string', 'required' => false, 'default'=>ACCESS_PUBLIC),
                     ),
@@ -414,8 +419,13 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
     $product_id_array = explode(",", $tip_obj->products);
     foreach ($product_id_array as $id) {
         $id = intval($id);
+        if ($id == 0) {
+            continue;
+        }
         $product_post = get_entity($id);
+//        echo ("after product_post, id = $id, product_post = $product_post<br>");
         if ($product_post) { // if the product id is a valid one
+                echo ("after if<br>");
                 $blog['product_id'] = $product_post->guid;
                 $options = array(
                         'annotations_name' => 'generic_comment',
@@ -428,11 +438,13 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
 
-//                 echo ("product_post = $product_post->title");
+                 echo ("product_post = $product_post->title");
 
                  $blog['product_name'] = $product_post->title;
                  $blog['product_price'] = $product_post->price;
                  $blog['tips_number'] = $product_post->tips_number;
+		 //XXX: hard-code sold_count;		 		 
+                 $single->sold_count = 0;
                  $blog['sold_number'] = $product_post->sold_count;
                  $blog['product_category'] = $product_post->marketcategory;
                  $blog['product_image'] = elgg_normalize_url("market/image/".$product_post->guid."/1/"."large/");
@@ -525,7 +537,7 @@ function ideas_search($query, $category, $offset, $limit,
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
-                 $blog['products_number'] = $single->products_number;
+                 $blog['products_number'] = $single->products;
 
                  $return[] = $blog;
             }
