@@ -21,7 +21,7 @@ Make a note of the username, password, and host name as you will need to use the
 Add this upstream elgg quickstart repo
 
 	cd elgg 
-	git remote add upstream -m master git://github.com/gshipley/elgg-openshift-quickstart.git
+	git remote add upstream -m master https://github.com/emagic/Lovebeautyserver.git
 	git pull -s recursive -X theirs upstream master
 
 Then push the repo upstream to OpenShift
@@ -30,7 +30,7 @@ Then push the repo upstream to OpenShift
 
 That's it for the code, you can now install your application at:
 
-	http://elgg-$yournamespace.rhcloud.com
+	http://elgg-lovebeauty.rhcloud.com
 
 When the installation asks you for your data directory, use the same information as for the Elgg installation which should look something like this:
 
