@@ -20,7 +20,7 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 		$user->email = 'fake_email@fake.com' . rand();
 		$user->name = 'fake user';
 		$user->access_id = ACCESS_PUBLIC;
-		$user->salt = generate_random_cleartext_password();
+		$user->salt = _elgg_generate_password_salt();
 		$user->password = generate_user_password($user, rand());
 		$user->owner_guid = 0;
 		$user->container_guid = 0;
@@ -54,7 +54,6 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 	}
 
 	public function testCreateGetDeleteACL() {
-		global $DB_QUERY_CACHE;
 		
 		$acl_name = 'test access collection';
 		$acl_id = create_access_collection($acl_name);
@@ -67,8 +66,6 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 		$this->assertEqual($acl->id, $acl_id);
 
 		if ($acl) {
-			$DB_QUERY_CACHE = array();
-			
 			$this->assertEqual($acl->name, $acl_name);
 
 			$result = delete_access_collection($acl_id);
@@ -76,7 +73,7 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 
 			$q = "SELECT * FROM {$this->dbPrefix}access_collections WHERE id = $acl_id";
 			$data = get_data($q);
-			$this->assertFalse($data);
+			$this->assertIdentical(array(), $data);
 		}
 	}
 
@@ -88,7 +85,7 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 
 		if ($result) {
 			$result = remove_user_from_access_collection($this->user->guid, $acl_id);
-			$this->assertTrue($result);
+			$this->assertIdentical(true, $result);
 		}
 
 		delete_access_collection($acl_id);
@@ -101,7 +98,7 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 		$user->email = 'fake_email@fake.com' . rand();
 		$user->name = 'fake user';
 		$user->access_id = ACCESS_PUBLIC;
-		$user->salt = generate_random_cleartext_password();
+		$user->salt = _elgg_generate_password_salt();
 		$user->password = generate_user_password($user, rand());
 		$user->owner_guid = 0;
 		$user->container_guid = 0;
@@ -267,5 +264,27 @@ class ElggCoreAccessCollectionsTest extends ElggCoreUnitTest {
 		 elgg_set_ignore_access($ia);
 
 		$group->delete();
+	}
+
+	public function testAccessCaching() {
+		// create a new user to check against
+		$user = new ElggUser();
+		$user->username = 'access_test_user';
+		$user->save();
+
+		foreach (array('get_access_list', 'get_access_array') as $func) {
+			$cache = _elgg_get_access_cache();
+			$cache->clear();
+
+			// admin users run tests, so disable access
+			elgg_set_ignore_access(true);
+			$access = $func($user->getGUID());
+
+			elgg_set_ignore_access(false);
+			$access2 = $func($user->getGUID());
+			$this->assertNotEqual($access, $access2, "Access test for $func");
+		}
+
+		$user->delete();	
 	}
 }

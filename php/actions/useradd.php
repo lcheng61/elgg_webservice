@@ -10,8 +10,8 @@ elgg_make_sticky_form('useradd');
 
 // Get variables
 $username = get_input('username');
-$password = get_input('password');
-$password2 = get_input('password2');
+$password = get_input('password', null, false);
+$password2 = get_input('password2', null, false);
 $email = get_input('email');
 $name = get_input('name');
 
@@ -37,7 +37,7 @@ try {
 
 	if ($guid) {
 		$new_user = get_entity($guid);
-		if ($uew_user && $admin && elgg_is_admin_logged_in()) {
+		if ($new_user && $admin && elgg_is_admin_logged_in()) {
 			$new_user->makeAdmin();
 		}
 

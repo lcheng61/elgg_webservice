@@ -24,8 +24,7 @@
  *
  * @package    Elgg.Core
  * @subpackage DataModel.Entities
- * @link       http://docs.elgg.org/DataModel/ElggEntity
- * 
+ *
  * @property string $type           object, user, group, or site (read-only after save)
  * @property string $subtype        Further clarifies the nature of the entity (read-only after save)
  * @property int    $guid           The unique identifier for this entity (read only)
@@ -35,6 +34,7 @@
  * @property int    $access_id      Specifies the visibility level of this entity
  * @property int    $time_created   A UNIX timestamp of when the entity was created (read-only, set on first save)
  * @property int    $time_updated   A UNIX timestamp of when the entity was last updated (automatically updated on save)
+ * @property-read string $enabled
  */
 abstract class ElggEntity extends ElggData implements
 	Notable,    // Calendar interface
@@ -201,8 +201,11 @@ abstract class ElggEntity extends ElggData implements
 	/**
 	 * Sets the value of a property.
 	 *
-	 * If $name is defined in $this->attributes that value is set, otherwise it will
-	 * set the appropriate item of metadata.
+	 * If $name is defined in $this->attributes that value is set, otherwise it is
+	 * saved as metadata.
+	 *
+	 * @warning Metadata set this way will inherit the entity's owner and access ID. If you want
+	 * to set metadata with a different owner, use create_metadata().
 	 *
 	 * @warning It is important that your class populates $this->attributes with keys
 	 * for all base attributes, anything not in their gets set as METADATA.
@@ -246,29 +249,53 @@ abstract class ElggEntity extends ElggData implements
 	 * @return mixed The value, or NULL if not found.
 	 */
 	public function getMetaData($name) {
-		if ((int) ($this->guid) == 0) {
+		$guid = $this->getGUID();
+
+		if (! $guid) {
 			if (isset($this->temp_metadata[$name])) {
-				return $this->temp_metadata[$name];
+				// md is returned as an array only if more than 1 entry
+				if (count($this->temp_metadata[$name]) == 1) {
+					return $this->temp_metadata[$name][0];
+				} else {
+					return $this->temp_metadata[$name];
+				}
 			} else {
 				return null;
 			}
 		}
 
+		// upon first cache miss, just load/cache all the metadata and retry.
+		// if this works, the rest of this function may not be needed!
+		$cache = elgg_get_metadata_cache();
+		if ($cache->isKnown($guid, $name)) {
+			return $cache->load($guid, $name);
+		} else {
+			$cache->populateFromEntities(array($guid));
+			// in case ignore_access was on, we have to check again...
+			if ($cache->isKnown($guid, $name)) {
+				return $cache->load($guid, $name);
+			}
+		}
+
 		$md = elgg_get_metadata(array(
-			'guid' => $this->getGUID(),
+			'guid' => $guid,
 			'metadata_name' => $name,
 			'limit' => 0,
 		));
 
+		$value = null;
+
 		if ($md && !is_array($md)) {
-			return $md->value;
+			$value = $md->value;
 		} elseif (count($md) == 1) {
-			return $md[0]->value;
+			$value = $md[0]->value;
 		} else if ($md && is_array($md)) {
-			return metadata_array_to_values($md);
+			$value = metadata_array_to_values($md);
 		}
 
-		return null;
+		$cache->save($guid, $name, $value);
+
+		return $value;
 	}
 
 	/**
@@ -291,80 +318,77 @@ abstract class ElggEntity extends ElggData implements
 	/**
 	 * Set a piece of metadata.
 	 *
-	 * @tip Plugin authors should use the magic methods.
+	 * Plugin authors should use the magic methods or create_metadata().
+	 *
+	 * @warning The metadata will inherit the parent entity's owner and access ID.
+	 * If you want to write metadata with a different owner, use create_metadata().
 	 *
 	 * @access private
 	 *
 	 * @param string $name       Name of the metadata
-	 * @param mixed  $value      Value of the metadata
+	 * @param mixed  $value      Value of the metadata (doesn't support assoc arrays)
 	 * @param string $value_type Types supported: integer and string. Will auto-identify if not set
 	 * @param bool   $multiple   Allow multiple values for a single name (doesn't support assoc arrays)
 	 *
 	 * @return bool
 	 */
-	public function setMetaData($name, $value, $value_type = "", $multiple = false) {
-		$delete_first = false;
-		// if multiple is set that always means don't delete.
-		// if multiple isn't set it means override. set it to true on arrays for the foreach.
-		if (!$multiple) {
-			$delete_first = true;
-			$multiple = is_array($value);
+	public function setMetaData($name, $value, $value_type = null, $multiple = false) {
+
+		// normalize value to an array that we will loop over
+		// remove indexes if value already an array.
+		if (is_array($value)) {
+			$value = array_values($value);
+		} else {
+			$value = array($value);
 		}
 
-		if (!$this->guid) {
-			// real metadata only returns as an array if there are multiple elements
-			if (is_array($value) && count($value) == 1) {
-				$value = $value[0];
-			}
-
-			$value_is_array = is_array($value);
-
-			if (!isset($this->temp_metadata[$name]) || $delete_first) {
-				// need to remove the indexes because real metadata doesn't have them.
-				if ($value_is_array) {
-					$this->temp_metadata[$name] = array_values($value);
-				} else {
-					$this->temp_metadata[$name] = $value;
-				}
-			} else {
-				// multiple is always true at this point.
-				// if we're setting multiple and temp isn't array, it needs to be.
-				if (!is_array($this->temp_metadata[$name])) {
-					$this->temp_metadata[$name] = array($this->temp_metadata[$name]);
-				}
-
-				if ($value_is_array) {
-					$this->temp_metadata[$name] = array_merge($this->temp_metadata[$name], array_values($value));
-				} else {
-					$this->temp_metadata[$name][] = $value;
-				}
-			}
-		} else {
-			if ($delete_first) {
+		// saved entity. persist md to db.
+		if ($this->guid) {
+			// if overwriting, delete first.
+			if (!$multiple) {
 				$options = array(
 					'guid' => $this->getGUID(),
 					'metadata_name' => $name,
 					'limit' => 0
 				);
-				// @todo this doesn't check if it exists so we can't handle failed deletes
-				// is it worth the overhead of more SQL calls to check?
-				elgg_delete_metadata($options);
+				// @todo in 1.9 make this return false if can't add metadata
+				// https://github.com/elgg/elgg/issues/4520
+				//
+				// need to remove access restrictions right now to delete
+				// because this is the expected behavior
+				$ia = elgg_set_ignore_access(true);
+				if (false === elgg_delete_metadata($options)) {
+					return false;
+				}
+				elgg_set_ignore_access($ia);
 			}
-			// save into real metadata
-			if (!is_array($value)) {
-				$value = array($value);
-			}
-			foreach ($value as $v) {
-				$result = create_metadata($this->getGUID(), $name, $v, $value_type,
-					$this->getOwnerGUID(), $this->getAccessId(), $multiple);
 
-				if (!$result) {
+			// add new md
+			$result = true;
+			foreach ($value as $value_tmp) {
+				// at this point $value should be appended because it was cleared above if needed.
+				$md_id = create_metadata($this->getGUID(), $name, $value_tmp, $value_type,
+						$this->getOwnerGUID(), $this->getAccessId(), true);
+				if (!$md_id) {
 					return false;
 				}
 			}
-		}
 
-		return true;
+			return $result;
+		} else {
+			// unsaved entity. store in temp array
+			// returning single entries instead of an array of 1 element is decided in
+			// getMetaData(), just like pulling from the db.
+			//
+			// if overwrite, delete first
+			if (!$multiple || !isset($this->temp_metadata[$name])) {
+				$this->temp_metadata[$name] = array();
+			}
+
+			// add new md
+			$this->temp_metadata[$name] = array_merge($this->temp_metadata[$name], $value);
+			return true;
+		}
 	}
 
 	/**
@@ -575,7 +599,6 @@ abstract class ElggEntity extends ElggData implements
 	 * @param mixed  $value Value of private setting
 	 *
 	 * @return bool
-	 * @link http://docs.elgg.org/DataModel/Entities/PrivateSettings
 	 */
 	function setPrivateSetting($name, $value) {
 		if ((int) $this->guid > 0) {
@@ -734,8 +757,6 @@ abstract class ElggEntity extends ElggData implements
 	 * @param string $vartype   The type of annotation value
 	 *
 	 * @return bool
-	 *
-	 * @link http://docs.elgg.org/DataModel/Annotations
 	 */
 	function annotate($name, $value, $access_id = ACCESS_PRIVATE, $owner_id = 0, $vartype = "") {
 		if ((int) $this->guid > 0) {
@@ -919,7 +940,7 @@ abstract class ElggEntity extends ElggData implements
 	 * @param ElggMetadata $metadata  The piece of metadata to specifically check
 	 * @param int          $user_guid The user GUID, optionally (default: logged in user)
 	 *
-	 * @return true|false
+	 * @return bool
 	 */
 	function canEditMetadata($metadata = null, $user_guid = 0) {
 		return can_edit_entity_metadata($this->getGUID(), $user_guid, $metadata);
@@ -943,7 +964,7 @@ abstract class ElggEntity extends ElggData implements
 	 *
 	 * @tip Can be overridden by registering for the permissions_check:comment,
 	 * <entity type> plugin hook.
-	 * 
+	 *
 	 * @param int $user_guid User guid (default is logged in user)
 	 *
 	 * @return bool
@@ -1005,7 +1026,7 @@ abstract class ElggEntity extends ElggData implements
 	/**
 	 * Returns the guid.
 	 *
-	 * @return int GUID
+	 * @return int|null GUID
 	 */
 	public function getGUID() {
 		return $this->get('guid');
@@ -1243,21 +1264,29 @@ abstract class ElggEntity extends ElggData implements
 	/**
 	 * Save an entity.
 	 *
-	 * @return bool/int
+	 * @return bool|int
 	 * @throws IOException
 	 */
 	public function save() {
-		$guid = (int) $this->guid;
+		$guid = $this->getGUID();
 		if ($guid > 0) {
-			cache_entity($this);
 
-			return update_entity(
-				$this->get('guid'),
+			// See #5600. This ensures the lower level can_edit_entity() check will use a
+			// fresh entity from the DB so it sees the persisted owner_guid
+			_elgg_disable_caching_for_entity($guid);
+
+			$ret = update_entity(
+				$guid,
 				$this->get('owner_guid'),
 				$this->get('access_id'),
 				$this->get('container_guid'),
 				$this->get('time_created')
 			);
+
+			_elgg_enable_caching_for_entity($guid);
+			_elgg_cache_entity($this);
+
+			return $ret;
 		} else {
 			// Create a new entity (nb: using attribute array directly
 			// 'cos set function does something special!)
@@ -1299,10 +1328,7 @@ abstract class ElggEntity extends ElggData implements
 			$this->attributes['subtype'] = get_subtype_id($this->attributes['type'],
 				$this->attributes['subtype']);
 
-			// Cache object handle
-			if ($this->attributes['guid']) {
-				cache_entity($this);
-			}
+			_elgg_cache_entity($this);
 
 			return $this->attributes['guid'];
 		}
@@ -1311,12 +1337,16 @@ abstract class ElggEntity extends ElggData implements
 	/**
 	 * Loads attributes from the entities table into the object.
 	 *
-	 * @param int $guid GUID of Entity
+	 * @param mixed $guid GUID of entity or stdClass object from entities table
 	 *
 	 * @return bool
 	 */
 	protected function load($guid) {
-		$row = get_entity_as_row($guid);
+		if ($guid instanceof stdClass) {
+			$row = $guid;
+		} else {
+			$row = get_entity_as_row($guid);
+		}
 
 		if ($row) {
 			// Create the array if necessary - all subclasses should test before creating
@@ -1335,9 +1365,12 @@ abstract class ElggEntity extends ElggData implements
 				$this->attributes['tables_loaded']++;
 			}
 
+			// guid needs to be an int  https://github.com/elgg/elgg/issues/4111
+			$this->attributes['guid'] = (int)$this->attributes['guid'];
+
 			// Cache object handle
 			if ($this->attributes['guid']) {
-				cache_entity($this);
+				_elgg_cache_entity($this);
 			}
 
 			return true;
@@ -1580,36 +1613,36 @@ abstract class ElggEntity extends ElggData implements
 		foreach ($this->attributes as $k => $v) {
 			$meta = NULL;
 
-			if (in_array( $k, $exportable_values)) {
+			if (in_array($k, $exportable_values)) {
 				switch ($k) {
-					case 'guid' : 			// Dont use guid in OpenDD
-					case 'type' :			// Type and subtype already taken care of
-					case 'subtype' :
-					break;
+					case 'guid':			// Dont use guid in OpenDD
+					case 'type':			// Type and subtype already taken care of
+					case 'subtype':
+						break;
 
-					case 'time_created' :	// Created = published
+					case 'time_created':	// Created = published
 						$odd->setAttribute('published', date("r", $v));
-					break;
+						break;
 
-					case 'site_guid' : // Container
+					case 'site_guid':	// Container
 						$k = 'site_uuid';
 						$v = guid_to_uuid($v);
 						$meta = new ODDMetaData($uuid . "attr/$k/", $uuid, $k, $v);
-					break;
+						break;
 
-					case 'container_guid' : // Container
+					case 'container_guid':	// Container
 						$k = 'container_uuid';
 						$v = guid_to_uuid($v);
 						$meta = new ODDMetaData($uuid . "attr/$k/", $uuid, $k, $v);
-					break;
+						break;
 
-					case 'owner_guid' :			// Convert owner guid to uuid, this will be stored in metadata
+					case 'owner_guid':			// Convert owner guid to uuid, this will be stored in metadata
 						$k = 'owner_uuid';
 						$v = guid_to_uuid($v);
 						$meta = new ODDMetaData($uuid . "attr/$k/", $uuid, $k, $v);
-					break;
+						break;
 
-					default :
+					default:
 						$meta = new ODDMetaData($uuid . "attr/$k/", $uuid, $k, $v);
 				}
 
@@ -1643,9 +1676,11 @@ abstract class ElggEntity extends ElggData implements
 	/**
 	 * Import data from an parsed ODD xml data array.
 	 *
-	 * @param array $data XML data
+	 * @param ODD $data XML data
 	 *
 	 * @return true
+	 *
+	 * @throws InvalidParameterException
 	 */
 	public function import(ODD $data) {
 		if (!($data instanceof ODDEntity)) {
@@ -1707,8 +1742,6 @@ abstract class ElggEntity extends ElggData implements
 	 * @return array
 	 */
 	public function getTags($tag_names = NULL) {
-		global $CONFIG;
-
 		if ($tag_names && !is_array($tag_names)) {
 			$tag_names = array($tag_names);
 		}

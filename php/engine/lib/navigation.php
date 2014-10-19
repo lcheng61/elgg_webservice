@@ -78,7 +78,11 @@
  *                          link_class  => STR  A class or classes for the <a> tag
  *                          item_class  => STR  A class or classes for the <li> tag
  *
- *                          Custom options can be added as key value pairs.
+ *                          Additional options that the view output/url takes can be
+ *							passed in the array. If the 'confirm' key is passed, the
+ *							menu link uses the 'output/confirmlink' view. Custom
+ *							options can be added by using the 'data' key with the
+ *							value being an associative array.
  *
  * @return bool
  * @since 1.8.0
@@ -122,6 +126,7 @@ function elgg_unregister_menu_item($menu_name, $item_name) {
 	}
 
 	foreach ($CONFIG->menus[$menu_name] as $index => $menu_object) {
+		/* @var ElggMenuItem $menu_object */
 		if ($menu_object->getName() == $item_name) {
 			unset($CONFIG->menus[$menu_name][$index]);
 			return true;
@@ -147,7 +152,8 @@ function elgg_is_menu_item_registered($menu_name, $item_name) {
 		return false;
 	}
 
-	foreach ($CONFIG->menus[$menu_name] as $index => $menu_object) {
+	foreach ($CONFIG->menus[$menu_name] as $menu_object) {
+		/* @var ElggMenuItem $menu_object */
 		if ($menu_object->getName() == $item_name) {
 			return true;
 		}
@@ -212,7 +218,7 @@ function elgg_push_breadcrumb($title, $link = NULL) {
 	}
 
 	// avoid key collisions.
-	$CONFIG->breadcrumbs[] = array('title' => $title, 'link' => $link);
+	$CONFIG->breadcrumbs[] = array('title' => elgg_get_excerpt($title, 100), 'link' => $link);
 }
 
 /**
@@ -226,7 +232,7 @@ function elgg_pop_breadcrumb() {
 	global $CONFIG;
 
 	if (is_array($CONFIG->breadcrumbs)) {
-		array_pop($CONFIG->breadcrumbs);
+		return array_pop($CONFIG->breadcrumbs);
 	}
 
 	return FALSE;
@@ -301,7 +307,38 @@ function elgg_site_menu_setup($hook, $type, $return, $params) {
 		// if only one item on more menu, stick it with the rest
 		$num_menu_items = count($return['default']);
 		if ($num_menu_items > ($max_display_items + 1)) {
-			$return['more'] =  array_splice($return['default'], $max_display_items);
+			$return['more'] = array_splice($return['default'], $max_display_items);
+		}
+	}
+	
+	// check if we have anything selected
+	$selected = false;
+	foreach ($return as $section) {
+		foreach ($section as $item) {
+			if ($item->getSelected()) {
+				$selected = true;
+				break 2;
+			}
+		}
+	}
+	
+	if (!$selected) {
+		// nothing selected, match name to context or match url
+		$current_url = current_page_url();
+		foreach ($return as $section_name => $section) {
+			foreach ($section as $key => $item) {
+				// only highlight internal links
+				if (strpos($item->getHref(), elgg_get_site_url()) === 0) {
+					if ($item->getName() == elgg_get_context()) {
+						$return[$section_name][$key]->setSelected(true);
+						break 2;
+					}
+					if ($item->getHref() == $current_url) {
+						$return[$section_name][$key]->setSelected(true);
+						break 2;
+					}
+				}
+			}
 		}
 	}
 
@@ -315,6 +352,7 @@ function elgg_site_menu_setup($hook, $type, $return, $params) {
 function elgg_river_menu_setup($hook, $type, $return, $params) {
 	if (elgg_is_logged_in()) {
 		$item = $params['item'];
+		/* @var ElggRiverItem $item */
 		$object = $item->getObjectEntity();
 		// comments and non-objects cannot be commented on or liked
 		if (!elgg_in_context('widgets') && $item->annotation_id == 0) {
@@ -331,6 +369,18 @@ function elgg_river_menu_setup($hook, $type, $return, $params) {
 				$return[] = ElggMenuItem::factory($options);
 			}
 		}
+		
+		if (elgg_is_admin_logged_in()) {
+			$options = array(
+				'name' => 'delete',
+				'href' => elgg_add_action_tokens_to_url("action/river/delete?id=$item->id"),
+				'text' => elgg_view_icon('delete'),
+				'title' => elgg_echo('delete'),
+				'confirm' => elgg_echo('deleteconfirm'),
+				'priority' => 200,
+			);
+			$return[] = ElggMenuItem::factory($options);
+		}
 	}
 
 	return $return;
@@ -346,6 +396,7 @@ function elgg_entity_menu_setup($hook, $type, $return, $params) {
 	}
 	
 	$entity = $params['entity'];
+	/* @var ElggEntity $entity */
 	$handler = elgg_extract('handler', $params, false);
 
 	// access
@@ -385,11 +436,62 @@ function elgg_entity_menu_setup($hook, $type, $return, $params) {
 }
 
 /**
+ * Widget menu is a set of widget controls
+ * @access private
+ */
+function elgg_widget_menu_setup($hook, $type, $return, $params) {
+
+	$widget = $params['entity'];
+	/* @var ElggWidget $widget */
+	$show_edit = elgg_extract('show_edit', $params, true);
+
+	$collapse = array(
+		'name' => 'collapse',
+		'text' => ' ',
+		'href' => "#elgg-widget-content-$widget->guid",
+		'class' => 'elgg-widget-collapse-button',
+		'rel' => 'toggle',
+		'priority' => 1
+	);
+	$return[] = ElggMenuItem::factory($collapse);
+
+	if ($widget->canEdit()) {
+		$delete = array(
+			'name' => 'delete',
+			'text' => elgg_view_icon('delete-alt'),
+			'title' => elgg_echo('widget:delete', array($widget->getTitle())),
+			'href' => "action/widgets/delete?widget_guid=$widget->guid",
+			'is_action' => true,
+			'class' => 'elgg-widget-delete-button',
+			'id' => "elgg-widget-delete-button-$widget->guid",
+			'priority' => 900
+		);
+		$return[] = ElggMenuItem::factory($delete);
+
+		if ($show_edit) {
+			$edit = array(
+				'name' => 'settings',
+				'text' => elgg_view_icon('settings-alt'),
+				'title' => elgg_echo('widget:edit'),
+				'href' => "#widget-edit-$widget->guid",
+				'class' => "elgg-widget-edit-button",
+				'rel' => 'toggle',
+				'priority' => 800,
+			);
+			$return[] = ElggMenuItem::factory($edit);
+		}
+	}
+
+	return $return;
+}
+
+/**
  * Adds a delete link to "generic_comment" annotations
  * @access private
  */
 function elgg_annotation_menu_setup($hook, $type, $return, $params) {
 	$annotation = $params['annotation'];
+	/* @var ElggAnnotation $annotation */
 
 	if ($annotation->name == 'generic_comment' && $annotation->canEdit()) {
 		$url = elgg_http_add_url_query_elements('action/comments/delete', array(
@@ -418,6 +520,7 @@ function elgg_nav_init() {
 	elgg_register_plugin_hook_handler('prepare', 'menu:site', 'elgg_site_menu_setup');
 	elgg_register_plugin_hook_handler('register', 'menu:river', 'elgg_river_menu_setup');
 	elgg_register_plugin_hook_handler('register', 'menu:entity', 'elgg_entity_menu_setup');
+	elgg_register_plugin_hook_handler('register', 'menu:widget', 'elgg_widget_menu_setup');
 	elgg_register_plugin_hook_handler('register', 'menu:annotation', 'elgg_annotation_menu_setup');
 }
 

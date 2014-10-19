@@ -33,9 +33,9 @@ function users_settings_save() {
  * @access private
  */
 function elgg_set_user_password() {
-	$current_password = get_input('current_password');
-	$password = get_input('password');
-	$password2 = get_input('password2');
+	$current_password = get_input('current_password', null, false);
+	$password = get_input('password', null, false);
+	$password2 = get_input('password2', null, false);
 	$user_guid = get_input('guid');
 
 	if (!$user_guid) {
@@ -69,8 +69,17 @@ function elgg_set_user_password() {
 
 		if ($result) {
 			if ($password == $password2) {
-				$user->salt = generate_random_cleartext_password(); // Reset the salt
+				$user->salt = _elgg_generate_password_salt();
 				$user->password = generate_user_password($user, $password);
+				$user->code = '';
+				if ($user->guid == elgg_get_logged_in_user_guid() && !empty($_COOKIE['elggperm'])) {
+					// regenerate remember me code so no other user could
+					// use it to authenticate later
+					$code = _elgg_generate_remember_me_token();
+					$_SESSION['code'] = $code;
+					$user->code = md5($code);
+					setcookie("elggperm", $code, (time() + (86400 * 30)), "/");
+				}
 				if ($user->save()) {
 					system_message(elgg_echo('user:password:success'));
 					return true;
@@ -265,9 +274,9 @@ function elgg_set_user_default_access() {
  * @access private
  */
 function usersettings_pagesetup() {
-	if (elgg_get_context() == "settings" && elgg_get_logged_in_user_guid()) {
-		$user = elgg_get_logged_in_user_entity();
+	$user = elgg_get_page_owner_entity();
 
+	if ($user && elgg_get_context() == "settings") {
 		$params = array(
 			'name' => '1_account',
 			'text' => elgg_echo('usersettings:user:opt:linktext'),
@@ -308,7 +317,7 @@ function usersettings_page_handler($page) {
 		$user = get_user_by_username($page[1]);
 		elgg_set_page_owner_guid($user->guid);
 	} else {
-		$user = elgg_get_logged_in_user_guid();
+		$user = elgg_get_logged_in_user_entity();
 		elgg_set_page_owner_guid($user->guid);
 	}
 
@@ -332,6 +341,7 @@ function usersettings_page_handler($page) {
 		require $path;
 		return true;
 	}
+	return false;
 }
 
 /**
@@ -346,6 +356,13 @@ function usersettings_init() {
 	elgg_register_plugin_hook_handler('usersettings:save', 'user', 'users_settings_save');
 
 	elgg_register_action("usersettings/save");
+
+	// extend the account settings form
+	elgg_extend_view('forms/account/settings', 'core/settings/account/name', 100);
+	elgg_extend_view('forms/account/settings', 'core/settings/account/password', 100);
+	elgg_extend_view('forms/account/settings', 'core/settings/account/email', 100);
+	elgg_extend_view('forms/account/settings', 'core/settings/account/language', 100);
+	elgg_extend_view('forms/account/settings', 'core/settings/account/default_access', 100);
 }
 
 elgg_register_event_handler('init', 'system', 'usersettings_init');

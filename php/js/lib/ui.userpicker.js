@@ -93,7 +93,7 @@ elgg.userpicker.viewUser = function(info) {
 	html += "<div class='elgg-image'>" + info.icon + "</div>";
 	html += "<div class='elgg-image-alt'>" + deleteLink + "</div>";
 	html += "<div class='elgg-body'>" + info.name + "</div>";
-	html += "</div";
+	html += "</div>";
 	
 	return html;
 };
@@ -107,7 +107,7 @@ elgg.userpicker.viewUser = function(info) {
  * @return Object
  */
 elgg.userpicker.getSearchParams = function(obj) {
-	if (obj.element.siblings('[name=match_on]').attr('checked')) {
+	if (obj.element.parent('.elgg-user-picker').find('input[name=match_on]').attr('checked')) {
 		return {'match_on[]': 'friends', 'term' : obj.term};
 	} else {
 		return {'match_on[]': 'users', 'term' : obj.term};

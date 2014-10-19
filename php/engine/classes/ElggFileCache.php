@@ -13,6 +13,8 @@ class ElggFileCache extends ElggCache {
 	 * @param string $cache_path The cache path.
 	 * @param int    $max_age    Maximum age in seconds, 0 if no limit.
 	 * @param int    $max_size   Maximum size of cache in seconds, 0 if no limit.
+	 *
+	 * @throws ConfigurationException
 	 */
 	function __construct($cache_path, $max_age = 0, $max_size = 0) {
 		$this->setVariable("cache_path", $cache_path);
@@ -24,6 +26,7 @@ class ElggFileCache extends ElggCache {
 		}
 	}
 
+	// @codingStandardsIgnoreStart
 	/**
 	 * Create and return a handle to a file.
 	 *
@@ -39,6 +42,7 @@ class ElggFileCache extends ElggCache {
 
 		return $this->createFile($filename, $rw);
 	}
+	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Create and return a handle to a file.
@@ -70,6 +74,7 @@ class ElggFileCache extends ElggCache {
 		return fopen($path . $filename, $rw);
 	}
 
+	// @codingStandardsIgnoreStart
 	/**
 	 * Create a sanitised filename for the file.
 	 *
@@ -84,6 +89,7 @@ class ElggFileCache extends ElggCache {
 
 		return $filename;
 	}
+	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Create a sanitised filename for the file.
@@ -161,12 +167,25 @@ class ElggFileCache extends ElggCache {
 	}
 
 	/**
-	 * This was probably meant to delete everything?
+	 * Delete all files in the directory of this file cache
 	 *
 	 * @return void
 	 */
 	public function clear() {
-		// @todo writeme
+		$dir = $this->getVariable("cache_path");
+
+		$exclude = array(".", "..");
+
+		$files = scandir($dir);
+		if (!$files) {
+			return;
+		}
+
+		foreach ($files as $f) {
+			if (!in_array($f, $exclude)) {
+				unlink($dir . $f);
+			}
+		}
 	}
 
 	/**
@@ -184,7 +203,7 @@ class ElggFileCache extends ElggCache {
 			return;
 		}
 
-		$exclude = array(".","..");
+		$exclude = array(".", "..");
 
 		$files = scandir($dir);
 		if (!$files) {

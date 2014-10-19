@@ -4,6 +4,7 @@
  */
 elgg.provide('elgg.config.translations');
 
+// default language - required by unit tests
 elgg.config.language = 'en';
 
 /**
@@ -26,16 +27,20 @@ elgg.add_translation = function(lang, translations) {
 elgg.reload_all_translations = function(language) {
 	var lang = language || elgg.get_language();
 
-	elgg.getJSON('ajax/view/js/languages', {
-		data: {
-			language: lang
-		},
-		success: function(json) {
-			elgg.add_translation(lang, json);
-			elgg.config.languageReady = true;
-			elgg.initWhenReady();
-		}
-	});
+	var url, options;
+	url = 'ajax/view/js/languages';
+	options = {data: {language: lang}};
+    if (elgg.config.simplecache_enabled) {
+        options.data.lc = elgg.config.lastcache;
+    }
+
+	options['success'] = function(json) {
+		elgg.add_translation(lang, json);
+		elgg.config.languageReady = true;
+		elgg.initWhenReady();
+	};
+
+	elgg.getJSON(url, options);
 };
 
 /**

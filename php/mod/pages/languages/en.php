@@ -15,7 +15,7 @@ $english = array(
 	'pages:owner' => "%s's pages",
 	'pages:friends' => "Friends' pages",
 	'pages:all' => "All site pages",
-	'pages:add' => "Add page",
+	'pages:add' => "Add a page",
 
 	'pages:group' => "Group pages",
 	'groups:enablepages' => 'Enable group pages',
@@ -25,9 +25,20 @@ $english = array(
 	'pages:history' => "History",
 	'pages:view' => "View page",
 	'pages:revision' => "Revision",
+	'pages:current_revision' => "Current Revision",
+	'pages:revert' => "Revert",
 
 	'pages:navigation' => "Navigation",
-	'pages:via' => "via pages",
+	'pages:new' => "A new page",
+	'pages:notification' =>
+'%s added a new page:
+
+%s
+%s
+
+View and comment on the new page:
+%s
+',
 	'item:object:page_top' => 'Top-level pages',
 	'item:object:page' => 'Pages',
 	'pages:nogroup' => 'This group does not have any pages yet',
@@ -52,6 +63,7 @@ $english = array(
 	'pages:title' => 'Page title',
 	'pages:description' => 'Page text',
 	'pages:tags' => 'Tags',
+	'pages:parent_guid' => 'Parent page',
 	'pages:access_id' => 'Read access',
 	'pages:write_access_id' => 'Write access',
 
@@ -65,6 +77,9 @@ $english = array(
 	'pages:error:no_title' => 'You must specify a title for this page.',
 	'pages:delete:success' => 'The page was successfully deleted.',
 	'pages:delete:failure' => 'The page could not be deleted.',
+	'pages:revision:delete:success' => 'The page revision was successfully deleted.',
+	'pages:revision:delete:failure' => 'The page revision could not be deleted.',
+	'pages:revision:not_found' => 'Cannot find this revision.',
 
 	/**
 	 * Page

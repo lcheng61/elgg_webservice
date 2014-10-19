@@ -37,7 +37,7 @@ foreach ($plugin_guids as $guid) {
 // don't regenerate the simplecache because the plugin won't be
 // loaded until next run.  Just invalidate and let it regnerate as needed
 elgg_invalidate_simplecache();
-elgg_filepath_cache_reset();
+elgg_reset_system_cache();
 
 if (count($plugin_guids) == 1) {
 	$url = 'admin/plugins';
@@ -46,7 +46,8 @@ if (count($plugin_guids) == 1) {
 		$url .= "?$query";
 	}
 	$plugin = get_entity($plugin_guids[0]);
-	forward("$url#{$plugin->getID()}");
+	$id = preg_replace('/[^a-z0-9-]/i', '-', $plugin->getID());
+	forward("$url#$id");
 } else {
 	forward(REFERER);
 }

@@ -65,61 +65,43 @@ function action($action, $forwarder = "") {
 	// @todo REMOVE THESE ONCE #1509 IS IN PLACE.
 	// Allow users to disable plugins without a token in order to
 	// remove plugins that are incompatible.
-	// Login and logout are for convenience.
+	// Logout for convenience.
 	// file/download (see #2010)
 	$exceptions = array(
 		'admin/plugins/disable',
 		'logout',
-		'login',
 		'file/download',
 	);
 
 	if (!in_array($action, $exceptions)) {
-		// All actions require a token.
-		action_gatekeeper();
+		action_gatekeeper($action);
 	}
 
 	$forwarder = str_replace(elgg_get_site_url(), "", $forwarder);
 	$forwarder = str_replace("http://", "", $forwarder);
 	$forwarder = str_replace("@", "", $forwarder);
-
 	if (substr($forwarder, 0, 1) == "/") {
 		$forwarder = substr($forwarder, 1);
 	}
 
-	if (isset($CONFIG->actions[$action])) {
-		if (elgg_is_admin_logged_in() || ($CONFIG->actions[$action]['access'] !== 'admin')) {
-			if (elgg_is_logged_in() || ($CONFIG->actions[$action]['access'] === 'public')) {
-
-				// Trigger action event
-				// @todo This is only called before the primary action is called.
-				$event_result = true;
-				$event_result = elgg_trigger_plugin_hook('action', $action, null, $event_result);
-
-				// Include action
-				// Event_result being false doesn't produce an error
-				// since i assume this will be handled in the hook itself.
-				// @todo make this better!
-				if ($event_result) {
-					if (!include($CONFIG->actions[$action]['file'])) {
-						register_error(elgg_echo('actionnotfound', array($action)));
-					}
-				}
-			} else {
-				register_error(elgg_echo('actionloggedout'));
-			}
-		} else {
-			register_error(elgg_echo('actionunauthorized'));
-		}
-	} else {
+	if (!isset($CONFIG->actions[$action])) {
 		register_error(elgg_echo('actionundefined', array($action)));
+	} elseif (!elgg_is_admin_logged_in() && ($CONFIG->actions[$action]['access'] === 'admin')) {
+		register_error(elgg_echo('actionunauthorized'));
+	} elseif (!elgg_is_logged_in() && ($CONFIG->actions[$action]['access'] !== 'public')) {
+		register_error(elgg_echo('actionloggedout'));
+	} else {
+		// Returning falsy doesn't produce an error
+		// We assume this will be handled in the hook itself.
+		if (elgg_trigger_plugin_hook('action', $action, null, true)) {
+			if (!include($CONFIG->actions[$action]['file'])) {
+				register_error(elgg_echo('actionnotfound', array($action)));
+			}
+		}
 	}
 
-	if (!empty($forwarder)) {
-		forward($forwarder);
-	} else {
-		forward(REFERER);
-	}
+	$forwarder = empty($forwarder) ? REFERER : $forwarder;
+	forward($forwarder);
 }
 
 /**
@@ -205,6 +187,26 @@ function elgg_unregister_action($action) {
 }
 
 /**
+ * Is the token timestamp within acceptable range?
+ * 
+ * @param int $ts timestamp from the CSRF token
+ * 
+ * @return bool
+ */
+function _elgg_validate_token_timestamp($ts) {
+	$action_token_timeout = elgg_get_config('action_token_timeout');
+	// default is 2 hours
+	$timeout = ($action_token_timeout !== null) ? $action_token_timeout : 2;
+
+	$hour = 60 * 60;
+	$timeout = $timeout * $hour;
+	$now = time();
+
+	// Validate time to ensure its not crazy
+	return ($timeout == 0 || ($ts > $now - $timeout) && ($ts < $now + $timeout));
+}
+
+/**
  * Validate an action token.
  *
  * Calls to actions will automatically validate tokens. If tokens are not
@@ -222,8 +224,6 @@ function elgg_unregister_action($action) {
  * @access private
  */
 function validate_action_token($visibleerrors = TRUE, $token = NULL, $ts = NULL) {
-	global $CONFIG;
-
 	if (!$token) {
 		$token = get_input('__elgg_token');
 	}
@@ -232,29 +232,18 @@ function validate_action_token($visibleerrors = TRUE, $token = NULL, $ts = NULL)
 		$ts = get_input('__elgg_ts');
 	}
 
-	if (!isset($CONFIG->action_token_timeout)) {
-		// default to 2 hours
-		$timeout = 2;
-	} else {
-		$timeout = $CONFIG->action_token_timeout;
-	}
-
 	$session_id = session_id();
 
 	if (($token) && ($ts) && ($session_id)) {
 		// generate token, check with input and forward if invalid
-		$generated_token = generate_action_token($ts);
+		$required_token = generate_action_token($ts);
 
 		// Validate token
-		if ($token == $generated_token) {
-			$hour = 60 * 60;
-			$timeout = $timeout * $hour;
-			$now = time();
-
-			// Validate time to ensure its not crazy
-			if ($timeout == 0 || ($ts > $now - $timeout) && ($ts < $now + $timeout)) {
+		if ($token == $required_token) {
+			
+			if (_elgg_validate_token_timestamp($ts)) {
 				// We have already got this far, so unless anything
-				// else says something to the contry we assume we're ok
+				// else says something to the contrary we assume we're ok
 				$returnval = true;
 
 				$returnval = elgg_trigger_plugin_hook('action_gatekeeper:permissions:check', 'all', array(
@@ -268,13 +257,34 @@ function validate_action_token($visibleerrors = TRUE, $token = NULL, $ts = NULL)
 					register_error(elgg_echo('actiongatekeeper:pluginprevents'));
 				}
 			} else if ($visibleerrors) {
-				register_error(elgg_echo('actiongatekeeper:timeerror'));
+				// this is necessary because of #5133
+				if (elgg_is_xhr()) {
+					register_error(elgg_echo('js:security:token_refresh_failed', array(elgg_get_site_url())));
+				} else {
+					register_error(elgg_echo('actiongatekeeper:timeerror'));
+				}
 			}
 		} else if ($visibleerrors) {
-			register_error(elgg_echo('actiongatekeeper:tokeninvalid'));
+			// this is necessary because of #5133
+			if (elgg_is_xhr()) {
+				register_error(elgg_echo('js:security:token_refresh_failed', array(elgg_get_site_url())));
+			} else {
+				register_error(elgg_echo('actiongatekeeper:tokeninvalid'));
+			}
 		}
-	} else if ($visibleerrors) {
-		register_error(elgg_echo('actiongatekeeper:missingfields'));
+	} else {
+		if (! empty($_SERVER['CONTENT_LENGTH']) && empty($_POST)) {
+			// The size of $_POST or uploaded file has exceed the size limit
+			$error_msg = elgg_trigger_plugin_hook('action_gatekeeper:upload_exceeded_msg', 'all', array(
+				'post_size' => $_SERVER['CONTENT_LENGTH'],
+				'visible_errors' => $visibleerrors,
+			), elgg_echo('actiongatekeeper:uploadexceeded'));
+		} else {
+			$error_msg = elgg_echo('actiongatekeeper:missingfields');
+		}
+		if ($visibleerrors) {
+			register_error($error_msg);
+		}
 	}
 
 	return FALSE;
@@ -289,12 +299,33 @@ function validate_action_token($visibleerrors = TRUE, $token = NULL, $ts = NULL)
  * This function verifies form input for security features (like a generated token),
  * and forwards if they are invalid.
  *
+ * @param string $action The action being performed
+ * 
  * @return mixed True if valid or redirects.
  * @access private
  */
-function action_gatekeeper() {
-	if (validate_action_token()) {
-		return TRUE;
+function action_gatekeeper($action) {
+	if ($action === 'login') {
+		if (validate_action_token(false)) {
+			return true;
+		}
+		
+		$token = get_input('__elgg_token');
+		$ts = (int)get_input('__elgg_ts');
+		if ($token && _elgg_validate_token_timestamp($ts)) {
+			// The tokens are present and the time looks valid: this is probably a mismatch due to the 
+			// login form being on a different domain.
+			register_error(elgg_echo('actiongatekeeper:crosssitelogin'));
+			
+			
+			forward('login', 'csrf');
+		}
+		
+		// let the validator send an appropriate msg
+		validate_action_token();
+		
+	} elseif (validate_action_token()) {
+		return true;
 	}
 
 	forward(REFERER, 'csrf');
@@ -333,16 +364,19 @@ function generate_action_token($timestamp) {
 }
 
 /**
- * Initialise the site secret hash.
+ * Initialise the site secret (32 bytes: "z" to indicate format + 186-bit key in Base64 URL).
  *
  * Used during installation and saves as a datalist.
+ *
+ * Note: Old secrets were hex encoded.
  *
  * @return mixed The site secret hash or false
  * @access private
  * @todo Move to better file.
  */
 function init_site_secret() {
-	$secret = md5(rand() . microtime());
+	$secret = 'z' . ElggCrypto::getRandomString(31);
+
 	if (datalist_set('__site_secret__', $secret)) {
 		return $secret;
 	}
@@ -366,6 +400,26 @@ function get_site_secret() {
 	}
 
 	return $secret;
+}
+
+/**
+ * Get the strength of the site secret
+ *
+ * @return string "strong", "moderate", or "weak"
+ * @access private
+ */
+function _elgg_get_site_secret_strength() {
+	$secret = get_site_secret();
+	if ($secret[0] !== 'z') {
+		$rand_max = getrandmax();
+		if ($rand_max < pow(2, 16)) {
+			return 'weak';
+		}
+		if ($rand_max < pow(2, 32)) {
+			return 'moderate';
+		}
+	}
+	return 'strong';
 }
 
 /**
@@ -459,8 +513,7 @@ function ajax_forward_hook($hook, $type, $reason, $params) {
 		// however some browsers will not accept the JSON MIME type.
 		if (stripos($_SERVER['HTTP_ACCEPT'], 'application/json') === FALSE) {
 			header("Content-type: text/plain");
-		}
-		else {
+		} else {
 			header("Content-type: application/json");
 		}
 

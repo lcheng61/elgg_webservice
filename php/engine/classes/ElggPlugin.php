@@ -36,8 +36,9 @@ class ElggPlugin extends ElggObject {
 	 * @warning Unlike other ElggEntity objects, you cannot null instantiate
 	 *          ElggPlugin. You must point it to an actual plugin GUID or location.
 	 *
-	 * @param mixed $plugin The GUID of the ElggPlugin object or the path of
-	 *                      the plugin to load.
+	 * @param mixed $plugin The GUID of the ElggPlugin object or the path of the plugin to load.
+	 *
+	 * @throws PluginException
 	 */
 	public function __construct($plugin) {
 		if (!$plugin) {
@@ -76,6 +77,8 @@ class ElggPlugin extends ElggObject {
 			// load the rest of the plugin
 			parent::__construct($existing_guid);
 		}
+
+		_elgg_cache_plugin_by_id($this);
 	}
 
 	/**
@@ -142,7 +145,7 @@ class ElggPlugin extends ElggObject {
 	/**
 	 * Sets the location of this plugin.
 	 *
-	 * @param path $id The path to the plugin's dir.
+	 * @param string $id The path to the plugin's dir.
 	 * @return bool
 	 */
 	public function setID($id) {
@@ -296,20 +299,15 @@ class ElggPlugin extends ElggObject {
 
 		$private_settings = get_data($q);
 
+		$return = array();
+
 		if ($private_settings) {
-			$return = array();
-
 			foreach ($private_settings as $setting) {
-				$name = substr($setting->name, $ps_prefix_len);
-				$value = $setting->value;
-
-				$return[$name] = $value;
+				$return[$setting->name] = $setting->value;
 			}
-
-			return $return;
 		}
 
-		return false;
+		return $return;
 	}
 
 	/**
@@ -350,11 +348,14 @@ class ElggPlugin extends ElggObject {
 	 */
 	public function unsetAllSettings() {
 		$db_prefix = get_config('dbprefix');
-		$ps_prefix = elgg_namespace_plugin_private_setting('setting', '');
+
+		$us_prefix = elgg_namespace_plugin_private_setting('user_setting', '', $this->getID());
+		$is_prefix = elgg_namespace_plugin_private_setting('internal', '', $this->getID());
 
 		$q = "DELETE FROM {$db_prefix}private_settings
 			WHERE entity_guid = $this->guid
-			AND name NOT LIKE '$ps_prefix%'";
+			AND name NOT LIKE '$us_prefix%'
+			AND name NOT LIKE '$is_prefix%'";
 
 		return delete_data($q);
 	}
@@ -420,20 +421,18 @@ class ElggPlugin extends ElggObject {
 
 		$private_settings = get_data($q);
 
-		if ($private_settings) {
-			$return = array();
+		$return = array();
 
+		if ($private_settings) {
 			foreach ($private_settings as $setting) {
 				$name = substr($setting->name, $ps_prefix_len);
 				$value = $setting->value;
 
 				$return[$name] = $value;
 			}
-
-			return $return;
 		}
 
-		return false;
+		return $return;
 	}
 
 	/**
@@ -546,7 +545,7 @@ class ElggPlugin extends ElggObject {
 	 * Returns if the plugin is complete, meaning has all required files
 	 * and Elgg can read them and they make sense.
 	 *
-	 * @todo bad name? This could be confused with isValid() from ElggPackage.
+	 * @todo bad name? This could be confused with isValid() from ElggPluginPackage.
 	 *
 	 * @return bool
 	 */
@@ -596,6 +595,8 @@ class ElggPlugin extends ElggObject {
 	/**
 	 * Checks if this plugin can be activated on the current
 	 * Elgg installation.
+	 *
+	 * @todo remove $site_guid param or implement it
 	 *
 	 * @param mixed $site_guid Optional site guid
 	 * @return bool
@@ -647,8 +648,8 @@ class ElggPlugin extends ElggObject {
 			// Note: this will not run re-run the init hooks!
 			if ($return) {
 				if ($this->canReadFile('activate.php')) {
-					$flags = ELGG_PLUGIN_INCLUDE_START | ELGG_PLUGIN_REGISTER_CLASSES
-							| ELGG_PLUGIN_REGISTER_LANGUAGES | ELGG_PLUGIN_REGISTER_VIEWS;
+					$flags = ELGG_PLUGIN_INCLUDE_START | ELGG_PLUGIN_REGISTER_CLASSES |
+							ELGG_PLUGIN_REGISTER_LANGUAGES | ELGG_PLUGIN_REGISTER_VIEWS;
 
 					$this->start($flags);
 
@@ -707,9 +708,9 @@ class ElggPlugin extends ElggObject {
 	 * @throws PluginException
 	 */
 	public function start($flags) {
-//		if (!$this->canActivate()) {
-//			return false;
-//		}
+		//if (!$this->canActivate()) {
+		//	return false;
+		//}
 
 		// include classes
 		if ($flags & ELGG_PLUGIN_REGISTER_CLASSES) {

@@ -55,43 +55,54 @@ if (!$request || !$simplecache_enabled) {
 // it won't make a difference in real life and regex is easier to read.
 // <type>/<viewtype>/<name/of/view.and.dots>.<ts>.<type>
 $regex = '|([^/]+)/([^/]+)/(.+)\.([^\.]+)\.([^.]+)$|';
-preg_match($regex, $request, $matches);
+if (!preg_match($regex, $request, $matches)) {
+	echo 'Cache error: bad request';
+	exit;
+}
 
 $type = $matches[1];
 $viewtype = $matches[2];
 $view = $matches[3];
+$ts = $matches[4];
+
+// If is the same ETag, content didn't changed.
+$etag = $ts;
+if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) == "\"$etag\"") {
+	header("HTTP/1.1 304 Not Modified");
+	exit;
+}
 
 switch ($type) {
 	case 'css':
 		header("Content-type: text/css", true);
-		header('Expires: ' . date('r', strtotime("+6 months")), true);
-		header("Pragma: public", true);
-		header("Cache-Control: public", true);
-
 		$view = "css/$view";
 		break;
 	case 'js':
 		header('Content-type: text/javascript', true);
-		header('Expires: ' . date('r', strtotime("+6 months")), true);
-		header("Pragma: public", true);
-		header("Cache-Control: public", true);
-
 		$view = "js/$view";
 		break;
 }
 
+header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', strtotime("+6 months")), true);
+header("Pragma: public", true);
+header("Cache-Control: public", true);
+header("ETag: \"$etag\"");
+
 $filename = $dataroot . 'views_simplecache/' . md5($viewtype . $view);
 
 if (file_exists($filename)) {
-	$contents = file_get_contents($filename);
+	readfile($filename);
 } else {
 	// someone trying to access a non-cached file or a race condition with cache flushing
 	mysql_close($mysql_dblink);
 	require_once(dirname(dirname(__FILE__)) . "/start.php");
-	elgg_regenerate_simplecache();
+
+	global $CONFIG;
+	if (!in_array($view, $CONFIG->views->simplecache)) {
+		header("HTTP/1.1 404 Not Found");
+		exit;
+	}
 
 	elgg_set_viewtype($viewtype);
-	$contents = elgg_view($view);
+	echo elgg_view($view);
 }
-
-echo $contents;

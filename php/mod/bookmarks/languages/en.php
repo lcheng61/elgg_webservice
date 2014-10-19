@@ -9,7 +9,7 @@ $english = array(
 	 * Menu items and titles
 	 */
 	'bookmarks' => "Bookmarks",
-	'bookmarks:add' => "Add bookmark",
+	'bookmarks:add' => "Add a bookmark",
 	'bookmarks:edit' => "Edit bookmark",
 	'bookmarks:owner' => "%s's bookmarks",
 	'bookmarks:friends' => "Friends' bookmarks",
@@ -23,9 +23,18 @@ $english = array(
 	'bookmarks:more' => "More",
 	'bookmarks:with' => "Share with",
 	'bookmarks:new' => "A new bookmark",
-	'bookmarks:via' => "via bookmarks",
 	'bookmarks:address' => "Address of the bookmark",
 	'bookmarks:none' => 'No bookmarks',
+
+	'bookmarks:notification' =>
+'%s added a new bookmark:
+
+%s - %s
+%s
+
+View and comment on the new bookmark:
+%s
+',
 
 	'bookmarks:delete:confirm' => "Are you sure you want to delete this resource?",
 

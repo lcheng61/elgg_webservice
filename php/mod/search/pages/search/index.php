@@ -17,10 +17,7 @@ $search_type = get_input('search_type', 'all');
 // XSS protection is more important that searching for HTML.
 $query = stripslashes(get_input('q', get_input('tag', '')));
 
-// @todo - create function for sanitization of strings for display in 1.8
-// encode <,>,&, quotes and characters above 127
-$display_query = mb_convert_encoding($query, 'HTML-ENTITIES', 'UTF-8');
-$display_query = htmlspecialchars($display_query, ENT_QUOTES, 'UTF-8', false);
+$display_query = _elgg_get_display_query($query);
 
 // check that we have an actual query
 if (!$query) {
@@ -58,7 +55,7 @@ switch ($sort) {
 		break;
 }
 
-$order = get_input('sort', 'desc');
+$order = get_input('order', 'desc');
 if ($order != 'asc' && $order != 'desc') {
 	$order = 'desc';
 }
@@ -140,11 +137,7 @@ foreach ($custom_types as $type) {
 
 	$data = htmlspecialchars(http_build_query(array(
 		'q' => $query,
-		'entity_subtype' => $entity_subtype,
-		'entity_type' => $entity_type,
-		'owner_guid' => $owner_guid,
 		'search_type' => $type,
-		'friends' => $friends
 	)));
 
 	$url = elgg_get_site_url()."search?$data";
@@ -235,8 +228,6 @@ if ($search_type != 'entities' || $search_type == 'all') {
 
 			$current_params = $params;
 			$current_params['search_type'] = $type;
-			// custom search types have no subtype.
-			unset($current_params['subtype']);
 
 			$results = elgg_trigger_plugin_hook('search', $type, $current_params, array());
 
@@ -258,7 +249,11 @@ if ($search_type != 'entities' || $search_type == 'all') {
 }
 
 // highlight search terms
-$searched_words = search_remove_ignored_words($display_query, 'array');
+if ($search_type == 'tags') {
+	$searched_words = array($display_query);
+} else {
+	$searched_words = search_remove_ignored_words($display_query, 'array');
+}
 $highlighted_query = search_highlight_words($searched_words, $display_query);
 
 $body = elgg_view_title(elgg_echo('search:results', array("\"$highlighted_query\"")));

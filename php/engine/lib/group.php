@@ -33,6 +33,7 @@ function get_group_entity_as_row($guid) {
  * @param string $description Description
  *
  * @return bool
+ * @access private
  */
 function create_group_entity($guid, $name, $description) {
 	global $CONFIG;
@@ -169,7 +170,7 @@ function get_group_members($group_guid, $limit = 10, $offset = 0, $site_guid = 0
 		'relationship' => 'member',
 		'relationship_guid' => $group_guid,
 		'inverse_relationship' => TRUE,
-		'types' => 'user',
+		'type' => 'user',
 		'limit' => $limit,
 		'offset' => $offset,
 		'count' => $count,
@@ -239,48 +240,52 @@ function leave_group($group_guid, $user_guid) {
  */
 function get_users_membership($user_guid) {
 	$options = array(
+		'type' => 'group',
 		'relationship' => 'member',
 		'relationship_guid' => $user_guid,
-		'inverse_relationship' => FALSE
+		'inverse_relationship' => false,
+		'limit' => false,
 	);
 	return elgg_get_entities_from_relationship($options);
 }
 
 /**
- * Checks access to a group.
+ * May the current user access item(s) on this page? If the page owner is a group,
+ * membership, visibility, and logged in status are taken into account.
  *
  * @param boolean $forward If set to true (default), will forward the page;
  *                         if set to false, will return true or false.
  *
- * @return true|false If $forward is set to false.
+ * @return bool If $forward is set to false.
  */
 function group_gatekeeper($forward = true) {
-	$allowed = true;
-	$url = '';
 
-	if ($group = elgg_get_page_owner_entity()) {
-		if ($group instanceof ElggGroup) {
-			$url = $group->getURL();
-			if (
-				((!elgg_is_logged_in()) && (!$group->isPublicMembership())) ||
-				((!$group->isMember(elgg_get_logged_in_user_entity()) && (!$group->isPublicMembership())))
-			) {
-				$allowed = false;
-			}
+	$page_owner_guid = elgg_get_page_owner_guid();
+	if (!$page_owner_guid) {
+		return true;
+	}
+	$visibility = ElggGroupItemVisibility::factory($page_owner_guid);
 
-			// Admin override
-			if (elgg_is_admin_logged_in()) {
-				$allowed = true;
-			}
+	if (!$visibility->shouldHideItems) {
+		return true;
+	}
+	if ($forward) {
+		// only forward to group if user can see it
+		$group = get_entity($page_owner_guid);
+		$forward_url = $group ? $group->getURL() : '';
+
+		if (!elgg_is_logged_in()) {
+			$_SESSION['last_forward_from'] = current_page_url();
+			$forward_reason = 'login';
+		} else {
+			$forward_reason = 'member';
 		}
+
+		register_error(elgg_echo($visibility->reasonHidden));
+		forward($forward_url, $forward_reason);
 	}
 
-	if ($forward && $allowed == false) {
-		register_error(elgg_echo('membershiprequired'));
-		forward($url, 'member');
-	}
-
-	return $allowed;
+	return false;
 }
 
 /**

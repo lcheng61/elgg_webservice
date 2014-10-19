@@ -5,6 +5,9 @@
  *
  * @package    Elgg.Core
  * @subpackage Groups
+ * 
+ * @property string $name        A short name that captures the purpose of the group
+ * @property string $description A longer body of content that gives more details about the group
  */
 class ElggGroup extends ElggEntity
 	implements Friendable {
@@ -13,8 +16,6 @@ class ElggGroup extends ElggEntity
 	 * Sets the type to group.
 	 *
 	 * @return void
-	 *
-	 * @deprecated 1.8 Use initializeAttributes
 	 */
 	protected function initializeAttributes() {
 		parent::initializeAttributes();
@@ -26,12 +27,12 @@ class ElggGroup extends ElggEntity
 	}
 
 	/**
-	 * Construct a new user entity, optionally from a given id value.
+	 * Construct a new group entity, optionally from a given guid value.
 	 *
 	 * @param mixed $guid If an int, load that GUID.
-	 * 	If a db row then will attempt to load the rest of the data.
+	 * 	If an entity table db row, then will load the rest of the data.
 	 *
-	 * @throws Exception if there was a problem creating the user.
+	 * @throws IOException|InvalidParameterException if there was a problem creating the group.
 	 */
 	function __construct($guid = null) {
 		$this->initializeAttributes();
@@ -40,28 +41,25 @@ class ElggGroup extends ElggEntity
 		$this->initialise_attributes(false);
 
 		if (!empty($guid)) {
-			// Is $guid is a DB row - either a entity row, or a user table row.
+			// Is $guid is a entity table DB row
 			if ($guid instanceof stdClass) {
 				// Load the rest
-				if (!$this->load($guid->guid)) {
+				if (!$this->load($guid)) {
 					$msg = elgg_echo('IOException:FailedToLoadGUID', array(get_class(), $guid->guid));
 					throw new IOException($msg);
 				}
-
-				// Is $guid is an ElggGroup? Use a copy constructor
 			} else if ($guid instanceof ElggGroup) {
+				// $guid is an ElggGroup so this is a copy constructor
 				elgg_deprecated_notice('This type of usage of the ElggGroup constructor was deprecated. Please use the clone method.', 1.7);
 
 				foreach ($guid->attributes as $key => $value) {
 					$this->attributes[$key] = $value;
 				}
-
-				// Is this is an ElggEntity but not an ElggGroup = ERROR!
 			} else if ($guid instanceof ElggEntity) {
+				// @todo why separate from else
 				throw new InvalidParameterException(elgg_echo('InvalidParameterException:NonElggGroup'));
-
-				// We assume if we have got this far, $guid is an int
 			} else if (is_numeric($guid)) {
+				// $guid is a GUID so load entity
 				if (!$this->load($guid)) {
 					throw new IOException(elgg_echo('IOException:FailedToLoadGUID', array(get_class(), $guid)));
 				}
@@ -219,6 +217,7 @@ class ElggGroup extends ElggEntity
 	 * @return array|false
 	 */
 	public function getObjects($subtype = "", $limit = 10, $offset = 0) {
+		// @todo are we deprecating this method, too?
 		return get_objects_in_group($this->getGUID(), $subtype, 0, 0, "", $limit, $offset, false);
 	}
 
@@ -232,6 +231,7 @@ class ElggGroup extends ElggEntity
 	 * @return array|false
 	 */
 	public function getFriendsObjects($subtype = "", $limit = 10, $offset = 0) {
+		// @todo are we deprecating this method, too?
 		return get_objects_in_group($this->getGUID(), $subtype, 0, 0, "", $limit, $offset, false);
 	}
 
@@ -243,6 +243,7 @@ class ElggGroup extends ElggEntity
 	 * @return array|false
 	 */
 	public function countObjects($subtype = "") {
+		// @todo are we deprecating this method, too?
 		return get_objects_in_group($this->getGUID(), $subtype, 0, 0, "", 10, 0, true);
 	}
 
@@ -283,7 +284,7 @@ class ElggGroup extends ElggEntity
 	 *
 	 * @return bool
 	 */
-	public function isMember($user = 0) {
+	public function isMember($user = null) {
 		if (!($user instanceof ElggUser)) {
 			$user = elgg_get_logged_in_user_entity();
 		}
@@ -309,45 +310,32 @@ class ElggGroup extends ElggEntity
 	 *
 	 * @param ElggUser $user User
 	 *
-	 * @return void
+	 * @return bool
 	 */
 	public function leave(ElggUser $user) {
 		return leave_group($this->getGUID(), $user->getGUID());
 	}
 
 	/**
-	 * Override the load function.
-	 * This function will ensure that all data is loaded (were possible), so
-	 * if only part of the ElggGroup is loaded, it'll load the rest.
+	 * Load the ElggGroup data from the database
 	 *
-	 * @param int $guid GUID of an ElggGroup entity
+	 * @param mixed $guid GUID of an ElggGroup entity or database row from entity table
 	 *
-	 * @return true
+	 * @return bool
 	 */
 	protected function load($guid) {
-		// Test to see if we have the generic stuff
-		if (!parent::load($guid)) {
+		$attr_loader = new ElggAttributeLoader(get_class(), 'group', $this->attributes);
+		$attr_loader->requires_access_control = !($this instanceof ElggPlugin);
+		$attr_loader->secondary_loader = 'get_group_entity_as_row';
+
+		$attrs = $attr_loader->getRequiredAttributes($guid);
+		if (!$attrs) {
 			return false;
 		}
 
-		// Check the type
-		if ($this->attributes['type'] != 'group') {
-			$msg = elgg_echo('InvalidClassException:NotValidElggStar', array($guid, get_class()));
-			throw new InvalidClassException($msg);
-		}
-
-		// Load missing data
-		$row = get_group_entity_as_row($guid);
-		if (($row) && (!$this->isFullyLoaded())) {
-			// If $row isn't a cached copy then increment the counter
-			$this->attributes['tables_loaded'] ++;
-		}
-
-		// Now put these into the attributes array as core values
-		$objarray = (array) $row;
-		foreach ($objarray as $key => $value) {
-			$this->attributes[$key] = $value;
-		}
+		$this->attributes = $attrs;
+		$this->attributes['tables_loaded'] = 2;
+		_elgg_cache_entity($this);
 
 		return true;
 	}
@@ -364,7 +352,12 @@ class ElggGroup extends ElggEntity
 		}
 
 		// Now save specific stuff
-		return create_group_entity($this->get('guid'), $this->get('name'), $this->get('description'));
+
+		_elgg_disable_caching_for_entity($this->guid);
+		$ret = create_group_entity($this->get('guid'), $this->get('name'), $this->get('description'));
+		_elgg_enable_caching_for_entity($this->guid);
+
+		return $ret;
 	}
 
 	// EXPORTABLE INTERFACE ////////////////////////////////////////////////////////////

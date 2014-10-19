@@ -18,7 +18,7 @@
  */
 function get_dir_size($dir, $totalsize = 0) {
 	$handle = @opendir($dir);
-	while ($file = @readdir ($handle)) {
+	while ($file = @readdir($handle)) {
 		if (eregi("^\.{1,2}$", $file)) {
 			continue;
 		}
@@ -148,6 +148,12 @@ $x1 = 0, $y1 = 0, $x2 = 0, $y2 = 0, $upscale = FALSE) {
 	if (!$new_image) {
 		return FALSE;
 	}
+
+	// color transparencies white (default is black)
+	imagefilledrectangle(
+		$new_image, 0, 0, $params['newwidth'], $params['newheight'],
+		imagecolorallocate($new_image, 255, 255, 255)
+	);
 
 	$rtn_code = imagecopyresampled(	$new_image,
 									$original_image,
@@ -302,8 +308,6 @@ function get_image_resize_parameters($width, $height, $options) {
 function file_delete($guid) {
 	if ($file = get_entity($guid)) {
 		if ($file->canEdit()) {
-			$container = get_entity($file->container_guid);
-
 			$thumbnail = $file->thumbnail;
 			$smallthumb = $file->smallthumb;
 			$largethumb = $file->largethumb;
@@ -377,7 +381,7 @@ function file_get_general_file_type($mimetype) {
 /**
  * Delete a directory and all its contents
  *
- * @param str $directory Directory to delete
+ * @param string $directory Directory to delete
  *
  * @return bool
  */
@@ -494,7 +498,7 @@ function filestore_init() {
 /**
  * Unit tests for files
  *
- * @param sting  $hook   unit_test
+ * @param string  $hook   unit_test
  * @param string $type   system
  * @param mixed  $value  Array of tests
  * @param mixed  $params Params

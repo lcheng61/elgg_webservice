@@ -29,7 +29,9 @@ function elgg_get_page_owner_guid($guid = 0) {
 	// return guid of page owner entity
 	$guid = elgg_trigger_plugin_hook('page_owner', 'system', NULL, 0);
 
-	$page_owner_guid = $guid;
+	if ($guid) {
+		$page_owner_guid = $guid;
+	}
 
 	return $guid;
 }
@@ -37,24 +39,30 @@ function elgg_get_page_owner_guid($guid = 0) {
 /**
  * Gets the owner entity for the current page.
  *
- * @return ElggEntity|false The current page owner or false if none.
+ * @note Access is disabled when getting the page owner entity.
+ *
+ * @return ElggUser|ElggGroup|false The current page owner or false if none.
  *
  * @since 1.8.0
  */
 function elgg_get_page_owner_entity() {
 	$guid = elgg_get_page_owner_guid();
 	if ($guid > 0) {
-		return get_entity($guid);
+		$ia = elgg_set_ignore_access(true);
+		$owner = get_entity($guid);
+		elgg_set_ignore_access($ia);
+
+		return $owner;
 	}
 
-	return FALSE;
+	return false;
 }
 
 /**
  * Set the guid of the entity that owns this page
  *
  * @param int $guid The guid of the page owner
- *
+ * @return void
  * @since 1.8.0
  */
 function elgg_set_page_owner_guid($guid) {
@@ -75,6 +83,8 @@ function elgg_set_page_owner_guid($guid) {
  *   <handler>/edit/<entity guid>
  *   <handler>/group/<group guid>
  *
+ * @note Access is disabled while finding the page owner for the group gatekeeper functions.
+ *
  *
  * @param string $hook        'page_owner'
  * @param string $entity_type 'system'
@@ -90,6 +100,8 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 		return $returnvalue;
 	}
 
+	$ia = elgg_set_ignore_access(true);
+
 	$username = get_input("username");
 	if ($username) {
 		// @todo using a username of group:<guid> is deprecated
@@ -97,11 +109,13 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 			preg_match('/group\:([0-9]+)/i', $username, $matches);
 			$guid = $matches[1];
 			if ($entity = get_entity($guid)) {
+				elgg_set_ignore_access($ia);
 				return $entity->getGUID();
 			}
 		}
 
 		if ($user = get_user_by_username($username)) {
+			elgg_set_ignore_access($ia);
 			return $user->getGUID();
 		}
 	}
@@ -109,6 +123,7 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 	$owner = get_input("owner_guid");
 	if ($owner) {
 		if ($user = get_entity($owner)) {
+			elgg_set_ignore_access($ia);
 			return $user->getGUID();
 		}
 	}
@@ -130,6 +145,7 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 				case 'friends':
 					$user = get_user_by_username($segments[2]);
 					if ($user) {
+						elgg_set_ignore_access($ia);
 						return $user->getGUID();
 					}
 					break;
@@ -137,6 +153,7 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 				case 'edit':
 					$entity = get_entity($segments[2]);
 					if ($entity) {
+						elgg_set_ignore_access($ia);
 						return $entity->getContainerGUID();
 					}
 					break;
@@ -144,6 +161,7 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 				case 'group':
 					$entity = get_entity($segments[2]);
 					if ($entity) {
+						elgg_set_ignore_access($ia);
 						return $entity->getGUID();
 					}
 					break;
@@ -151,7 +169,7 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
 		}
 	}
 
-	return $returnvalue;
+	elgg_set_ignore_access($ia);
 }
 
 /**
@@ -173,7 +191,7 @@ function default_page_owner_handler($hook, $entity_type, $returnvalue, $params) 
  * @warning The context is not available until the page_handler runs (after
  * the 'init, system' event processing has completed).
  *
- * @param  string $context The context of the page
+ * @param string $context The context of the page
  * @return bool
  * @since 1.8.0
  */
@@ -216,6 +234,7 @@ function elgg_get_context() {
  * Push a context onto the top of the stack
  *
  * @param string $context The context string to add to the context stack
+ * @return void
  * @since 1.8.0
  */
 function elgg_push_context($context) {
@@ -244,7 +263,7 @@ function elgg_pop_context() {
  * itself differently based on being on the dashboard or profile pages, it
  * can check the stack.
  *
- * @param  string $context The context string to check for
+ * @param string $context The context string to check for
  * @return bool
  * @since 1.8.0
  */

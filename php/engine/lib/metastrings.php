@@ -67,7 +67,7 @@ function get_metastring_id($string, $case_sensitive = TRUE) {
 	}
 
 	$row = FALSE;
-	$metaStrings = get_data($query, "entity_row_to_elggstar");
+	$metaStrings = get_data($query);
 	if (is_array($metaStrings)) {
 		if (sizeof($metaStrings) > 1) {
 			$ids = array();
@@ -389,11 +389,6 @@ function elgg_get_metastring_based_objects($options) {
 
 	$selects = $options['selects'];
 
-	// allow count shortcut
-	if ($options['count']) {
-		$options['metastring_calculation'] = 'count';
-	}
-
 	// For performance reasons we don't want the joins required for metadata / annotations
 	// unless we're going through one of their callbacks.
 	// this means we expect the functions passing different callbacks to pass their required joins.
@@ -426,9 +421,11 @@ function elgg_get_metastring_based_objects($options) {
 	if ($metastring_clauses) {
 		$wheres = array_merge($wheres, $metastring_clauses['wheres']);
 		$joins = array_merge($joins, $metastring_clauses['joins']);
+	} else {
+		$wheres[] = get_access_sql_suffix('n_table');
 	}
 
-	if ($options['metastring_calculation'] === ELGG_ENTITIES_NO_VALUE) {
+	if ($options['metastring_calculation'] === ELGG_ENTITIES_NO_VALUE && !$options['count']) {
 		$selects = array_unique($selects);
 		// evalutate selects
 		$select_str = '';
@@ -439,6 +436,9 @@ function elgg_get_metastring_based_objects($options) {
 		}
 
 		$query = "SELECT DISTINCT n_table.*{$select_str} FROM {$db_prefix}$type n_table";
+	} elseif ($options['count']) {
+		// count is over the entities
+		$query = "SELECT count(DISTINCT e.guid) as calculation FROM {$db_prefix}$type n_table";
 	} else {
 		$query = "SELECT {$options['metastring_calculation']}(v.string) as calculation FROM {$db_prefix}$type n_table";
 	}
@@ -467,7 +467,7 @@ function elgg_get_metastring_based_objects($options) {
 			$defaults['order_by']);
 	}
 
-	if ($options['metastring_calculation'] === ELGG_ENTITIES_NO_VALUE) {
+	if ($options['metastring_calculation'] === ELGG_ENTITIES_NO_VALUE && !$options['count']) {
 		if (isset($options['group_by'])) {
 			$options['group_by'] = sanitise_string($options['group_by']);
 			$query .= " GROUP BY {$options['group_by']}";
@@ -515,20 +515,15 @@ function elgg_get_metastring_sql($table, $names = null, $values = null,
 		&& !$ids
 		&& (!$pairs && $pairs !== 0)) {
 
-		return '';
+		return array();
 	}
 
 	$db_prefix = elgg_get_config('dbprefix');
-
-	// join counter for incremental joins.
-	$i = 1;
 
 	// binary forces byte-to-byte comparision of strings, making
 	// it case- and diacritical-mark- sensitive.
 	// only supported on values.
 	$binary = ($case_sensitive) ? ' BINARY ' : '';
-
-	$access = get_access_sql_suffix($table);
 
 	$return = array (
 		'joins' => array (),
@@ -594,12 +589,14 @@ function elgg_get_metastring_sql($table, $names = null, $values = null,
 	}
 
 	if ($names_where && $values_where) {
-		$wheres[] = "($names_where AND $values_where AND $access)";
+		$wheres[] = "($names_where AND $values_where)";
 	} elseif ($names_where) {
-		$wheres[] = "($names_where AND $access)";
+		$wheres[] = $names_where;
 	} elseif ($values_where) {
-		$wheres[] = "($values_where AND $access)";
+		$wheres[] = $values_where;
 	}
+
+	$wheres[] = get_access_sql_suffix($table);
 
 	if ($where = implode(' AND ', $wheres)) {
 		$return['wheres'][] = "($where)";
@@ -609,8 +606,7 @@ function elgg_get_metastring_sql($table, $names = null, $values = null,
 }
 
 /**
- * Normalizes metadata / annotation option names to their
- * corresponding metastrings name.
+ * Normalizes metadata / annotation option names to their corresponding metastrings name.
  *
  * @param array $options An options array
  * @since 1.8.0
@@ -631,10 +627,10 @@ function elgg_normalize_metastrings_options(array $options = array()) {
 
 	// map the metadata_* options to metastring_* options
 	$map = array(
-		'names' 				=>	'metastring_names',
-		'values' 				=>	'metastring_values',
-		'case_sensitive' 		=>	'metastring_case_sensitive',
-		'owner_guids' 			=>	'metastring_owner_guids',
+		'names'					=>	'metastring_names',
+		'values'				=>	'metastring_values',
+		'case_sensitive'		=>	'metastring_case_sensitive',
+		'owner_guids'			=>	'metastring_owner_guids',
 		'created_time_lower'	=>	'metastring_created_time_lower',
 		'created_time_upper'	=>	'metastring_created_time_upper',
 		'calculation'			=>	'metastring_calculation',
@@ -664,9 +660,10 @@ function elgg_normalize_metastrings_options(array $options = array()) {
  *
  * @param int    $id      The object's ID
  * @param string $enabled Value to set to: yes or no
- * @param string $type    The type of table to use: metadata or anntations
+ * @param string $type    The type of table to use: metadata or annotations
  *
  * @return bool
+ * @throws InvalidParameterException
  * @since 1.8.0
  * @access private
  */
@@ -717,21 +714,23 @@ function elgg_set_metastring_based_object_enabled_by_id($id, $enabled, $type) {
  * @warning Unlike elgg_get_metastring_based_objects() this will not accept an
  * empty options array!
  *
- * @param array  $options  An options array. {@See elgg_get_metastring_based_objects()}
- * @param string $callback The callback to pass each result through
- * @return mixed
+ * @warning This returns null on no ops.
+ *
+ * @param array  $options    An options array. {@See elgg_get_metastring_based_objects()}
+ * @param string $callback   The callback to pass each result through
+ * @param bool   $inc_offset Increment the offset? Pass false for callbacks that delete / disable
+ *
+ * @return bool|null true on success, false on failure, null if no objects are found.
  * @since 1.8.0
  * @access private
  */
-function elgg_batch_metastring_based_objects(array $options, $callback) {
+function elgg_batch_metastring_based_objects(array $options, $callback, $inc_offset = true) {
 	if (!$options || !is_array($options)) {
 		return false;
 	}
 
-	$batch = new ElggBatch('elgg_get_metastring_based_objects', $options, $callback);
-	$r = $batch->callbackResult;
-
-	return $r;
+	$batch = new ElggBatch('elgg_get_metastring_based_objects', $options, $callback, 50, $inc_offset);
+	return $batch->callbackResult;
 }
 
 /**
@@ -739,7 +738,7 @@ function elgg_batch_metastring_based_objects(array $options, $callback) {
  *
  * @param int    $id   The metastring-based object's ID
  * @param string $type The type: annotation or metadata
- * @return mixed
+ * @return ElggMetadata|ElggAnnotation
  *
  * @since 1.8.0
  * @access private
@@ -805,12 +804,13 @@ function elgg_delete_metastring_based_object_by_id($id, $type) {
 			}
 
 			if ($metabyname_memcache) {
+				// @todo why name_id? is that even populated?
 				$metabyname_memcache->delete("{$obj->entity_guid}:{$obj->name_id}");
 			}
 		}
 
 		if (($obj->canEdit()) && (elgg_trigger_event('delete', $type, $obj))) {
-			return delete_data("DELETE from $table where id=$id");
+			return (bool)delete_data("DELETE from $table where id=$id");
 		}
 	}
 

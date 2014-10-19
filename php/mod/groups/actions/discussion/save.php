@@ -4,7 +4,7 @@
  */
 
 // Get variables
-$title = get_input("title");
+$title = htmlspecialchars(get_input('title', '', false), ENT_QUOTES, 'UTF-8');
 $desc = get_input("description");
 $status = get_input("status");
 $access_id = (int) get_input("access_id");
@@ -21,7 +21,7 @@ if (!$title || !$desc) {
 }
 
 $container = get_entity($container_guid);
-if (!$container || !$container->canWriteToContainer()) {
+if (!$container || !$container->canWriteToContainer(0, 'object', 'groupforumtopic')) {
 	register_error(elgg_echo('discussion:error:permissions'));
 	forward(REFERER);
 }
