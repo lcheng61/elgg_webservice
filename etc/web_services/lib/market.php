@@ -113,7 +113,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
 //                $blog['time_created'] = (int)$single->time_created;
 //                $blog['time_updated'] = (int)$single->time_updated;
 //                $blog['last_action'] = (int)$single->last_action;
-                 $return[] = $blog;
+                 $return['products'][] = $blog;
             }
         }
     }
