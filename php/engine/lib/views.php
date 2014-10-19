@@ -1563,6 +1563,7 @@ function autoregister_views($view_base, $folder, $base_location_path, $viewtype)
  * @return void
  * @access private
  */
+/*
 function elgg_views_add_rss_link() {
 	global $autofeed;
 	if (isset($autofeed) && $autofeed == true) {
@@ -1582,7 +1583,7 @@ function elgg_views_add_rss_link() {
 		));
 	}
 }
-
+*/
 /**
  * Registers deprecated views to avoid making some pages from older plugins
  * completely empty.
