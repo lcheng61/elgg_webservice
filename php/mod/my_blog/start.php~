@@ -1,0 +1,3 @@
+<?php
+
+elgg_register_action("my_blog/save", elgg_get_plugins_path() . "my_blog/actions/my_blog/save.php");
