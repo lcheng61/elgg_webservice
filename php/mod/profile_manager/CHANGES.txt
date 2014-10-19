@@ -1,5 +1,7 @@
 = Version history =
 
+
+
 7.6.1 (2013-08-28):
 
 - fixed: about me field uses custom field name as label

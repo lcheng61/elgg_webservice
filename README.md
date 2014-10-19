@@ -40,7 +40,6 @@ Remove the /runtime/repo/php and add data so it looks like:
 
 	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/data
 
-=======================
 
 Develop branching:
 
@@ -56,5 +55,7 @@ develop -> stage -> product
 4. git commit -a -m "message"
 5. git push origin develop
 6. go to 
+=======
+
 
 
