@@ -40,6 +40,21 @@ Remove the /runtime/repo/php and add data so it looks like:
 
 	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/data
 
+=======================
 
+Develop branching:
+
+1. develop at github:
+
+develop -> stage -> product
+|
+-> develop-mobile
+
+1. git clone https://github.com/emagic/lovebeautyserver
+2. git checkout develop
+3. make change in your code, test it at your local server at least not breaking
+4. git commit -a -m "message"
+5. git push origin develop
+6. go to 
 
 
