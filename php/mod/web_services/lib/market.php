@@ -173,6 +173,22 @@ function product_get_detail($product_id) {
     $return['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
     $return['product_seller']['is_seller'] = $owner->is_seller;
 
+
+///// check if the product has already been liked
+    $like = elgg_get_annotation_from_id($product_id);
+
+    if (!$like) {
+        $likes = elgg_get_annotations(array(
+                'guid' => $product_id,
+                'annotation_owner_guid' => elgg_get_logged_in_user_guid(),
+                'annotation_name' => 'likes',
+        ));
+        $like = $likes[0];
+    }
+    $return['liked'] = ($like && $like->canEdit());
+////// done like checking
+
+
     $return['likes_number'] = likes_count(get_entity($product_id));
     $return['tips_number'] = $blog->tips_number;
     $return['reviews_number'] = 0;
