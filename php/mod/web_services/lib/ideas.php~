@@ -108,7 +108,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
 //                $blog['time_created'] = (int)$single->time_created;
 //                $blog['time_updated'] = (int)$single->time_updated;
 //                $blog['last_action'] = (int)$single->last_action;
-                 $return[] = $blog;
+                 $return['tips'][] = $blog;
             }
         }
     }
@@ -150,6 +150,17 @@ function tip_get_detail($tip_id) {
 
     $blog = get_entity($tip_id);
 
+    $options = array(
+        'annotations_name' => 'generic_comment',
+        'guid' => $tip_id,
+        'limit' => 10,
+        'pagination' => false,
+        'reverse_order_by' => true,
+    );
+    $comments = elgg_get_annotations($options);
+    $num_comments = count($comments);
+
+
     if (!elgg_instanceof($blog, 'object', 'ideas')) {
         $return['content'] = elgg_echo('blog:error:post_not_found');
         return $return;
@@ -174,6 +185,21 @@ function tip_get_detail($tip_id) {
     $return['comments_number'] = $num_comments;
     $return['products_number'] = $blog->products_number;
     $return['tip_tags'] = $blog->tags;
+
+///// check if the product has already been liked
+    $like = elgg_get_annotation_from_id($tip_id);
+    if (!$like) {
+        $likes = elgg_get_annotations(array(
+                'guid' => $tip_id,
+                'annotation_owner_guid' => elgg_get_logged_in_user_guid(),
+                'annotation_name' => 'likes',
+        ));
+        $like = $likes[0];
+    }
+    $return['liked'] = ($like && $like->canEdit());
+////// done like checking
+
+
 
     return $return;
 }
@@ -239,6 +265,25 @@ function ideas_post_tip($title,
     $obj->ideascategory =           strip_tags($tip_category);
     $obj->products =                strip_tags($products);
 
+    // Parse products string to extract its individual product guid's.
+    $product_id_array = explode(",", $obj->products);
+
+//    echo ("obj->products is $obj->products\n");
+
+    $obj->products_number = 0;
+    foreach ($product_id_array as $id) {
+        $id = intval($id);
+//        echo ("product_id = $id\n");
+        $product_post = get_entity($id);
+        if ($product_post) { // if the product id is a valid one
+//            echo ("$id is valid\n");
+            // XXX: we assume the same product id can't be linked to the same tip.
+            $product_post->tips_number ++;
+            $product_post->tips .= "$guid,";
+        }
+        $obj->products_number ++;
+    }
+
     $guid = $obj->save();
     add_to_river('river/object/ideas/create',
             'create',
@@ -246,25 +291,7 @@ function ideas_post_tip($title,
             $obj->guid
     );
 
-    // Parse products string to extract its individual product guid's.
-    $product_id_array = explode(",", $obj->products);
-
-    echo ("obj->products is $obj->products\n");
-
-    foreach ($product_id_array as $id) {
-        $id = intval($id);
-        echo ("product_id = $id\n");
-        $product_post = get_entity($id);
-        if ($product_post) { // if the product id is a valid one
-            echo ("$id is valid\n");
-            // XXX: we assume the same product id can't be linked to the same tip.
-            $product_post->tips_number ++;
-            $product_post->tips .= "$guid,";
-        }
-    }
-
 //    echo ("product_post->tips = $product_post->tips\n");
-
 //    echo ("product_post->tips_number = $product_post->tips_number");
 //    echo ("guid = $guid, product_post->tips = $product_post->tips\n");
 
@@ -425,7 +452,7 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
         $product_post = get_entity($id);
 //        echo ("after product_post, id = $id, product_post = $product_post<br>");
         if ($product_post) { // if the product id is a valid one
-                echo ("after if<br>");
+//                echo ("after if<br>");
                 $blog['product_id'] = $product_post->guid;
                 $options = array(
                         'annotations_name' => 'generic_comment',
@@ -438,7 +465,7 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
 
-                 echo ("product_post = $product_post->title");
+//                 echo ("product_post = $product_post->title");
 
                  $blog['product_name'] = $product_post->title;
                  $blog['product_price'] = $product_post->price;
@@ -457,7 +484,7 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
                  $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['product_seller']['is_seller'] = $owner->is_seller;
             
-                 $return[] = $blog;
+                 $return['products'][] = $blog;
         }
     } // done with listing products of that tip.
 
@@ -539,7 +566,7 @@ function ideas_search($query, $category, $offset, $limit,
                  $blog['comments_number'] = $num_comments;
                  $blog['products_number'] = $single->products;
 
-                 $return[] = $blog;
+                 $return['ideas'][] = $blog;
             }
         }
     }

@@ -42,6 +42,7 @@ $values = array(
 	'access_id' => ACCESS_DEFAULT,
 	'tags' => '',
 	'container_guid' => (int)get_input('container_guid'),
+	'tips_number' => 0,
 	);
 
 // fail if a required entity isn't set

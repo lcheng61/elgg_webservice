@@ -69,8 +69,20 @@ function user_get_profile($username) {
         $objs_array = explode(",", $user->liked_ideas);
     $liked_ideas_count = count ($objs_array);
     $profile_info['likes_number'] = $liked_products_count + $liked_ideas_count;
-    $profile_info['follower_number'] = 0;
-    $profile_info['following_number'] = 0;
+
+    $friends = get_user_friends($user->guid, '' , 0, 0);
+    $follower_number = 0;
+    if($friends){
+        $follower_number = count($friends);
+    }
+    $profile_info['follower_number'] = $follower_number;
+
+    $friends = get_user_friends_of($user->guid, '' , 0, 0);
+    $following_number = 0;
+    if($friends) {
+        $following_number = count($friends);
+    }
+    $profile_info['following_number'] = $following_number;
     
         $options = array(
                 'annotations_name' => 'generic_comment',
@@ -181,7 +193,7 @@ function user_save_profile($username, $profile) {
 expose_function('user.save_profile',
                 "user_save_profile",
                 array('username' => array ('type' => 'string'),
-                     'profile' => array ('type' => 'array'),
+                     'profile' => array ('type' => 'array', 'required' => false),
                     ),
                 "Get user profile information with username",
                 'POST',
@@ -412,7 +424,7 @@ function user_get_friends($username, $limit = 10, $offset = 0) {
             $friend['name'] = $single->name;
             $friend['is_seller'] = $single->is_seller;
             $friend['avatar_url'] = get_entity_icon_url($single,'small');
-            $return[] = $friend;
+            $return['follower'][] = $friend;
         }
     } else {
         $msg = elgg_echo('friends:none');
@@ -461,7 +473,7 @@ function user_get_friends_of($username, $limit = 10, $offset = 0) {
             $friend['name'] = $single->name;
             $friend['is_seller'] = $single->is_seller;
             $friend['avatar_url'] = get_entity_icon_url($single,'small');
-     	    $return[] = $friend;
+     	    $return['following'][] = $friend;
         }
     } else {
         $msg = elgg_echo('friends:none');

@@ -38,6 +38,7 @@ $values = array(
 	'custom' => '',
 	'description' => '',
 	'price' => '',
+	'sold_count' => '',
 	'access_id' => ACCESS_DEFAULT,
 	'tags' => '',
 	'container_guid' => (int)get_input('container_guid'),

@@ -209,7 +209,7 @@ expose_function('messages.sent',
     $recipient = get_user_by_username($send_to);
     $recipient_guid = $recipient->guid;
     $result = messages_send($subject, $body, $recipient_guid, 0, $reply);
-        
+
     return $result;
 }
 

@@ -8,13 +8,10 @@ elgg.embed.init = function() {
 
 	// caches the current textarea id
 	$(".embed-control").live('click', function() {
-		var classes = $(this).attr('class').split(/[, ]+/);
-		
-		$.each(classes, function(index, item) {
-			if (item.indexOf('embed-control-') === 0) {
-				elgg.embed.textAreaId = item.substr('embed-control-'.length);
-			}
-		});
+		var classes = $(this).attr('class');
+		var embedClass = classes.split(/[, ]+/).pop();
+		var textAreaId = embedClass.substr(embedClass.indexOf('embed-control-') + "embed-control-".length);
+		elgg.embed.textAreaId = textAreaId;
 	});
 
 	// special pagination helper for lightbox
