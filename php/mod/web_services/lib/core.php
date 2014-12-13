@@ -158,3 +158,51 @@ expose_function('site.search',
                 'GET',
                 false,
                 false);
+
+/**
+ * The auth.gettoken API.
+ * This API call lets a user log in, returning an authentication token which can be used
+ * to authenticate a user for a period of time. It is passed in future calls as the parameter
+ * auth_token.
+ *
+ * @param string $username Username
+ * @param string $password Clear text password
+ *
+ * @return string Token string or exception
+ * @throws SecurityException
+ * @access private
+ */
+function auth_gettoken2($username, $password, $expire=527040) {
+        // check if username is an email address
+        if (is_email_address($username)) {
+                $users = get_user_by_email($username);
+                        
+                // check if we have a unique user
+                if (is_array($users) && (count($users) == 1)) {
+                        $username = $users[0]->username;
+                }
+        }
+        
+        // validate username and password
+        if (true === elgg_authenticate($username, $password)) {
+                $token = create_user_token($username, $expire);
+                if ($token) {
+                        return $token;
+                }
+        }
+
+        throw new SecurityException(elgg_echo('SecurityException:authenticationfailed'));
+}
+expose_function(
+    "auth.gettoken2",
+    "auth_gettoken2",
+    array(
+        'username' => array ('type' => 'string'),
+        'password' => array ('type' => 'string'),
+        'expire' => array ('type' => 'int', 'default' => 527040),
+    ),
+    elgg_echo('auth.gettoken'),
+    'POST',
+    true,
+    false
+);

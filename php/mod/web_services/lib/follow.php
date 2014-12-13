@@ -108,6 +108,7 @@ expose_function('user.follow.remove',
                 
 /**
  * Web service to get friends of a user
+ * Web service to get friends I'm following to
  *
  * @param string $username Username
  * @param string $limit    Number of users to return
@@ -147,13 +148,14 @@ expose_function('user.follow.get_followers',
                         'limit' => array ('type' => 'int', 'required' => false),
                         'offset' => array ('type' => 'int', 'required' => false),
                     ),
-                "Register user",
+                "Get friends I'm following to",
                 'GET',
                 false,
                 false);    
                 
 /**
  * Web service to obtains the people who have made a given user a friend
+ * Web service to obtains the people who follows me
  *
  * @param string $username Username
  * @param string $limit    Number of users to return
@@ -193,7 +195,7 @@ expose_function('user.follow.get_followers_of',
                         'limit' => array ('type' => 'int', 'required' => false),
                         'offset' => array ('type' => 'int', 'required' => false),
                     ),
-                "Register user",
+                "Get friends following me",
                 'GET',
                 false,
                 false);    

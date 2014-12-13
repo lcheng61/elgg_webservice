@@ -38,10 +38,12 @@ expose_function('user.get_profile_fields',
  */
 function user_get_profile($username) {
     //if $username is not provided then try and get the loggedin user
+    $me = null;
     if(!$username){
         $user = get_loggedin_user();
     } else {
         $user = get_user_by_username($username);
+        $me = get_loggedin_user();
     }
     
     if (!$user) {
@@ -63,12 +65,71 @@ function user_get_profile($username) {
         }
     }
 
-    
-        $objs_array = explode(",", $user->liked_products);
+    $params = array(
+            'types' => 'object',
+            'subtypes' => 'ideas',
+            'owner_guid' => $user->guid,
+            'limit' => 0,
+            'full_view' => FALSE,
+            'offset' => $offset,
+	    );
+    $ideas_num = count(elgg_get_entities($params));
+    $profile_info['ideas_num'] = $ideas_num;
+////////
+/*
+    $options = array(
+        'annotation_names' => array('likes'),
+        'annotation_owner_guids' => array($entity->guid),
+        'order_by' => 'maxtime DESC',
+        'full_view' => false,
+    );
+    $content = elgg_list_entities_from_annotations($options);
+    if (!$content) {
+        $content = elgg_echo('liked_content:noresults');
+    }
+*/
+////////~
+
+// add liked items
+   
+    $dbprefix = elgg_get_config('dbprefix');
+    $likes_metastring = get_metastring_id('likes');
+
+    $options = array(
+        'annotation_names' => array('likes'),
+        'annotation_owner_guids' => array($user->guid),
+        'order_by' => 'maxtime DESC',
+        'full_view' => false,
+    );
+    $content = elgg_list_entities_from_annotations($options);
+
+    if (!$content) {
+        $content = elgg_echo('liked_content:noresults');
+    }
+    $title = elgg_echo('liked_content:liked_content');
+    $layout = elgg_view_layout('content', array(
+             'title' => elgg_view_title($title),
+             'content' => $content,
+	     'filter' => elgg_view('liked_content/navigation/filter'),
+    ));
+//    $profile_info['likes_items'] = json_decode(elgg_view_page($title, $layout), true);
+//~
+
+/* old get likes_number    
+    $objs_array = explode(",", $user->liked_products);
     $liked_products_count = count ($objs_array);
         $objs_array = explode(",", $user->liked_ideas);
     $liked_ideas_count = count ($objs_array);
     $profile_info['likes_number'] = $liked_products_count + $liked_ideas_count;
+*/
+
+// new likes_number
+    $profile_info['likes_number'] = count($profile_info['likes_items']['object']['market']) + 
+            count($profile_info['likes_items']['object']['ideas']);
+//~
+
+//    $profile_info['likes_total'] = $user->countAnnotations('likes');
+//    $profile_info['likes_total'] = $user->getAnnotationsSum('likes');
 
     $friends = get_user_friends($user->guid, '' , 0, 0);
     $follower_number = 0;
@@ -100,6 +161,9 @@ function user_get_profile($username) {
     $profile_info['username'] = $user->username;
     $profile_info['profile_fields'] = $profile_fields;
     $profile_info['avatar_url'] = get_entity_icon_url($user,'medium');
+
+    $profile_info['do_i_follow'] = user_is_friend($me->guid, $user->guid);
+
     return $profile_info;
 }
 
@@ -272,10 +336,10 @@ function user_register($name, $email, $username, $password) {
         $return['success'] = true;
         $return['guid'] = register_user($username, $password, $name, $email);
     } else {
-        $return['success'] = false;
-        $return['message'] = elgg_echo('registration:userexists');
+        throw new RegistrationException(elgg_echo('registration:userexists'));
     }
-    return $return;
+    return user_get_profile($username);
+//    return $return;
 }
 
 expose_function('user.register',
@@ -286,7 +350,7 @@ expose_function('user.register',
                         'password' => array ('type' => 'string'),
                     ),
                 "Register user",
-                'GET',
+                'POST',
                 false,
                 false);
 
@@ -424,6 +488,7 @@ function user_get_friends($username, $limit = 10, $offset = 0) {
             $friend['name'] = $single->name;
             $friend['is_seller'] = $single->is_seller;
             $friend['avatar_url'] = get_entity_icon_url($single,'small');
+            $friend['do_i_follow'] = user_is_friend($single->guid, $user->guid);
             $return['follower'][] = $friend;
         }
     } else {
@@ -439,7 +504,7 @@ expose_function('user.friend.get_follower',
                         'limit' => array ('type' => 'int', 'required' => false),
                         'offset' => array ('type' => 'int', 'required' => false),
                     ),
-                "Register user",
+                "friend get follower",
                 'GET',
                 false,
                 false);    
@@ -599,6 +664,224 @@ expose_function('user.post_messageboard',
                         'from' => array ('type' => 'string', 'required' => false),
                     ),
                 "Post a messageboard post",
+                'POST',
+                true,
+                true);
+///////////////////////////// Upload avatar
+/**
+ * Web service to upload an image for user profile avatar
+ *
+ * @param string $display_name
+ *
+ * @return array
+ */                    
+function user_upload_avatar($display_name)
+{
+    $owner = elgg_get_logged_in_user_entity();
+    $guid = $owner->guid;
+    if ($display_name) {
+        $owner->name = $display_name;
+	$owner->save();
+    }
+    if (!$owner || !($owner instanceof ElggUser) || !$owner->canEdit()) {
+        register_error(elgg_echo('avatar:upload:fail'));
+        throw new InvalidParameterException("cannot_upload_avatar");
+    }
+
+    if ($_FILES['avatar']['error'] != 0) {
+	register_error(elgg_echo('avatar:upload:fail'));
+        throw new InvalidParameterException("cannot_upload_avatar");
+    }
+
+    $icon_sizes = elgg_get_config('icon_sizes');
+
+    // get the images and save their file handlers into an array
+    // so we can do clean up if one fails.
+    $files = array();
+    foreach ($icon_sizes as $name => $size_info) {
+        $resized = get_resized_image_from_uploaded_file('avatar', 
+            $size_info['w'], $size_info['h'], $size_info['square'], 
+            $size_info['upscale']);
+
+        if ($resized) {
+            //@todo Make these actual entities.  See exts #348.
+            $file = new ElggFile();
+            $file->owner_guid = $guid;
+            $file->setFilename("profile/{$guid}{$name}.jpg");
+                $file->open('write');
+                $file->write($resized);
+                $file->close();
+                $files[] = $file;
+        } else {
+            // cleanup on fail
+            foreach ($files as $file) {
+                $file->delete();
+            }
+            register_error(elgg_echo('avatar:resize:fail'));
+            throw new InvalidParameterException("cannot_upload_avatar");
+	}
+    }
+
+    // reset crop coordinates
+    $owner->x1 = 0;
+    $owner->x2 = 0;
+    $owner->y1 = 0;
+    $owner->y2 = 0;
+
+    $owner->icontime = time();
+    if (elgg_trigger_event('profileiconupdate', $owner->type, $owner)) {
+        system_message(elgg_echo("avatar:upload:success"));
+        $return = "avatar:upload:success";
+
+        $view = 'river/user/default/profileiconupdate';
+        elgg_delete_river(array('subject_guid' => $owner->guid, 'view' => $view));
+        add_to_river($view, 'update', $owner->guid, $owner->guid);
+    }
+    return $return;
+}
+expose_function('user.upload_avatar',
+                "user_upload_avatar",
+                array(
+                        'display_name' => array ('type' => 'string', 'required' => false, 'default' => null),
+                    ),
+                "Upload Avatar picture",
+                'POST',
+                true,
+                true);
+
+/////////////////////////////
+
+///////////////////////////// Upload avatar
+/**
+ * Profile Edit action
+ *
+ * @param string $profile_str
+ *
+ * @return array
+ */                    
+/**
+ * wrapper for recursive array walk decoding
+ */
+function profile_array_decoder(&$v) {
+        $v = _elgg_html_decode($v);
+}
+
+function user_edit_profile($profile_str)
+{
+    $owner = elgg_get_logged_in_user_entity();
+    $guid = $owner->guid;
+
+    if (!$owner || !($owner instanceof ElggUser) || !$owner->canEdit()) {
+        register_error(elgg_echo('profile:edit:fail'));
+        throw new InvalidParameterException("cannot_upload_avatar");
+    }
+
+    $json = json_decode($profile_str, true);
+
+    // grab the defined profile field names and their load the values from POST json.
+    // each field can have its own access, so sort that too.
+    $input = array();
+    $accesslevel = $json['accesslevel'];
+
+    if (!is_array($accesslevel)) {
+        $accesslevel = array();
+    }
+
+    $profile_fields = elgg_get_config('profile_fields');
+    foreach ($profile_fields as $shortname => $valuetype) {
+        // the decoding is a stop gap to prevent &amp;&amp; showing up in profile fields
+        // because it is escaped on both input (get_input()) and output (view:output/text). see #561 and #1405.
+        // must decode in utf8 or string corruption occurs. see #1567.
+        $value = $json[$shortname];
+
+        $return[$shortname] = $value;
+
+        if (is_array($value)) {
+                array_walk_recursive($value, 'profile_array_decoder');
+        } else {
+                $value = _elgg_html_decode($value);
+        }
+        // limit to reasonable sizes
+        // @todo - throwing away changes due to this is dumb!
+        if (!is_array($value) && $valuetype != 'longtext' && elgg_strlen($value) > 250) {
+                $error = elgg_echo('profile:field_too_long', array(elgg_echo("profile:{$shortname}")));
+                register_error($error);
+                throw new InvalidParameterException("profile_data_invalid");
+        }
+
+        if ($value && $valuetype == 'url' && !preg_match('~^https?\://~i', $value)) {
+                $value = "http://$value";
+        }
+
+        if ($valuetype == 'tags') {
+                $value = string_to_tag_array($value);
+        }
+
+        $input[$shortname] = $value;
+    }
+
+    // display name is handled separately
+    $name = strip_tags(get_input('name'));
+    if ($name) {
+        if (elgg_strlen($name) > 50) {
+                register_error(elgg_echo('user:name:fail'));
+        } elseif ($owner->name != $name) {
+                $owner->name = $name;
+                $owner->save();
+        }
+    }
+
+    // go through custom fields
+    if (sizeof($input) > 0) {
+        foreach ($input as $shortname => $value) {
+                $options = array(
+                        'guid' => $owner->guid,
+                        'metadata_name' => $shortname,
+                        'limit' => false
+                );
+                elgg_delete_metadata($options);
+                if (!is_null($value) && ($value !== '')) {
+                        // only create metadata for non empty values (0 is allowed) to prevent metadata records with empty string values #4858
+
+                        if (isset($accesslevel[$shortname])) {
+                                $access_id = (int) $accesslevel[$shortname];
+                        } else {
+                                // this should never be executed since the access level should always be set
+                                $access_id = ACCESS_DEFAULT;
+                        }
+                        if (is_array($value)) {
+                                $i = 0;
+                                foreach ($value as $interval) {
+                                        $i++;
+                                        $multiple = ($i > 1) ? TRUE : FALSE;
+                                        create_metadata($owner->guid, $shortname, $interval, 'text', $owner->guid, $access_id, $multiple);
+                                }
+                        } else {
+                                create_metadata($owner->getGUID(), $shortname, $value, 'text', $owner->getGUID(), $access_id);
+                        }
+                }
+        }
+
+        $owner->save();
+
+        $return['input'] = $input;
+        $return['accesslevel'] = $accesslevel;
+
+        // Notify of profile update
+        elgg_trigger_event('profileupdate', $owner->type, $owner);
+
+        elgg_clear_sticky_form('profile:edit');
+        system_message(elgg_echo("profile:saved"));
+    }
+    return $return;
+}
+
+expose_function('user.edit_profile',
+                "user_edit_profile",
+                array(
+                        'profile' => array ('type' => 'string', 'required' => true, 'default' => null),
+                    ),
+                "Edit user profile",
                 'POST',
                 true,
                 true);

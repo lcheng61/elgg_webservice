@@ -169,28 +169,169 @@ expose_function('likes.getusers',
  * Web service to get products liked by the user
  *
  * @param string $entity_guid guid of user
+ * @param string $subtype can be "market", "ideas" or "all"
  *
  * @return bool
  */
-function likes_getitems($entity_guid, $subtype) {
+function likes_getitems($username, $subtype, $limit=10, $offset=0) {
+    if(!$username) {
+        $user = get_loggedin_user();
+    } else {
+        $user = get_user_by_username($username);
+        if (!$user) {
+            throw new InvalidParameterException('registration:usernamenotvalid');
+	}
+    }
+///////////////////////
+    $dbprefix = elgg_get_config('dbprefix');
+    $likes_metastring = get_metastring_id('likes');
 
-    $user = get_entity($entity_guid);
+    $entity = get_user_by_username($username);
+    if (!elgg_instanceof($entity, 'user')) {
+        return false;
+    }
+//    $filter = 'most_liked'; // get_input('filter'); // XXX
+    $options = array(
+        'annotation_names' => array('likes'),
+        'annotation_owner_guids' => array($entity->guid),
+        'order_by' => 'maxtime DESC',
+        'full_view' => false,
+    );
+/*										
+    if ($filter == 'most_liked') {
+        $options = array(
+            'container_guid' => $entity->guid,
+	    'annotation_names' => array('likes'),
+	    'selects' => array("(SELECT count(distinct l.id) FROM {$dbprefix}annotations l WHERE l.name_id = $likes_metastring AND l.entity_guid = e.guid) AS likes"),
+	    'order_by' => 'likes DESC',
+	    'full_view' => false
+	);
+    }
+*/
+    $content = elgg_list_entities_from_annotations($options);
 
-    echo ("liked_products = ".$user->liked_products."<br>");
-    echo ("liked_ideas = ".$user->liked_ideas."<br>");
+    if (!$content) {
+        $content = elgg_echo('liked_content:noresults');
+    }
+    $title = elgg_echo('liked_content:liked_content');
+    $layout = elgg_view_layout('content', array(
+             'title' => elgg_view_title($title),
+//             'content' => $content,
+	     'filter' => elgg_view('liked_content/navigation/filter'),
+    ));
+// copy layout to return;
 
-    if ($subtype == "ideas") { 
+    $liked_items = json_decode(elgg_view_page($title, $layout));
+    $liked_products = $liked_items->object->market;
+    $liked_ideas = $liked_items->object->ideas;
+
+    $blog = array();
+    foreach($liked_products as $product_info ) {
+        $single = get_entity($product_info->guid);
+        $blog['product_id'] = $single->guid;
+        $options = array(
+                'annotations_name' => 'generic_comment',
+                'guid' => $single->$guid,
+                'limit' => $limit,
+                'pagination' => false,
+                'reverse_order_by' => true,
+                );
+
+        $comments = elgg_get_annotations($options);
+        $num_comments = count($comments);
+
+        $display_product_number++;
+        $blog['product_name'] = $single->title;
+        $blog['product_price'] = floatval($single->price);
+        $blog['tips_number'] = $single->tips_number;
+        //XXX: hard-code sold_count;		 		 
+        $single->sold_count = 0;
+        $blog['sold_number'] = $single->sold_count;
+        $blog['product_category'] = $single->marketcategory;
+
+        $post_images = unserialize($single->images);
+        $blog['images'] = null;
+        foreach ($post_images as $key => $value) {
+            if ($value == 1) {
+                $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
+            }
+        }
+
+        $blog['likes_number'] = intval(likes_count(get_entity($single->guid)));
+        $blog['reviews_number'] = $num_comments;
+
+        $owner = get_entity($single->owner_guid);
+        $blog['product_seller']['user_id'] = $owner->guid;
+        $blog['product_seller']['user_name'] = $owner->username;
+        $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+        $blog['product_seller']['is_seller'] = ($owner->is_seller == "true");
+        $blog['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
+ 
+        $return['liked_products'][] = $blog;
+    }
+    $return['liked_products_num'] = $display_product_number;
+
+    // liked ideas
+    $blog = array();
+    $display_ideas_number = 0;
+    foreach($liked_ideas as $idea_info ) {
+        $single = get_entity($idea_info->guid);
+        $blog['tip_id'] = $single->guid;
+        $options = array(
+                'annotations_name' => 'generic_comment',
+                'guid' => $single->$guid,
+                'limit' => $limit,
+                'pagination' => false,
+                'reverse_order_by' => true,
+                );
+
+         $comments = elgg_get_annotations($options);
+         $num_comments = count($comments);
+
+         $display_ideas_number++;
+         $blog['tip_title'] = $single->title;
+         $blog['tip_category'] = $single->ideascategory;
+         $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+         $blog['likes_number'] = likes_count(get_entity($single->guid));
+         $blog['comments_number'] = $num_comments;
+
+         $owner = get_entity($single->owner_guid);
+         $blog['tip_author']['user_id'] = $owner->guid;
+         $blog['tip_author']['user_name'] = $owner->username;
+         $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+         $blog['tip_author']['is_seller'] = $owner->is_seller;
+         $blog['tip_author']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
+
+         $blog['likes_number'] = likes_count(get_entity($single->guid));
+         $blog['comments_number'] = $num_comments;
+
+         $blog['products_number'] = $single->countEntitiesFromRelationship("sponsor", false);
+
+         $return['liked_ideas'][] = $blog;
+    }
+    $return['liked_ideas_num'] = $display_ideas_number;
+
+    return $return;
+
+////////////////////////////
+/*
+    $return = "";
+
+//    echo ("liked_products = ".$user->liked_products."<br>");
+//    echo ("liked_ideas = ".$user->liked_ideas."<br>");
+
+    if ($subtype == "ideas" || $subtype == "all") { 
         $objs_array = explode(",", $user->liked_ideas);
         foreach ($objs_array as $id) {
-//echo("hello here1 <br>");
             $id = intval($id);
             $obj_post = get_entity($id);
-            if ($obj_post) { // if the product id is a valid one
-                $blog['product_id'] = $obj_post->guid;
+            if ($obj_post) { // if the ideas id is a valid one
+                $blog['ideas_id'] = $obj_post->guid;
                 $options = array(
                         'annotations_name' => 'generic_comment',
                         'guid' => $obj_post->$guid,
                         'limit' => $limit,
+                        'offset' => $offset,
                         'pagination' => false,
                         'reverse_order_by' => true,
                         );
@@ -198,32 +339,30 @@ function likes_getitems($entity_guid, $subtype) {
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
 
-//                 echo ("obj_post = $obj_post->title");
-
-                 $blog['product_name'] = $obj_post->title;
-                 $blog['product_price'] = $obj_post->price;
+                 $blog['ideas_name'] = $obj_post->title;
+                 $blog['ideas_price'] = $obj_post->price;
                  $blog['tips_number'] = $obj_post->tips_number;
 		 //XXX: hard-code sold_count;		 		 
                  $single->sold_count = 0;
                  $blog['sold_number'] = $obj_post->sold_count;
-                 $blog['product_category'] = $obj_post->marketcategory;
-                 $blog['product_image'] = elgg_normalize_url("market/image/".$obj_post->guid."/1/"."large/");
+                 $blog['ideas_category'] = $obj_post->marketcategory;
+                 $blog['ideas_image'] = elgg_normalize_url("market/image/".$obj_post->guid."/1/"."large/");
                  $blog['likes_number'] = likes_count(get_entity($obj_post->guid));
                  $blog['reviews_number'] = $num_comments;
 
                  $owner = get_entity($obj_post->owner_guid);
-                 $blog['product_seller']['user_id'] = $owner->guid;
-                 $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
-                 $blog['product_seller']['is_seller'] = $owner->is_seller;
+                 $blog['ideas_seller']['user_id'] = $owner->guid;
+                 $blog['ideas_seller']['user_name'] = $owner->username;
+                 $blog['ideas_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['ideas_seller']['is_seller'] = $owner->is_seller;
             
                  $return[] = $blog;
             }
-        } // done with listing products of that tip.
-    } else if ($subtype == "market") { 
+        } // done with listing ideas of that tip.
+    } 
+    if ($subtype == "market" || $subtype == "all") { 
         $objs_array = explode(",", $user->liked_products);
         foreach ($objs_array as $id) {
-//echo("hello here2: $id <br>");
             $id = intval($id);
             $obj_post = get_entity($id);
             if ($obj_post) { // if the product id is a valid one
@@ -238,8 +377,6 @@ function likes_getitems($entity_guid, $subtype) {
 
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
-
-//                 echo ("obj_post = $obj_post->title");
 
                  $blog['product_name'] = $obj_post->title;
                  $blog['product_price'] = $obj_post->price;
@@ -261,12 +398,12 @@ function likes_getitems($entity_guid, $subtype) {
         } // done with listing products of that tip.
     }
     return $return;
+*/
 }
 
 expose_function('likes.getitems',
                 "likes_getitems",
-                array('entity_guid' => array ('type' => 'int'),
-                      'subtype' => array ('type' => 'string'),
+                array('username' => array ('type' => 'string', 'required' => false),
                      ),
                 "Get products liked by the current user",
                 'GET',
