@@ -250,14 +250,19 @@ function pay_checkout_direct($msg)
     if (strlen($msg) == 0) {
         throw new InvalidParameterException('payment:charge:message:wrong');
     }
+    $date = date_create();
+    $time_friendly = date_format($date, 'Y-m-d H:i:s');
+    $timestamp = date_format($date, 'U');
+
     $json = json_decode($msg, true);
     $order_info['amount'] = $json['amount'];
     $order_info['currency'] = $json['currency'];
     $order_info['card'] = $json['card'];
     $order_info['description'] = $json['description'];
-    $order_info['shipping_address'] = $json['shipping_address'];
-    $order_info['shipping_method'] = $json['shipping_method'];
-    $order_info['coupon'] = $json['coupon'];
+    $order_info['shipping_address'] = $json['order_info']['shipping_address'];
+
+    $order_info['shipping_method'] = $json['order_info']['shipping_method'];
+    $order_info['coupon'] = $json['order_info']['coupon'];
 
     $sellers = $json['order_info']['sellers'];
 
@@ -312,16 +317,22 @@ function pay_checkout_direct($msg)
     $item->subtype = 'buyer_order';
 
     $item->object_guid = $charge['id'];
+    $card = $charge['card'];
+    $item->charge_card_name = "{$user->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
+    $item->time_friendly = $time_friendly;
+    $item->timestamp = $timestamp;
     $item->msg = $msg;
 
     if($item->save()){
+        $return['card_name'] = $item->charge_card_name;
 	$return['order_id'] = $item->guid;
         $return['content'] = elgg_echo("pay:charge:order:saved");
 	$return['buyer_email'] = $user->email;
         // send email, format it later
         $email_sent = elgg_send_email ("team@lovebeauty.com", $user->email, "Shopper order $item->guid is made", "Thank you");
 	$return['email_sent'] = $email_sent;
-        $return['time'] = date(DATE_RFC2822);
+        $return['time_friendly'] = $time_friendly;
+        $return['timestamp'] = $timestamp;
 
 	foreach ($sellers as $key => $value) {
             $products = $value['products'];
@@ -351,6 +362,11 @@ function pay_checkout_direct($msg)
 		$seller_order->product_quantity = $product_value['item_number'];
 		$seller_order->shipping_code = $product_value['shipping_code'];
 		$seller_order->shipping_cost = $product_value['shipping_cost'];
+		$seller_order->shipping_address = json_encode($order_info['shipping_address']);
+
+		$seller_order->charge_card_name = $item->charge_card_name;
+		$seller_order->time_friendly = $time_friendly;
+		$seller_order->timestamp = $timestamp;
 
                 $seller_item = "";
                 if ($seller_order->save()) {
@@ -359,12 +375,16 @@ function pay_checkout_direct($msg)
                     // send email, format it later
                     $email_sent = elgg_send_email ("team@lovebeauty.com", $seller->email, "Seller order $seller_order->guid is made", "Thank you");
       	            $seller_item['email_sent'] = $email_sent;
-                    $seller_item['time'] = date(DATE_RFC2822);
+                    $seller_item['time_friendly'] = $time_friendly;
+                    $seller_item['timestamp'] = $timestamp;
+
                     $seller_item['product_name'] = $product_value['product_name'];
                     $seller_item['product_image_url'] = $product_value['product_image_url'];
                     $seller_item['product_price'] = $product_value['product_price'];
   		    $seller_item['product_quantity'] = $product_value['item_number'];
                     $seller_item['avatar_url'] = get_entity_icon_url($seller, 'small');
+   		    $seller_item['shipping_address'] = $seller_order->shipping_address;
+
                 }
                 $person_info['seller_orders'][] = $seller_item;
 
@@ -373,10 +393,12 @@ function pay_checkout_direct($msg)
                 $thinker_order->type = 'object';
                 $thinker_order->subtype = "thinker_order";
                 $thinker_order->thinker_guid = $product_value['thinker_id'];
-//                $thinker_order->owner_guid = $product_value['seller_id'];
                 $thinker_order->product_guid = $product_value['product_id'];
 		$thinker_order->product_name = $product_value['product_name'];
 		$thinker_order->product_image_url = $product_value['product_image_url'];
+		$thinker_order->time_friendly = $time_friendly;
+		$thinker_order->timestamp = $timestamp;
+
                 $thinker = get_user($product_value['thinker_id']);
 		                
                 $thinker_item = "";
@@ -386,7 +408,8 @@ function pay_checkout_direct($msg)
                     // send email, format it later
                     $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you");
       	            $thinker_item['email_sent'] = $email_sent;
-                    $thinker_item['time'] = date(DATE_RFC2822);
+                    $thinker_item['time_friendly'] = $time_friendly;
+                    $thinker_item['timestamp'] = $timestamp;
                     $thinker_item['product_name'] = $product_value['product_name'];
                     $thinker_item['product_image_url'] = $product_value['product_image_url'];
                     $thinker_item['product_price'] = $product_value['product_price'];
@@ -682,8 +705,43 @@ expose_function('payment.list_basket',
                 true);
 
 // This is buyer's shopping history
-function pay_list_buyer_order($limit, $offset)
+function pay_list_buyer_order($context, $username, $limit, $offset)
 {
+    if (!$username) {
+        $user = get_loggedin_user();
+        if (!$user) {
+            throw new InvalidParameterException('pay_list_buyer_order:loginusernamenotvalid');
+        }
+    } else {
+        $user = get_user_by_username($username);
+        if (!$user) {
+            throw new InvalidParameterException('pay_list_buyer_order:usernamenotvalid');
+        }
+    }
+
+    if($context == "all"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'seller_order',
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+            );
+    } else if(($context == "mine") || ($context ==  "user")){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'seller_order',
+            'owner_guid' => $user->guid,
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+        );
+    } else {
+        throw new InvalidParameterException('pay_list_seller_order:contextnotvalid');
+    }
+    $latest_blogs = elgg_get_entities($params);
+
+
     $user = elgg_get_logged_in_user_entity();
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
@@ -715,22 +773,26 @@ function pay_list_buyer_order($limit, $offset)
 
     return $return;
 }
-expose_function('payment.list_buyer_order',
+
+expose_function('payment.list.buyer_order',
                 "pay_list_buyer_order",
                 array(
+                      'context' => array ('type' => 'string', 'required' => false, 'default' => "all"),
+                      'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
                     ),
                 "list items of buyer order",
-                'POST',
+                'GET',
                 true,
                 true);
 
+
 // This is seller's transaction history
-function pay_list_seller_order($username, $limit, $offset)
+function pay_list_seller_order($context, $username, $limit, $offset, $time_start, $time_end)
 {
-    if (strlen($username) == 0) {
-        $user = elgg_get_logged_in_user_entity();
+    if (!$username) {
+        $user = get_loggedin_user();
         if (!$user) {
             throw new InvalidParameterException('pay_list_seller_order:loginusernamenotvalid');
         }
@@ -741,30 +803,76 @@ function pay_list_seller_order($username, $limit, $offset)
         }
     }
 
-    $params = array(
-        'type' => 'object',
-        'subtypes' => 'seller_order',
-//        'owner_guid' => $user->guid,
-        'seller_guid' => $user->guid,
-        'limit' => $limit,
-        'full_view' => FALSE,
-        'offset' => $offset,
-    );
-    $latest_blogs = elgg_get_entities($params);
+    if($context == "all"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'seller_order',
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+            );
+        $latest_blogs = elgg_get_entities($params);
+    } else if(($context == "mine") || ($context ==  "user")){
+/*
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'seller_order',
+            'seller_guid' => $user->guid,
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+        );
+*/
+        $latest_blogs =  elgg_get_entities_from_metadata(array('types'=>'object', 
+                            'subtypes'=>'seller_order', 'limit'=>$limit, 'offset'=>$offset, 
+                            'metadata_name_value_pairs'=>array(
+                                array('name' => 'seller_guid', 'value' => $user->guid, 'operand' => '=' )
+                            )));
+    } else {
+        throw new InvalidParameterException('pay_list_seller_order:contextnotvalid');
+    }
     if($latest_blogs) {
         $return['offset'] = $offset;
         $display_number = 0;
 
         foreach($latest_blogs as $single ) {
+            // XXX: should be part of the filter
+            if (($item['timestamp'] < $time_start) || ($item['timestamp'] > $time_end)) {
+	        continue;
+	    }
             $item['order_guid'] = $single->guid;
             $item['product_guid'] = $single->product_guid;
-            $item['coupon'] = $single->coupon;
+            $item['coupon_code'] = $single->coupon;
+            $item['coupon_discount'] = 0;
             $item['product_name'] = $single->product_name;
             $item['product_image_url'] = $single->product_image_url;
             $item['product_price'] = $single->product_price;
             $item['product_quantity'] = $single->product_quantity;
             $item['shipping_code'] = $single->shipping_code;
-            $item['seller_name'] = $user->username;
+            $item['shipping_cost'] = $single->shipping_cost;
+
+	    if ($single->shipping_address) {
+                $item['shipping_address'] = json_decode($single->shipping_address, true);
+            }
+// XXX, credit_card is the only payment
+            $item['payment_method'] = "credit_card"; //$single->payment_method;
+            $item['charge_card_name'] = $single->charge_card_name;
+            $item['purchased_time_friendly'] = $single->time_friendly;
+            $item['purchased_timestamp'] = $single->timestamp;
+	    $item['status'] = "paid";
+
+            $seller = get_user($single->seller_guid);
+            if (!$seller) {
+                $item['seller']['seller_name'] = "";
+                $item['seller']['seller_email'] = "";
+                $item['seller']['seller_avatar'] = "";
+	    } else {
+                $item['seller']['seller_guid'] = $single->seller_guid;
+                $item['seller']['seller_name'] = $seller->username;
+                $item['seller']['seller_email'] = $seller->email;
+                $item['seller']['seller_avatar'] = get_entity_icon_url($seller, 'small');
+	    }
+
             $display_number ++;
             $return['product'][] = $item;
         }
@@ -772,21 +880,79 @@ function pay_list_seller_order($username, $limit, $offset)
         $return['total_number'] = $display_number;
     }
     else {
-        $msg = elgg_echo('payment_basket:none');
+        $msg = elgg_echo('payment_seller_order:none');
         throw new InvalidParameterException($msg);
     }
 
     return $return;
 }
-expose_function('payment.list_seller_order',
+expose_function('payment.list.seller_order',
                 "pay_list_seller_order",
                 array(
+                      'context' => array ('type' => 'string', 'required' => false, 'default' => "all"),
                       'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'start_time' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'end_time' => array ('type' => 'int', 'required' => false, 'default' => 5555555555),
                     ),
                 "list items of seller order",
-                'POST',
+                'GET',
+                true,
+                true);
+
+
+// This is seller's transaction history
+function pay_detail_seller_order($order_id)
+{
+    $return = array();
+    $single = get_entity($order_id);
+    if (!elgg_instanceof($single, 'object', 'seller_order')) {
+        $return['content'] = elgg_echo('seller_order:error:post_not_found');
+        return $return;
+    }
+    $item['order_guid'] = $single->guid;
+    $item['product_guid'] = $single->product_guid;
+    $item['coupon_code'] = $single->coupon;
+    $item['coupon_discount'] = 0;
+    $item['product_name'] = $single->product_name;
+    $item['product_image_url'] = $single->product_image_url;
+    $item['product_price'] = $single->product_price;
+    $item['product_quantity'] = $single->product_quantity;
+    $item['shipping_code'] = $single->shipping_code;
+    $item['shipping_cost'] = $single->shipping_cost;
+
+    if ($single->shipping_address) {
+        $item['shipping_address'] = json_decode($single->shipping_address, true);
+    }
+// XXX, credit_card is the only payment
+    $item['payment_method'] = "credit_card"; //$single->payment_method;
+    $item['charge_card_name'] = $single->charge_card_name;
+    $item['purchased_time_friendly'] = $single->time_friendly;
+    $item['purchased_timestamp'] = $single->timestamp;
+    $item['status'] = "paid";
+
+    $seller = get_user($single->seller_guid);
+    if (!$seller) {
+        $item['seller']['seller_name'] = "";
+        $item['seller']['seller_email'] = "";
+        $item['seller']['seller_avatar'] = "";
+    } else {
+        $item['seller']['seller_guid'] = $single->seller_guid;
+        $item['seller']['seller_name'] = $seller->username;
+        $item['seller']['seller_email'] = $seller->email;
+        $item['seller']['seller_avatar'] = get_entity_icon_url($seller, 'small');
+    }
+    return $item;
+}
+
+expose_function('payment.detail.seller_order',
+                "pay_detail_seller_order",
+                array(
+                      'order_id' => array ('type' => 'int', 'required' => true, 'default' => 0),
+                    ),
+                "detail of seller order item",
+                'GET',
                 true,
                 true);
 
