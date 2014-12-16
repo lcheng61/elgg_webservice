@@ -322,6 +322,7 @@ function pay_checkout_direct($msg)
     $item->time_friendly = $time_friendly;
     $item->timestamp = $timestamp;
     $item->msg = $msg;
+    $item->status = "paid";
 
     if($item->save()){
         $return['card_name'] = $item->charge_card_name;
@@ -330,7 +331,7 @@ function pay_checkout_direct($msg)
 	$return['buyer_email'] = $user->email;
         // send email, format it later
         $email_sent = elgg_send_email ("team@lovebeauty.com", $user->email, "Shopper order $item->guid is made", "Thank you");
-	$return['email_sent'] = $email_sent;
+	$return['email_sent'] = $user->email;
         $return['time_friendly'] = $time_friendly;
         $return['timestamp'] = $timestamp;
 
@@ -340,6 +341,7 @@ function pay_checkout_direct($msg)
             $seller_info['seller_name'] = $seller->username;
             $seller_info['seller_email'] = $seller->email;
      	    foreach ($products as $product_key => $product_value) {
+
 	        $product = get_entity($product_value['product_id']);
                 if (!$product) {
 		    continue;
@@ -368,6 +370,8 @@ function pay_checkout_direct($msg)
 		$seller_order->time_friendly = $time_friendly;
 		$seller_order->timestamp = $timestamp;
 
+		$seller_order->status = "paid";
+
                 $seller_item = "";
                 if ($seller_order->save()) {
        	            $seller_item['order_id'] = $seller_order->guid;
@@ -392,12 +396,18 @@ function pay_checkout_direct($msg)
 		$thinker_order = new ElggObject();
                 $thinker_order->type = 'object';
                 $thinker_order->subtype = "thinker_order";
-                $thinker_order->thinker_guid = $product_value['thinker_id'];
+		$thinker_order->seller_guid = $seller_order->seller_guid;
+		$thinker_order->seller_order_guid = $seller_order->guid;
+		$thinker_order->buyer_order_guid = $item->guid;
+                $thinker_order->buyer_guid = $user->guid;
                 $thinker_order->product_guid = $product_value['product_id'];
 		$thinker_order->product_name = $product_value['product_name'];
 		$thinker_order->product_image_url = $product_value['product_image_url'];
+                $thinker_order->thinker_guid = $product_value['thinker_id'];
+                $thinker_order->thinker_idea_guid = $product_value['thinker_idea_guid'];
 		$thinker_order->time_friendly = $time_friendly;
 		$thinker_order->timestamp = $timestamp;
+		$thinker_order->status = "paid";
 
                 $thinker = get_user($product_value['thinker_id']);
 		                
@@ -407,13 +417,14 @@ function pay_checkout_direct($msg)
 
                     // send email, format it later
                     $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you");
-      	            $thinker_item['email_sent'] = $email_sent;
+      	            $thinker_item['email_sent'] = $thinker->email;
                     $thinker_item['time_friendly'] = $time_friendly;
                     $thinker_item['timestamp'] = $timestamp;
                     $thinker_item['product_name'] = $product_value['product_name'];
                     $thinker_item['product_image_url'] = $product_value['product_image_url'];
                     $thinker_item['product_price'] = $product_value['product_price'];
                     $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
+                    $thinker_item['thinker_idea_guid'] = $product_value['thinker_idea_guid'];
                 }
                 $person_info['thinker_info'][] = $thinker_item;
             } // products loop
@@ -700,7 +711,7 @@ expose_function('payment.list_basket',
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
                     ),
                 "list items from the shopping cart",
-                'POST',
+                'GET',
                 true,
                 true);
 
@@ -760,6 +771,16 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
         $display_number = 0;
 
         foreach($latest_blogs as $single ) {
+/*
+  	    $return['guid'][] = $single->guid;
+            // Delete the market post
+            $rowsaffected = $single->delete();
+            if ($rowsaffected > 0) {
+                $return['delete'][] = true;
+            } else {
+                $return['delete'][] = false;
+            }
+*/
             $json = json_decode($single->msg, true);
             $return['msg'][] = $json;
             $display_number ++;
@@ -813,21 +834,16 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
             );
         $latest_blogs = elgg_get_entities($params);
     } else if(($context == "mine") || ($context ==  "user")){
-/*
         $params = array(
             'types' => 'object',
             'subtypes' => 'seller_order',
-            'seller_guid' => $user->guid,
             'limit' => $limit,
-            'full_view' => FALSE,
             'offset' => $offset,
-        );
-*/
-        $latest_blogs =  elgg_get_entities_from_metadata(array('types'=>'object', 
-                            'subtypes'=>'seller_order', 'limit'=>$limit, 'offset'=>$offset, 
-                            'metadata_name_value_pairs'=>array(
-                                array('name' => 'seller_guid', 'value' => $user->guid, 'operand' => '=' )
-                            )));
+            'metadata_name_value_pairs'=>array(
+                array('name' => 'seller_guid', 
+                      'value' => $user->guid, 
+                      'operand' => '=' )));
+        $latest_blogs = elgg_get_entities_from_metadata($params);
     } else {
         throw new InvalidParameterException('pay_list_seller_order:contextnotvalid');
     }
@@ -836,6 +852,17 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
         $display_number = 0;
 
         foreach($latest_blogs as $single ) {
+/*
+  	    $return['guid'][] = $single->guid;
+            // Delete the market post
+            $rowsaffected = $single->delete();
+            if ($rowsaffected > 0) {
+                $return['delete'][] = true;
+            } else {
+                $return['delete'][] = false;
+            }
+*/
+
             // XXX: should be part of the filter
             if (($item['timestamp'] < $time_start) || ($item['timestamp'] > $time_end)) {
 	        continue;
@@ -859,7 +886,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
             $item['charge_card_name'] = $single->charge_card_name;
             $item['purchased_time_friendly'] = $single->time_friendly;
             $item['purchased_timestamp'] = $single->timestamp;
-	    $item['status'] = "paid";
+	    $item['status'] = $single->status;
 
             $seller = get_user($single->seller_guid);
             if (!$seller) {
@@ -956,17 +983,236 @@ expose_function('payment.detail.seller_order',
                 true,
                 true);
 
-// This is thinker's commission history
-function pay_list_thinker_order($limit, $offset)
+// This is thinker's commission/credit transaction history
+function pay_list_thinker_order($context, $username, $limit, $offset, $time_start, $time_end)
 {
+    if (!$username) {
+        $user = get_loggedin_user();
+        if (!$user) {
+            throw new InvalidParameterException('pay_list_thinker_order:loginusernamenotvalid');
+        }
+    } else {
+        $user = get_user_by_username($username);
+        if (!$user) {
+            throw new InvalidParameterException('pay_list_thinker_order:usernamenotvalid');
+        }
+    }
+
+    if($context == "all"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'thinker_order',
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+            );
+        $latest_blogs = elgg_get_entities($params);
+    } else if(($context == "mine") || ($context ==  "user")){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'thinker_order',
+            'limit' => $limit,
+            'offset' => $offset,
+            'metadata_name_value_pairs'=>array(
+                array('name' => 'thinker_guid', 
+                      'value' => $user->guid, 
+                      'operand' => '=' )));
+        $latest_blogs = elgg_get_entities_from_metadata($params);
+    } else {
+        throw new InvalidParameterException('pay_list_thinker_order:contextnotvalid');
+    }
+    if($latest_blogs) {
+        $return['offset'] = $offset;
+        $display_number = 0;
+
+        foreach($latest_blogs as $single ) {
+
+/* for debugging, delete all the thinker order
+  	    $return['guid'][] = $single->guid;
+            // Delete the market post
+            $rowsaffected = $single->delete();
+            if ($rowsaffected > 0) {
+                $return['delete'][] = true;
+            } else {
+                $return['delete'][] = false;
+            }
+*/
+
+            // XXX: should be part of the filter
+            if (($item['timestamp'] < $time_start) || ($item['timestamp'] > $time_end)) {
+	        continue;
+	    }
+
+	    $seller = get_user($single->seller_guid);
+	    $buyer = get_user($single->buyer_guid);
+	    $idea = get_entity($single->thinker_idea_guid);
+            $thinker = get_user($single->thinker_guid);
+
+            if (!$thinker) {
+                $item['thinker']['thinker_name'] = "";
+                $item['thinker']['thinker_email'] = "";
+                $item['thinker']['thinker_avatar'] = "";
+	    } else {
+                $item['thinker']['thinker_guid'] = $single->thinker_guid;
+                $item['thinker']['thinker_name'] = $thinker->username;
+                $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'small');
+	    }
+	    if (!seller) {
+	        $item['seller']['guid'] = "";
+	        $item['seller']['name'] = "";
+	        $item['seller']['avatar'] = "";
+            } else {
+	        $item['seller']['guid'] = $seller->guid;
+	        $item['seller']['name'] = $seller->username;
+	        $item['seller']['avatar'] = get_entity_icon_url($seller, 'small');
+            }
+	    if (!buyer) {
+	        $item['buyer']['guid'] = "";
+	        $item['buyer']['name'] = "";
+	        $item['buyer']['avatar'] = "";
+            } else {
+	        $item['buyer']['guid'] = $buyer->guid;
+	        $item['buyer']['name'] = $buyer->username;
+	        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'small');
+            }
+
+	    if (!idea) {
+	        $item['idea']['guid'] = "";
+	        $item['idea']['name'] = "";
+                $item['idea']['tip_thumbnail_image_url'] = "";
+            } else {
+	        $item['idea']['guid'] = $idea->guid;
+	        $item['idea']['name'] = $idea->title;
+		$item['idea']['tip_thumbnail_image_url'] = $idea->tip_thumbnail_image_url;
+            }
+
+            $item['product']['name'] = $single->product_name;
+            $item['product']['image_url'] = $single->product_image_url;
+            $item['product']['price'] = $single->product_price;
+
+	    $item['idea']['name'] = $idea->title;
+            $item['thinker_order_guid'] = $single->guid;
+            $display_number ++;
+            $return['thinker'][] = $item;
+
+        }
+	
+        $return['total_number'] = $display_number;
+    }
+    else {
+        $msg = elgg_echo('payment_thinker_order:none');
+        throw new InvalidParameterException($msg);
+    }
+
+    return $return;
 }
-expose_function('payment.list_thinker_order',
+expose_function('payment.list.thinker_order',
                 "pay_list_thinker_order",
                 array(
+                      'context' => array ('type' => 'string', 'required' => false, 'default' => "all"),
+                      'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'start_time' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'end_time' => array ('type' => 'int', 'required' => false, 'default' => 5555555555),
                     ),
                 "list items of thinker order",
+                'GET',
+                true,
+                true);
+
+// This is thinker's commission/credit transaction history
+function pay_detail_thinker_order($id)
+{
+    $single = get_entity($id);
+
+    $seller = get_user($single->seller_guid);
+    $buyer = get_user($single->buyer_guid);
+    $idea = get_entity($single->thinker_idea_guid);
+    $thinker = get_user($single->thinker_guid);
+
+    if (!$thinker) {
+        $item['thinker']['thinker_name'] = "";
+        $item['thinker']['thinker_email'] = "";
+        $item['thinker']['thinker_avatar'] = "";
+    } else {
+        $item['thinker']['thinker_guid'] = $single->thinker_guid;
+        $item['thinker']['thinker_name'] = $thinker->username;
+        $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'small');
+    }
+    if (!seller) {
+        $item['seller']['guid'] = "";
+        $item['seller']['name'] = "";
+        $item['seller']['avatar'] = "";
+    } else {
+        $item['seller']['guid'] = $seller->guid;
+        $item['seller']['name'] = $seller->username;
+        $item['seller']['avatar'] = get_entity_icon_url($seller, 'small');
+    }
+    if (!buyer) {
+        $item['buyer']['guid'] = "";
+        $item['buyer']['name'] = "";
+        $item['buyer']['avatar'] = "";
+    } else {
+        $item['buyer']['guid'] = $buyer->guid;
+        $item['buyer']['name'] = $buyer->username;
+        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'small');
+    }
+
+    if (!idea) {
+        $item['idea']['guid'] = "";
+        $item['idea']['name'] = "";
+        $item['idea']['tip_thumbnail_image_url'] = "";
+    } else {
+        $item['idea']['guid'] = $idea->guid;
+        $item['idea']['name'] = $idea->title;
+	$item['idea']['tip_thumbnail_image_url'] = $idea->tip_thumbnail_image_url;
+    }
+
+    $item['product']['name'] = $single->product_name;
+    $item['product']['image_url'] = $single->product_image_url;
+    $item['product']['price'] = $single->product_price;
+
+    $item['idea']['name'] = $idea->title;
+    $item['thinker_order_guid'] = $single->guid;
+    $display_number ++;
+    $return['thinker'][] = $item;
+
+    return $return;
+}
+
+expose_function('payment.detail.thinker_order',
+                "pay_detail_thinker_order",
+                array(
+                      'id' => array ('type' => 'int', 'required' => true, 'default' => 0),
+                    ),
+                "detail of a particular thinker order",
+                'GET',
+                true,
+                true);
+
+// seller order update: paid -> shipped -> delivered
+
+function pay_order_update($id, $status)
+{
+    $seller_order = get_entity($id);
+    $seller_order->status = $status;
+    $seller_order->save();
+    if (!$seller_order) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+expose_function('payment.order_update',
+                "pay_order_update",
+                array(
+                      'id' => array ('type' => 'int', 'required' => true, 'default' => 0),
+                      'status' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                    ),
+                "detail of a particular thinker order",
                 'POST',
                 true,
                 true);
+

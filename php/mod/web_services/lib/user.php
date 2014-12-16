@@ -885,3 +885,65 @@ expose_function('user.edit_profile',
                 'POST',
                 true,
                 true);
+
+/**
+ * Web service to logout
+ *
+ * @return 0
+ */
+function user_logout() {
+    logout();
+    return 0;
+}
+
+expose_function('user.logout',
+                "user_logout",
+                array(),
+                "Log out the current user",
+                'POST',
+                true,
+                true);
+
+/////
+
+/**
+ * Web service to request lost password
+ *
+ * @return true/false
+ */
+function user_request_lost_password($username) {
+
+    // allow email addresses
+    if (strpos($username, '@') !== false && ($users = get_user_by_email($username))) {
+        $username = $users[0]->username;
+    }
+    $user = get_user_by_username($username);
+    if ($user) {
+        if (send_new_password_request($user->guid)) {
+                system_message(elgg_echo('user:password:resetreq:success'));
+                $return['username'] = $user->username;
+                $return['email_sent'] = $user->email;
+                $return['message'] = elgg_echo('user:password:resetreq:success');
+        } else {
+                register_error(elgg_echo('user:password:resetreq:fail'));
+                $return['message'] = elgg_echo('user:password:resetreq:fail');
+        }
+    } else {
+        register_error(elgg_echo('user:username:notfound', array($username)));
+        $return['message'] = elgg_echo('user:username:notfound', array($username));
+    }
+    return $return;
+}
+
+expose_function('user.request_lost_password',
+                "user_request_lost_password",
+                array(
+                        'username' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                ),
+                "request lost password",
+                'POST',
+                true,
+                true);
+
+
+
