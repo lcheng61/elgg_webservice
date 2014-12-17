@@ -280,51 +280,54 @@ expose_function('blog.get_post',
  * @param string $offset   Indexing offset, if any
  *
  * @return array
- */    				
+ */                    
 function blog_get_comments($guid, $limit = 10, $offset = 0){
-	$blog = get_entity($guid);
-	
-$options = array(
-	'annotations_name' => 'generic_comment',
-	'guid' => $guid,
-	'limit' => $limit,
-	'pagination' => false,
-	'reverse_order_by' => true,
-);
 
-	$comments = elgg_get_annotations($options);
+    $blog = get_entity($guid);
+    $options = array(
+        'annotations_name' => 'generic_comment',
+        'guid' => $guid,
+        'limit' => $limit,
+        'pagination' => false,
+        'reverse_order_by' => true,
+    );
+    $comments = elgg_get_annotations($options);
 
-	if($comments){
-	foreach($comments as $single){
-		$comment['guid'] = $single->id;
-		$comment['description'] = strip_tags($single->value);
-		
-		$owner = get_entity($single->owner_guid);
-		$comment['owner']['guid'] = $owner->guid;
-		$comment['owner']['name'] = $owner->name;
-		$comment['owner']['username'] = $owner->username;
-		$comment['owner']['avatar_url'] = get_entity_icon_url($owner,'small');
-		
-		$comment['time_created'] = (int)$single->time_created;
-		$return[] = $comment;
-	}
-} else {
-		$msg = elgg_echo('generic_comment:none');
-		throw new InvalidParameterException($msg);
-	}
-	return $return;
+    $total_num = 0;
+    if($comments){
+        foreach($comments as $single){
+            $comment['guid'] = $single->id;
+            $comment['description'] = strip_tags($single->value);
+        
+            $owner = get_entity($single->owner_guid);
+            $comment['review_user']['guid'] = $owner->guid;
+            $comment['review_user']['name'] = $owner->name;
+            $comment['review_user']['username'] = $owner->username;
+            $comment['review_user']['avatar_url'] = get_entity_icon_url($owner,'small');
+            $comment['review_user']['is_seller'] = $owner->is_seller;
+        
+            $comment['time_created'] = (int)$single->time_created;
+            $return['reviews'][] = $comment;
+	    $total_num ++;
+        }
+    } else {
+        $msg = elgg_echo('generic_comment:none');
+        throw new InvalidParameterException($msg);
+    }
+    $return['total_number'] = $total_num;
+    return $return;
 }
 expose_function('blog.get_comments',
-				"blog_get_comments",
-				array(	'guid' => array ('type' => 'string'),
-						'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
-						'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
-						
-					),
-				"Get comments for a blog post",
-				'GET',
-				false,
-				false);	
+                "blog_get_comments",
+                array(    'guid' => array ('type' => 'string'),
+                        'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
+                        'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                        
+                    ),
+                "Get comments for a blog post",
+                'GET',
+                true,
+                false);    
 /**
  * Web service to comment on a post
  *
@@ -333,52 +336,48 @@ expose_function('blog.get_comments',
  * @param int $access_id
  *
  * @return array
- */    				
+ */                    
 function blog_post_comment($guid, $text){
-	
-	$entity = get_entity($guid);
+    
+    $entity = get_entity($guid);
+    $user = elgg_get_logged_in_user_entity();
+    $annotation = create_annotation($entity->guid,
+        'generic_comment',
+        $text,
+        "",
+        $user->guid,
+        $entity->access_id);
 
-	$user = elgg_get_logged_in_user_entity();
+    if($annotation){
+        // notify if poster wasn't owner
+        if ($entity->owner_guid != $user->guid) {
 
-	$annotation = create_annotation($entity->guid,
-								'generic_comment',
-								$text,
-								"",
-								$user->guid,
-								$entity->access_id);
-
-
-	if($annotation){
-		// notify if poster wasn't owner
-		if ($entity->owner_guid != $user->guid) {
-
-			notify_user($entity->owner_guid,
-					$user->guid,
-					elgg_echo('generic_comment:email:subject'),
-					elgg_echo('generic_comment:email:body', array(
-						$entity->title,
-						$user->name,
-						$text,
-						$entity->getURL(),
-						$user->name,
-						$user->getURL()
-				))
-			);
-		}
-	
-		$return['success']['message'] = elgg_echo('generic_comment:posted');
-	} else {
-		$msg = elgg_echo('generic_comment:failure');
-		throw new InvalidParameterException($msg);
-	}
-	return $return;
+            notify_user($entity->owner_guid,
+                    $user->guid,
+                    elgg_echo('generic_comment:email:subject'),
+                    elgg_echo('generic_comment:email:body', array(
+                        $entity->title,
+                        $user->name,
+                        $text,
+                        $entity->getURL(),
+                        $user->name,
+                        $user->getURL()
+                ))
+            );
+        }
+        $return['success']['message'] = elgg_echo('generic_comment:posted');
+    } else {
+        $msg = elgg_echo('generic_comment:failure');
+        throw new InvalidParameterException($msg);
+    }
+    return $return;
 }
 expose_function('blog.post_comment',
-				"blog_post_comment",
-				array(	'guid' => array ('type' => 'int'),
-						'text' => array ('type' => 'string'),
-					),
-				"Post a comment on a blog post",
-				'POST',
-				true,
-				true);	
+                "blog_post_comment",
+                array(    'guid' => array ('type' => 'int'),
+                        'text' => array ('type' => 'string'),
+                    ),
+                "Post a comment on a blog post",
+                'POST',
+                true,
+                true);

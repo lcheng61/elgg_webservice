@@ -762,7 +762,7 @@ expose_function('user.upload_avatar',
 /**
  * wrapper for recursive array walk decoding
  */
-function profile_array_decoder(&$v) {
+function profile_array_decoder2(&$v) {
         $v = _elgg_html_decode($v);
 }
 
@@ -797,7 +797,7 @@ function user_edit_profile($profile_str)
         $return[$shortname] = $value;
 
         if (is_array($value)) {
-                array_walk_recursive($value, 'profile_array_decoder');
+                array_walk_recursive($value, 'profile_array_decoder2');
         } else {
                 $value = _elgg_html_decode($value);
         }
