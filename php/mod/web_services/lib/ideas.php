@@ -269,7 +269,7 @@ function ideas_post_tip($message, $idea_id)
     $json = json_decode($message, true);
     $post->tip_pages = json_encode($json['tip_pages']);
 
-    $return['tip_pages'] = $post->tip_pages;
+//    $return['tip_pages'] = $post->tip_pages;
 
     $post->title = $json['tip_title'];
     $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
@@ -289,11 +289,60 @@ function ideas_post_tip($message, $idea_id)
 
 //    $return['products_string'] = $post->products;
 
-    $post->save();
+    $save_result = $post->save();
+    if (!$save_result) {
+        throw new InvalidParameterException("cannot_save");
+    }
+
     $return['tip_title'] = $post->title;
     $return['tip_category'] = $post->ideascategory;
     $return['tip_thumbnail_image_url'] = $post->tip_thumbnail_image_url;
 
+    // process camera/local file upload (tip_image_local)
+    $page_num = 0;
+    $image_num = 1;
+    $idea_id = $post->guid;
+    $img_item = array();
+
+
+    elgg_load_library('ideas');
+
+    foreach ($json['tip_pages'] as $page) {
+        if ($page['tip_image_local']) {
+            if ($page['tip_image_local'] == "true") {
+	        $file_name = "tip_image_local_".$image_num;
+
+	        // upload image
+	        if ((isset($_FILES[$file_name]['name'])) && (substr_count($_FILES[$file_name]['type'],'image/'))) {
+	            $imgdata = get_uploaded_file($file_name);
+		    ideas_add_image($post, $imgdata, $image_num);
+
+                    $json['tip_pages'][$page_num]['tip_image_local'] =
+                            elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
+
+                    $img_item[] = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
+		    if ($image_num >= 4) {
+                        break;
+                    }
+                    $image_num ++;
+	        }
+	    } else {
+                $img_item[] = "";
+            }
+        } else {
+            $img_item[] = "";
+	}
+	$page_num ++;
+    }
+    $post->tip_pages = json_encode($json['tip_pages']);
+    $return['tip_pages'] = $post->tip_pages;
+    if (!$post->save()) {
+        throw new InvalidParameterException("cannot_save_with_local_images");
+    }
+
+    $return['local_images'] = $img_item;
+
+    // process product relationship
     foreach ($json['products_id'] as $id) {
         $id = intval($id);
         $product_post = get_entity($id);
@@ -493,12 +542,26 @@ function ideas_delete_tip($tip_id) {
 
     // Remove the tip object itself.
     if (elgg_instanceof($blog, 'object', 'ideas') && $blog->canEdit()) {
+
+        elgg_load_library('ideas');
+        $return = ideas_delete_post($blog);
+        if ($return) {
+            system_message(elgg_echo("ideas:deleted"));
+            $ret_msg = "product deleted";
+        } else {
+                // Error message
+            register_error(elgg_echo("ideas:notdeleted"));
+            $msg = elgg_echo('ideas:notdeleted');
+            throw new InvalidParameterException($msg);
+        }
+/*
         if ($blog->delete()) {
             $return['success'] = true;
             $return['message'] = elgg_echo('blog:message:deleted_post');
         } else {
             $return['message'] = elgg_echo('blog:error:cannot_delete_post');
         }
+*/
     } else {
         $return['message'] = elgg_echo('blog:error:user_cannot_delete_tip');
     }
