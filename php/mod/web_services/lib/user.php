@@ -943,7 +943,7 @@ expose_function('user.request_lost_password',
                 "request lost password",
                 'POST',
                 true,
-                true);
+                false);
 
 
 

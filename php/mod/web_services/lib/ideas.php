@@ -321,7 +321,7 @@ function ideas_post_tip($message, $idea_id)
                             elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
 
                     $img_item[] = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
-		    if ($image_num >= 4) {
+		    if ($image_num >= 11) {
                         break;
                     }
                     $image_num ++;

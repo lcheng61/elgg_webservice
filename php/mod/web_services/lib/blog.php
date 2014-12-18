@@ -297,7 +297,11 @@ function blog_get_comments($guid, $limit = 10, $offset = 0){
     if($comments){
         foreach($comments as $single){
             $comment['guid'] = $single->id;
-            $comment['description'] = strip_tags($single->value);
+
+$comment_ranking = unserialize(strip_tags($single->value));
+
+            $comment['description'] = $comment_ranking['text'];
+            $comment['ranking'] = $comment_ranking['ranking'];
         
             $owner = get_entity($single->owner_guid);
             $comment['review_user']['guid'] = $owner->guid;
@@ -337,13 +341,18 @@ expose_function('blog.get_comments',
  *
  * @return array
  */                    
-function blog_post_comment($guid, $text){
+function blog_post_comment($guid, $text, $ranking){
     
     $entity = get_entity($guid);
     $user = elgg_get_logged_in_user_entity();
+
+$comment['ranking'] = $ranking;
+$comment['text'] = $text;
+
     $annotation = create_annotation($entity->guid,
         'generic_comment',
-        $text,
+//        $text,
+serialize($comment),
         "",
         $user->guid,
         $entity->access_id);
@@ -376,8 +385,9 @@ expose_function('blog.post_comment',
                 "blog_post_comment",
                 array(    'guid' => array ('type' => 'int'),
                         'text' => array ('type' => 'string'),
+                        'ranking' => array ('type' => 'float', 'required' => false, 'default' => 0),
                     ),
-                "Post a comment on a blog post",
+                "Post a comment with ranking on a blog post",
                 'POST',
                 true,
                 true);

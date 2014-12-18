@@ -302,6 +302,10 @@ function pay_checkout_direct($msg)
             }
         }
     }
+    // check if card_id was actually a token. If yes then we need to change it to the default card_id
+
+    $order_info['card'] = $card->id;
+
     // Now charge to the $customer->getCustomerId();
     $charge = $stripe->createCharge($customer->getCustomerId(), $order_info);
     if (!$charge) {
