@@ -226,71 +226,102 @@ expose_function('blog.delete_post',
  * @return string $comments_on On/Off
  */
 function blog_get_post($guid, $username) {
-	$return = array();
-	$blog = get_entity($guid);
 
-	if (!elgg_instanceof($blog, 'object', 'blog')) {
-		$return['content'] = elgg_echo('blog:error:post_not_found');
-		return $return;
-	}
-	
-	$user = get_user_by_username($username);
-	if ($user) {
-		if (!has_access_to_entity($blog, $user)) {
-			$return['content'] = elgg_echo('blog:error:post_not_found');
-			return $return;
-		}
-		
-		if ($blog->status!='published' && $user->guid!=$blog->owner_guid) {
-			$return['content'] = elgg_echo('blog:error:post_not_found');
-			return $return;
-		}
-	} else {
-		if($blog->access_id!=2) {
-			$return['content'] = elgg_echo('blog:error:post_not_found');
-			return $return;
-		}
-	}
+    $return = array();
+    $blog = get_entity($guid);
 
-	$return['title'] = htmlspecialchars($blog->title);
-	$return['content'] = strip_tags($blog->description);
-	$return['excerpt'] = $blog->excerpt;
-	$return['tags'] = $blog->tags;
-	$return['owner_guid'] = $blog->owner_guid;
-	$return['access_id'] = $blog->access_id;
-	$return['status'] = $blog->status;
-	$return['comments_on'] = $blog->comments_on;
-	return $return;
+    if (!elgg_instanceof($blog, 'object', 'blog')) {
+        $return['content'] = elgg_echo('blog:error:post_not_found');
+        return $return;
+    }
+    
+    $user = get_user_by_username($username);
+    if ($user) {
+        if (!has_access_to_entity($blog, $user)) {
+            $return['content'] = elgg_echo('blog:error:post_not_found');
+            return $return;
+        }
+        
+        if ($blog->status!='published' && $user->guid!=$blog->owner_guid) {
+            $return['content'] = elgg_echo('blog:error:post_not_found');
+            return $return;
+        }
+    } else {
+        if($blog->access_id!=2) {
+            $return['content'] = elgg_echo('blog:error:post_not_found');
+            return $return;
+        }
+    }
+
+    $return['title'] = htmlspecialchars($blog->title);
+    $return['content'] = strip_tags($blog->description);
+    $return['excerpt'] = $blog->excerpt;
+    $return['tags'] = $blog->tags;
+    $return['owner_guid'] = $blog->owner_guid;
+    $return['access_id'] = $blog->access_id;
+    $return['status'] = $blog->status;
+    $return['comments_on'] = $blog->comments_on;
+    return $return;
 }
-	
+    
 expose_function('blog.get_post',
-				"blog_get_post",
-				array('guid' => array ('type' => 'string'),
-						'username' => array ('type' => 'string', 'required' => false),
-					),
-				"Read a blog post",
-				'GET',
-				false,
-				false);
+                "blog_get_post",
+                array('guid' => array ('type' => 'string'),
+                        'username' => array ('type' => 'string', 'required' => false),
+                    ),
+                "Read a blog post",
+                'GET',
+                false,
+                false);
 /**
  * Web service to retrieve comments on a blog post
  *
  * @param string $guid blog guid
  * @param string $limit    Number of users to return
  * @param string $offset   Indexing offset, if any
+ * @param string $type     comment type: 0/1/2
+ * @param string $context  what is based upon to get the comment. can be "user" or "post"
  *
  * @return array
  */                    
-function blog_get_comments($guid, $limit = 10, $offset = 0){
+function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $username){
+    if ($type == 0) {
+        $comment_type = "generic_comment";
+    } else if ($type == 1) {
+        $comment_type = "product_comment";
+    } else if ($type == 2) {
+        $comment_type = "ideas_comment";
+    } else {
+        throw new InvalidParameterException("blog:comment_type");
+    }
 
-    $blog = get_entity($guid);
-    $options = array(
-        'annotations_name' => 'generic_comment',
-        'guid' => $guid,
-        'limit' => $limit,
-        'pagination' => false,
-        'reverse_order_by' => true,
-    );
+//    $blog = get_entity($guid);
+
+    if ($context == "post") {
+        $options = array(
+            'annotations_name' => $comment_type,
+            'guid' => $guid,
+            'limit' => $limit,
+            'pagination' => false,
+            'reverse_order_by' => true,
+        );
+    } else if ($context == "user") {
+        if(!$username) {
+            $user = get_loggedin_user();
+        } else {
+           $user = get_user_by_username($username);
+            if (!$user) {
+                throw new InvalidParameterException('registration:usernamenotvalid');
+	    }
+        }  
+        $options = array(
+            'annotations_name' => $comment_type,
+            'owner_guid' => $user->guid,
+            'limit' => $limit,
+            'pagination' => false,
+            'reverse_order_by' => true,
+        );
+    }
     $comments = elgg_get_annotations($options);
 
     $total_num = 0;
@@ -298,7 +329,7 @@ function blog_get_comments($guid, $limit = 10, $offset = 0){
         foreach($comments as $single){
             $comment['guid'] = $single->id;
 
-$comment_ranking = unserialize(strip_tags($single->value));
+            $comment_ranking = unserialize(strip_tags($single->value));
 
             $comment['description'] = $comment_ranking['text'];
             $comment['ranking'] = $comment_ranking['ranking'];
@@ -312,10 +343,10 @@ $comment_ranking = unserialize(strip_tags($single->value));
         
             $comment['time_created'] = (int)$single->time_created;
             $return['reviews'][] = $comment;
-	    $total_num ++;
+            $total_num ++;
         }
     } else {
-        $msg = elgg_echo('generic_comment:none');
+        $msg = elgg_echo('comment:$comment_type:none');
         throw new InvalidParameterException($msg);
     }
     $return['total_number'] = $total_num;
@@ -323,10 +354,12 @@ $comment_ranking = unserialize(strip_tags($single->value));
 }
 expose_function('blog.get_comments',
                 "blog_get_comments",
-                array(    'guid' => array ('type' => 'string'),
+                array(    'guid' => array ('type' => 'string', 'required' => false, 'default' => 0),
                         'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                         'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                        
+                        'type' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                        'context' => array ('type' => 'string', 'required' => false, 'default' => 'post'),
+                        'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
                     ),
                 "Get comments for a blog post",
                 'GET',
@@ -338,21 +371,32 @@ expose_function('blog.get_comments',
  * @param int $guid blog guid
  * @param string $text
  * @param int $access_id
+ * @param int $ranking
+ * @param int $type  (0: generic_comment; 1: product_comment; 2: ideas_comment)
  *
  * @return array
  */                    
-function blog_post_comment($guid, $text, $ranking){
+function blog_post_comment($guid, $text, $ranking, $type){
     
     $entity = get_entity($guid);
     $user = elgg_get_logged_in_user_entity();
 
-$comment['ranking'] = $ranking;
-$comment['text'] = $text;
+    $comment['ranking'] = $ranking;
+    $comment['text'] = $text;
+
+    if ($type == 0) {
+        $comment_type = "generic_comment";
+    } else if ($type == 1) {
+        $comment_type = "product_comment";
+    } else if ($type == 2) {
+        $comment_type = "ideas_comment";
+    } else {
+        throw new InvalidParameterException("blog:comment_type");
+    }
 
     $annotation = create_annotation($entity->guid,
-        'generic_comment',
-//        $text,
-serialize($comment),
+        $comment_type,
+        serialize($comment),
         "",
         $user->guid,
         $entity->access_id);
@@ -367,7 +411,7 @@ serialize($comment),
                     elgg_echo('generic_comment:email:body', array(
                         $entity->title,
                         $user->name,
-                        $text,
+                        $comment['text'],
                         $entity->getURL(),
                         $user->name,
                         $user->getURL()
@@ -376,7 +420,7 @@ serialize($comment),
         }
         $return['success']['message'] = elgg_echo('generic_comment:posted');
     } else {
-        $msg = elgg_echo('generic_comment:failure');
+        $msg = elgg_echo('comment:$comment_type:failure');
         throw new InvalidParameterException($msg);
     }
     return $return;
@@ -384,8 +428,9 @@ serialize($comment),
 expose_function('blog.post_comment',
                 "blog_post_comment",
                 array(    'guid' => array ('type' => 'int'),
-                        'text' => array ('type' => 'string'),
-                        'ranking' => array ('type' => 'float', 'required' => false, 'default' => 0),
+                          'text' => array ('type' => 'string'),
+                          'ranking' => array ('type' => 'float', 'required' => false, 'default' => 0),
+                          'type' => array ('type' => 'int', 'required' => false, 'default' => 0),
                     ),
                 "Post a comment with ranking on a blog post",
                 'POST',
