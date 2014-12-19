@@ -46,7 +46,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
             'owner_guid' => $user->guid,
             'limit' => $limit,
             'full_view' => FALSE,
-                        'offset' => $offset,
+            'offset' => $offset,
         );
     }
     if($context == "group"){
@@ -76,8 +76,8 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
                     ($category == "all")) {
                 $blog['product_id'] = $single->guid;
                 $options = array(
-                        'annotations_name' => 'generic_comment',
-                        'guid' => $single->$guid,
+                        'annotations_name' => 'product_comment',
+                        'guid' => $single->guid,
                         'limit' => $limit,
                         'pagination' => false,
                         'reverse_order_by' => true,
@@ -251,7 +251,7 @@ expose_function('product.get_detail',
 function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
     $market = get_entity($product_id);
     $options = array(
-        'annotations_name' => 'generic_comment',
+        'annotations_name' => 'product_comment',
         'guid' => $product_id,
         'limit' => $limit,
         'pagination' => false,
@@ -274,7 +274,7 @@ function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
             $return[] = $comment;
         }
     } else {
-        $msg = elgg_echo('generic_comment:none');
+        $msg = elgg_echo('product_comment:none');
         throw new InvalidParameterException($msg);
     }
     return $return;
@@ -346,7 +346,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
                 $tip['likes_number'] = likes_count(get_entity($id));
 
                 $options = array(
-                        'annotations_name' => 'generic_comment',
+                        'annotations_name' => 'product_comment',
                         'guid' => $id,
                         'limit' => $limit,
                         'pagination' => false,
@@ -364,7 +364,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
         }
 
     } else {
-        $msg = elgg_echo('generic_comment:none');
+        $msg = elgg_echo('product_comment:none');
         throw new InvalidParameterException($msg);
     }
     return $return;
@@ -458,8 +458,8 @@ function product_search($query, $category, $offset, $limit,
                     ($category == "all")) {
                 $blog['product_id'] = $single->guid;
                 $options = array(
-                        'annotations_name' => 'generic_comment',
-                        'guid' => $single->$guid,
+                        'annotations_name' => 'product_comment',
+                        'guid' => $single->guid,
                         'limit' => $limit,
                         'pagination' => false,
                         'reverse_order_by' => true,
@@ -553,7 +553,7 @@ function product_post($product_id, $title, $category, $description, $price, $tag
             $error = elgg_echo("market:error:missing:$name");
             throw new InvalidParameterException("missing:$name");
         }
-       $post->$name = $value;
+       $post->name = $value;
     }
     elgg_load_library('market');
     if ($post->save()) {

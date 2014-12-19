@@ -325,6 +325,7 @@ function pay_checkout_direct($msg)
     $item->charge_card_name = "{$user->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
     $item->time_friendly = $time_friendly;
     $item->timestamp = $timestamp;
+
     $item->msg = $msg;
     $item->status = "paid";
 
@@ -441,6 +442,11 @@ function pay_checkout_direct($msg)
         register_error(elgg_echo("pay:charge:order:error"));
         throw new InvalidParameterException(elgg_echo("pay:charge:order:error"));
     }
+
+//$item->seller_info = $return['seller_info'];
+//$item->thinker_info = $return['thinker_info'];
+//$item->save();
+
     return $return;
 }
 expose_function('payment.checkout_direct',
@@ -737,7 +743,7 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
     if($context == "all"){
         $params = array(
             'types' => 'object',
-            'subtypes' => 'seller_order',
+            'subtypes' => 'buyer_order',
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
@@ -745,18 +751,18 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
     } else if(($context == "mine") || ($context ==  "user")){
         $params = array(
             'types' => 'object',
-            'subtypes' => 'seller_order',
+            'subtypes' => 'buyer_order',
             'owner_guid' => $user->guid,
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
         );
     } else {
-        throw new InvalidParameterException('pay_list_seller_order:contextnotvalid');
+        throw new InvalidParameterException('pay_list_buyer_order:contextnotvalid');
     }
     $latest_blogs = elgg_get_entities($params);
 
-
+/*
     $user = elgg_get_logged_in_user_entity();
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
@@ -770,6 +776,9 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
         'offset' => $offset,
     );
     $latest_blogs = elgg_get_entities($params);
+*/
+
+
     if($latest_blogs) {
         $return['offset'] = $offset;
         $display_number = 0;
@@ -786,6 +795,15 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
             }
 */
             $json = json_decode($single->msg, true);
+
+
+            $json['order_info']['charge_card_name'] = $single->charge_card_name;
+            $json['order_info']['time_friendly'] = $single->time_friendly;
+            $json['order_info']['order_guid'] = $single->object_guid;
+
+//            $json['seller_info'] = $single->seller_info;
+//            $json['thinker_info'] = $single->thinker_info;
+
             $return['msg'][] = $json;
             $display_number ++;
         }

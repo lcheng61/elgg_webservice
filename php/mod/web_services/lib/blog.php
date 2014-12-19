@@ -321,6 +321,8 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
             'pagination' => false,
             'reverse_order_by' => true,
         );
+    } else {
+        throw new InvalidParameterException('registration:typenamenotvalid');
     }
     $comments = elgg_get_annotations($options);
 
@@ -418,7 +420,7 @@ function blog_post_comment($guid, $text, $ranking, $type){
                 ))
             );
         }
-        $return['success']['message'] = elgg_echo('generic_comment:posted');
+        $return['success']['message'] = elgg_echo("$comment_type:posted");
     } else {
         $msg = elgg_echo('comment:$comment_type:failure');
         throw new InvalidParameterException($msg);

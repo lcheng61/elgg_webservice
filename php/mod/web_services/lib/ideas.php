@@ -74,9 +74,10 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             if (($single->ideascategory == $category) || 
                     ($category == "all")) {
                 $blog['tip_id'] = $single->guid;
+
                 $options = array(
-                        'annotations_name' => 'generic_comment',
-                        'guid' => $single->$guid,
+                        'annotations_name' => 'ideas_comment',
+                        'guid' => $single->guid,
                         'limit' => $limit,
                         'pagination' => false,
                         'reverse_order_by' => true,
@@ -148,7 +149,7 @@ function tip_get_detail($tip_id) {
     $blog = get_entity($tip_id);
 
     $options = array(
-        'annotations_name' => 'generic_comment',
+        'annotations_name' => 'ideas_comment',
         'guid' => $tip_id,
         'limit' => 10,
         'pagination' => false,
@@ -618,8 +619,8 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
 
 
         $options = array(
-                'annotations_name' => 'generic_comment',
-                'guid' => $item->$guid,
+                'annotations_name' => 'ideas_comment',
+                'guid' => $item->guid,
                 'limit' => $limit,
                 'pagination' => false,
                 'reverse_order_by' => true,
@@ -702,8 +703,8 @@ function ideas_search($query, $category, $offset, $limit,
                     ($category == "all")) {
                 $blog['tip_id'] = $single->guid;
                 $options = array(
-                        'annotations_name' => 'generic_comment',
-                        'guid' => $single->$guid,
+                        'annotations_name' => 'ideas_comment',
+                        'guid' => $single->guid,
                         'limit' => $limit,
                         'pagination' => false,
                         'reverse_order_by' => true,
@@ -769,7 +770,7 @@ expose_function('ideas.search',
 function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
     $market = get_entity($product_id);
     $options = array(
-        'annotations_name' => 'generic_comment',
+        'annotations_name' => 'ideas_comment',
         'guid' => $product_id,
         'limit' => $limit,
         'pagination' => false,
@@ -792,7 +793,7 @@ function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
             $return[] = $comment;
         }
     } else {
-        $msg = elgg_echo('generic_comment:none');
+        $msg = elgg_echo('ideas_comment:none');
         throw new InvalidParameterException($msg);
     }
     return $return;
