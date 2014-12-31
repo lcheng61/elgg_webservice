@@ -926,11 +926,11 @@ function user_request_lost_password($username) {
                 $return['message'] = elgg_echo('user:password:resetreq:success');
         } else {
                 register_error(elgg_echo('user:password:resetreq:fail'));
-                $return['message'] = elgg_echo('user:password:resetreq:fail');
+                throw new InvalidParameterException(elgg_echo('user:password:resetreqfail'));
         }
     } else {
         register_error(elgg_echo('user:username:notfound', array($username)));
-        $return['message'] = elgg_echo('user:username:notfound', array($username));
+        throw new InvalidParameterException(elgg_echo('user:username:notfound'));
     }
     return $return;
 }

@@ -316,13 +316,13 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
         }  
         $options = array(
             'annotations_name' => $comment_type,
-            'owner_guid' => $user->guid,
+            'annotation_owner_guid' => $user->guid,
             'limit' => $limit,
             'pagination' => false,
             'reverse_order_by' => true,
         );
     } else {
-        throw new InvalidParameterException('registration:typenamenotvalid');
+        throw new InvalidParameterException('registration:contextnamenotvalid');
     }
     $comments = elgg_get_annotations($options);
 
@@ -331,10 +331,10 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
         foreach($comments as $single){
             $comment['guid'] = $single->id;
 
-            $comment_ranking = unserialize(strip_tags($single->value));
+            $comment_rate = unserialize(strip_tags($single->value));
 
-            $comment['description'] = $comment_ranking['text'];
-            $comment['ranking'] = $comment_ranking['ranking'];
+            $comment['description'] = $comment_rate['text'];
+            $comment['rate'] = $comment_rate['rate'];
         
             $owner = get_entity($single->owner_guid);
             $comment['review_user']['guid'] = $owner->guid;
@@ -356,7 +356,7 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
 }
 expose_function('blog.get_comments',
                 "blog_get_comments",
-                array(    'guid' => array ('type' => 'string', 'required' => false, 'default' => 0),
+                array(  'guid' => array ('type' => 'string', 'required' => false, 'default' => 0),
                         'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                         'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
                         'type' => array ('type' => 'int', 'required' => false, 'default' => 0),
@@ -373,36 +373,83 @@ expose_function('blog.get_comments',
  * @param int $guid blog guid
  * @param string $text
  * @param int $access_id
- * @param int $ranking
+ * @param int $rate
  * @param int $type  (0: generic_comment; 1: product_comment; 2: ideas_comment)
  *
  * @return array
  */                    
-function blog_post_comment($guid, $text, $ranking, $type){
+function blog_post_comment($guid, $text, $rate, $type){
     
     $entity = get_entity($guid);
     $user = elgg_get_logged_in_user_entity();
 
-    $comment['ranking'] = $ranking;
-    $comment['text'] = $text;
+    $num_comments = 0;
+    $old_rate = 0;
 
+    if ($type == 1) { // add rate for product comment
+        $comment['rate'] = $rate;
+        $comment['text'] = $text;
+    } else {
+        $comment = $text;
+    }
     if ($type == 0) {
         $comment_type = "generic_comment";
     } else if ($type == 1) {
         $comment_type = "product_comment";
+
+        $options = array(
+                'annotations_name' => 'product_comment',
+                'guid' => $entity->guid,
+                'limit' => 0,
+                'pagination' => false,
+                'reverse_order_by' => true,
+                );
+
+        $comments = elgg_get_annotations($options);
+        $num_comments = count($comments);
+        $old_rate = $entity->rate;
     } else if ($type == 2) {
         $comment_type = "ideas_comment";
     } else {
         throw new InvalidParameterException("blog:comment_type");
     }
 
-    $annotation = create_annotation($entity->guid,
-        $comment_type,
-        serialize($comment),
-        "",
-        $user->guid,
-        $entity->access_id);
+    // for product, we only allow one comment.
+    if (($type == 1) && elgg_annotation_exists($entity->guid, $comment_type, $user->guid)) {
+        // get and update the existing comment.
+        $options = array(
+            'annotations_name' => $comment_type,
+            'annotation_owner_guid' => $user->guid,
+            'limit' => 1,
+            'pagination' => false,
+            'reverse_order_by' => true,
+        );
 
+        $my_comment = elgg_get_annotations($options);
+
+        if(!$my_comment){
+            throw new InvalidParameterException("blog:comment:update:null");
+	}
+
+        $annotation = update_annotation($my_comment[0]->id,
+            $comment_type,
+            serialize($comment),
+            "",
+            $user->guid,
+            $entity->access_id);
+        // update overall product rate
+        $entity->rate = ($entity->rate * $num_comments - $old_rate + $rate) / $num_comments;
+        $entity->save();
+    } else {
+        $annotation = create_annotation($entity->guid,
+            $comment_type,
+            serialize($comment),
+            "",
+            $user->guid,
+            $entity->access_id);
+        $entity->rate = ($entity->rate * $num_comments + $rate) / ($num_comments + 1);
+        $entity->save();
+    }
     if($annotation){
         // notify if poster wasn't owner
         if ($entity->owner_guid != $user->guid) {
@@ -431,10 +478,10 @@ expose_function('blog.post_comment',
                 "blog_post_comment",
                 array(    'guid' => array ('type' => 'int'),
                           'text' => array ('type' => 'string'),
-                          'ranking' => array ('type' => 'float', 'required' => false, 'default' => 0),
+                          'rate' => array ('type' => 'float', 'required' => false, 'default' => 0),
                           'type' => array ('type' => 'int', 'required' => false, 'default' => 0),
                     ),
-                "Post a comment with ranking on a blog post",
+                "Post a comment with rate on a blog post",
                 'POST',
                 true,
                 true);

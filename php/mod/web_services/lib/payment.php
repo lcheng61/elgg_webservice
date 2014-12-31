@@ -62,6 +62,7 @@ function stripe_card_add($token, $msg)
         $return['message'] = elgg_echo('stripe:cards:add:success');
 	$return['id'] = $card->id;
         $return['label'] = "{$card->brand}-{$card->last4} ({$card->exp_month} / {$card->exp_year})";
+        $return['last4'] = $card->last4;
 
 /* delete all cards, for debugging
         $cards = $stripe->getCards($user->guid, 100);
@@ -322,7 +323,9 @@ function pay_checkout_direct($msg)
 
     $item->object_guid = $charge['id'];
     $card = $charge['card'];
-    $item->charge_card_name = "{$user->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
+//    $item->charge_card_name = "{$user->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
+    $item->charge_card_name = $card['last4'];
+
     $item->time_friendly = $time_friendly;
     $item->timestamp = $timestamp;
 
@@ -393,45 +396,47 @@ function pay_checkout_direct($msg)
   		    $seller_item['product_quantity'] = $product_value['item_number'];
                     $seller_item['avatar_url'] = get_entity_icon_url($seller, 'small');
    		    $seller_item['shipping_address'] = $seller_order->shipping_address;
-
                 }
                 $person_info['seller_orders'][] = $seller_item;
 
                 // find the tip owner (if exist) and create the tip owner's credit object, XXX
-		$thinker_order = new ElggObject();
-                $thinker_order->type = 'object';
-                $thinker_order->subtype = "thinker_order";
-		$thinker_order->seller_guid = $seller_order->seller_guid;
-		$thinker_order->seller_order_guid = $seller_order->guid;
-		$thinker_order->buyer_order_guid = $item->guid;
-                $thinker_order->buyer_guid = $user->guid;
-                $thinker_order->product_guid = $product_value['product_id'];
-		$thinker_order->product_name = $product_value['product_name'];
-		$thinker_order->product_image_url = $product_value['product_image_url'];
-                $thinker_order->thinker_guid = $product_value['thinker_id'];
-                $thinker_order->thinker_idea_guid = $product_value['thinker_idea_guid'];
-		$thinker_order->time_friendly = $time_friendly;
-		$thinker_order->timestamp = $timestamp;
-		$thinker_order->status = "paid";
+                if ($product_value['thinker_id'] && $product_value['thinker_idea_id']) {
 
-                $thinker = get_user($product_value['thinker_id']);
-		                
-                $thinker_item = "";
-                if ($thinker_order->save()) {
-       	            $thinker_item['order_id'] = $thinker_order->guid;
+		    $thinker_order = new ElggObject();
+                    $thinker_order->type = 'object';
+                    $thinker_order->subtype = "thinker_order";
+		    $thinker_order->seller_guid = $seller_order->seller_guid;
+		    $thinker_order->seller_order_guid = $seller_order->guid;
+		    $thinker_order->buyer_order_guid = $item->guid;
+                    $thinker_order->buyer_guid = $user->guid;
+                    $thinker_order->product_guid = $product_value['product_id'];
+		    $thinker_order->product_name = $product_value['product_name'];
+		    $thinker_order->product_image_url = $product_value['product_image_url'];
+                    $thinker_order->thinker_guid = $product_value['thinker_id'];
+                    $thinker_order->thinker_idea_guid = $product_value['thinker_idea_id'];
+		    $thinker_order->time_friendly = $time_friendly;
+		    $thinker_order->timestamp = $timestamp;
+		    $thinker_order->status = "paid";
 
-                    // send email, format it later
-                    $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you");
-      	            $thinker_item['email_sent'] = $thinker->email;
-                    $thinker_item['time_friendly'] = $time_friendly;
-                    $thinker_item['timestamp'] = $timestamp;
-                    $thinker_item['product_name'] = $product_value['product_name'];
-                    $thinker_item['product_image_url'] = $product_value['product_image_url'];
-                    $thinker_item['product_price'] = $product_value['product_price'];
-                    $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
-                    $thinker_item['thinker_idea_guid'] = $product_value['thinker_idea_guid'];
+                    $thinker = get_user($product_value['thinker_id']);
+                
+                    $thinker_item = "";
+                    if ($thinker_order->save()) {
+       	                $thinker_item['order_id'] = $thinker_order->guid;
+
+                        // send email, format it later
+                        $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you");
+      	                $thinker_item['email_sent'] = $thinker->email;
+                        $thinker_item['time_friendly'] = $time_friendly;
+                        $thinker_item['timestamp'] = $timestamp;
+                        $thinker_item['product_name'] = $product_value['product_name'];
+                        $thinker_item['product_image_url'] = $product_value['product_image_url'];
+                        $thinker_item['product_price'] = $product_value['product_price'];
+                        $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
+                        $thinker_item['thinker_idea_id'] = $product_value['thinker_idea_id'];
+                    }
+                    $person_info['thinker_info'][] = $thinker_item;
                 }
-                $person_info['thinker_info'][] = $thinker_item;
             } // products loop
             $seller_info['products'][] = $person_info;
             $person_info = "";

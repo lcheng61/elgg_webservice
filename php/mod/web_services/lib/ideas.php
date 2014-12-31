@@ -39,6 +39,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'offset' => $offset,
             );
     }
+
     if($context == "mine" || $context ==  "user"){
         $params = array(
             'types' => 'object',
@@ -74,7 +75,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             if (($single->ideascategory == $category) || 
                     ($category == "all")) {
                 $blog['tip_id'] = $single->guid;
-
+/*
                 $options = array(
                         'annotations_name' => 'ideas_comment',
                         'guid' => $single->guid,
@@ -85,6 +86,16 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
 
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
+*/
+//                 $num_comments = $single->getAnnotationsSum('ideas_comment');
+                 $comments = $single->getAnnotations(
+                     'ideas_comment',    // The type of annotation
+                     0,   // The number to return
+                     0,  // Any indexing offset
+                     'asc'   // 'asc' or 'desc' (default 'asc')
+                 );
+                 $num_comments = count($comments);
+
 
                  $display_ideas_number++;
                  $blog['tip_title'] = $single->title;
@@ -148,6 +159,7 @@ function tip_get_detail($tip_id) {
 
     $blog = get_entity($tip_id);
 
+/*
     $options = array(
         'annotations_name' => 'ideas_comment',
         'guid' => $tip_id,
@@ -157,6 +169,16 @@ function tip_get_detail($tip_id) {
     );
     $comments = elgg_get_annotations($options);
     $num_comments = count($comments);
+*/
+//    $num_comments = $blog->getAnnotationsSum('ideas_comment');
+
+                 $comments = $blog->getAnnotations(
+                     'ideas_comment',    // The type of annotation
+                     0,   // The number to return
+                     0,  // Any indexing offset
+                     'asc'   // 'asc' or 'desc' (default 'asc')
+                 );
+                 $num_comments = count($comments);
 
 
     if (!elgg_instanceof($blog, 'object', 'ideas')) {
@@ -311,6 +333,9 @@ function ideas_post_tip($message, $idea_id)
     foreach ($json['tip_pages'] as $page) {
         if ($page['tip_image_local']) {
             if ($page['tip_image_local'] == "true") {
+                if ($image_num > 10) {
+                    break;
+                }
 	        $file_name = "tip_image_local_".$image_num;
 
 	        // upload image
@@ -318,14 +343,10 @@ function ideas_post_tip($message, $idea_id)
 	            $imgdata = get_uploaded_file($file_name);
 		    ideas_add_image($post, $imgdata, $image_num);
 
-                    $json['tip_pages'][$page_num]['tip_image_local'] =
+                    $json['tip_pages'][$page_num]['tip_image_url'] =
                             elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
 
                     $img_item[] = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
-		    if ($image_num >= 11) {
-                        break;
-                    }
-                    $image_num ++;
 	        }
 	    } else {
                 $img_item[] = "";
@@ -334,6 +355,7 @@ function ideas_post_tip($message, $idea_id)
             $img_item[] = "";
 	}
 	$page_num ++;
+        $image_num ++;
     }
     $post->tip_pages = json_encode($json['tip_pages']);
     $return['tip_pages'] = $post->tip_pages;
@@ -612,12 +634,12 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
     $return['products_number'] = $tip_obj->countEntitiesFromRelationship("sponsor", false);
     $items = $tip_obj->getEntitiesFromRelationship("sponsor", /*reverse_relation*/false, $limit, $offset);
     foreach ($items as $item) {
-        $product_info['id'] = $item->guid;
-        $product_info['name'] = $item->title;
+        $product_info['product_id'] = $item->guid;
+        $product_info['product_name'] = $item->title;
         $product_info['product_price'] = floatval($item->price);
         $product_info['product_category'] = $item->marketcategory;
 
-
+/*
         $options = array(
                 'annotations_name' => 'ideas_comment',
                 'guid' => $item->guid,
@@ -627,6 +649,16 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
         );
         $comments = elgg_get_annotations($options);
         $num_comments = count($comments);
+*/
+//        $num_comments = $item->getAnnotationsSum('product_comment');
+                 $comments = $item->getAnnotations(
+                     'product_comment',    // The type of annotation
+                     0,   // The number to return
+                     0,  // Any indexing offset
+                     'asc'   // 'asc' or 'desc' (default 'asc')
+                 );
+                 $num_comments = count($comments);
+
 
         $product_info['tips_number'] = $item->tips_number;
         //XXX: hard-code sold_count;		 		 
@@ -702,6 +734,7 @@ function ideas_search($query, $category, $offset, $limit,
             if (($single->ideascategory == $category) || 
                     ($category == "all")) {
                 $blog['tip_id'] = $single->guid;
+/*
                 $options = array(
                         'annotations_name' => 'ideas_comment',
                         'guid' => $single->guid,
@@ -712,6 +745,17 @@ function ideas_search($query, $category, $offset, $limit,
 
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
+*/
+//                 $num_comments = $single->getAnnotationsSum('ideas_comment');
+
+                 $comments = $single->getAnnotations(
+                     'ideas_comment',    // The type of annotation
+                     0,   // The number to return
+                     0,  // Any indexing offset
+                     'asc'   // 'asc' or 'desc' (default 'asc')
+                 );
+                 $num_comments = count($comments);
+
 
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
@@ -757,55 +801,4 @@ expose_function('ideas.search',
                 false);
 
 
-/**
- * Web service to retrieve comments on a product post
- *
- * @param string $guid market product guid
- * @param string $limit    Number of users to return
- * @param string $offset   Indexing offset, if any
- *
- * @return array
- */
-/*                    
-function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
-    $market = get_entity($product_id);
-    $options = array(
-        'annotations_name' => 'ideas_comment',
-        'guid' => $product_id,
-        'limit' => $limit,
-        'pagination' => false,
-        'reverse_order_by' => true,
-    );
-    $comments = elgg_get_annotations($options);
 
-    if($comments){
-        foreach($comments as $single){
-            $comment['guid'] = $single->id;
-            $comment['description'] = strip_tags($single->value);
-        
-            $owner = get_entity($single->owner_guid);
-            $comment['owner']['guid'] = $owner->guid;
-            $comment['owner']['name'] = $owner->name;
-            $comment['owner']['username'] = $owner->username;
-            $comment['owner']['avatar_url'] = get_entity_icon_url($owner,'small');
-        
-            $comment['time_created'] = (int)$single->time_created;
-            $return[] = $comment;
-        }
-    } else {
-        $msg = elgg_echo('ideas_comment:none');
-        throw new InvalidParameterException($msg);
-    }
-    return $return;
-}
-expose_function('product.get_comments_by_id',
-    "product_get_comments_by_id",
-    array('product_id' => array ('type' => 'string'),
-          'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
-          'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
-         ),
-    "Get comments for a market post",
-    'GET',
-    false,
-    false);    
-*/

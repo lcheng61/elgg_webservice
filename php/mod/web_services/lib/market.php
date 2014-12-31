@@ -22,6 +22,15 @@
  */
 
 function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $category, $username) {
+
+    if($context == "mine" && !get_loggedin_user()){
+        throw new InvalidParameterException('registration:minenotvalid');
+    }
+
+    if($context == "user" && $username == ""){
+        throw new InvalidParameterException('registration:usernamenotvalid');
+    }
+
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -30,6 +39,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
             throw new InvalidParameterException('registration:usernamenotvalid');
 	}
     }
+
     if($context == "all"){
         $params = array(
             'types' => 'object',
@@ -75,16 +85,15 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
             if (($single->marketcategory == $category) || 
                     ($category == "all")) {
                 $blog['product_id'] = $single->guid;
-                $options = array(
-                        'annotations_name' => 'product_comment',
-                        'guid' => $single->guid,
-                        'limit' => $limit,
-                        'pagination' => false,
-                        'reverse_order_by' => true,
-                        );
 
-                 $comments = elgg_get_annotations($options);
-                 $num_comments = count($comments);
+                $comments = $single->getAnnotations(
+                     'product_comment',    // The type of annotation
+                     0,   // The number to return
+                     0,  // Any indexing offset
+                     'asc'   // 'asc' or 'desc' (default 'asc')
+                );
+                $num_comments = count($comments);
+//                   $num_comments = $single->getAnnotationsSum('product_comment');
 
                  $display_product_number++;
                  $blog['product_name'] = $single->title;
@@ -93,6 +102,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
 		 //XXX: hard-code sold_count;		 		 
                  $single->sold_count = 0;
                  $blog['sold_number'] = $single->sold_count;
+                 $blog['rate'] = $single->rate;
                  $blog['product_category'] = $single->marketcategory;
 
                  $post_images = unserialize($single->images);
@@ -188,13 +198,14 @@ function product_get_detail($product_id) {
     }
 
     $return['content'] = strip_tags($blog->description);
+    $return['product_id'] = $product_id;
     $return['product_price'] = floatval($blog->price);
     $return['product_description'] = $blog->description;
 
     $return['category'] = $blog->marketcategory;
     $return['quantity'] = $blog->quantity;
     $return['sold_number'] = $blog->sold_count;
-
+    $return['rate'] = $blog->rate;
 
     $owner = get_entity($blog->owner_guid);
     $return['product_seller']['user_id'] = $owner->guid;
@@ -220,11 +231,29 @@ function product_get_detail($product_id) {
 
     $return['likes_number'] = intval(likes_count(get_entity($product_id)));
     $return['tips_number'] = $blog->tips_number;
-    $return['reviews_number'] = 0;
 
-// to add
-    $return['rating'] = 0;
-    $return['rating_number'] = 0;
+/*
+    $options = array(
+        'annotations_name' => 'product_comment',
+            'guid' => $single->guid,
+            'limit' => $limit,
+            'pagination' => false,
+            'reverse_order_by' => true,
+               );
+    $return['reviews_number'] = count(elgg_get_annotations($options));
+*/
+
+$comments = $blog->getAnnotations(
+    'product_comment',    // The type of annotation
+     0,   // The number to return
+     0,  // Any indexing offset
+    'asc'   // 'asc' or 'desc' (default 'asc')
+);
+    $return['reviews_number'] = count($comments);
+
+//    $return['reviews_number'] = $blog->getAnnotationsSum('product_comment');
+    
+    $return['rate'] = $blog->rate;
 
     return $return;
 }
@@ -348,7 +377,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
                 $options = array(
                         'annotations_name' => 'product_comment',
                         'guid' => $id,
-                        'limit' => $limit,
+                        'limit' => 0,
                         'pagination' => false,
                         'reverse_order_by' => true,
                         );
@@ -460,7 +489,7 @@ function product_search($query, $category, $offset, $limit,
                 $options = array(
                         'annotations_name' => 'product_comment',
                         'guid' => $single->guid,
-                        'limit' => $limit,
+                        'limit' => 0,
                         'pagination' => false,
                         'reverse_order_by' => true,
                         );
@@ -541,6 +570,7 @@ function product_post($product_id, $title, $category, $description, $price, $tag
         'tags' => string_to_tag_array($tags),
         'tips_number' => 0,
         'quantity' => $quantity,
+        'rate' => 0,
     );
 
     // fail if a required entity isn't set
@@ -553,12 +583,13 @@ function product_post($product_id, $title, $category, $description, $price, $tag
             $error = elgg_echo("market:error:missing:$name");
             throw new InvalidParameterException("missing:$name");
         }
-       $post->name = $value;
+       $post->$name = $value;
     }
     elgg_load_library('market');
+
     if ($post->save()) {
 	$product_id = $post->guid;
-        $values->product_id = $product_id;
+        $values['product_id'] = $product_id;
 
         // remove sticky form entries
         elgg_clear_sticky_form('market');
