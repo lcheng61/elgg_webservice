@@ -334,12 +334,33 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
             if ($type == 1) {
                 $comment_rate = unserialize(strip_tags($single->value));
                 $comment['description'] = $comment_rate['text'];
-                $comment['rate'] = $comment_rate['rate'];
+                $comment['rate'] = $comment_rate['rate'] ? $comment_rate['rate'] : "0";
             } else {
-                $comment['description'] = unserialize(strip_tags($single->value));
-                $comment['rate'] = 0;
+
+                $comment_rate = unserialize(strip_tags($single->value));
+                if ($comment_rate['text']) {
+                    $comment['description'] = $comment_rate['text'];
+                } else {
+                    $comment['description'] = $comment_rate;
+                }
+                $comment['rate'] = "0";
             }
-        
+
+            $entity = get_entity($single->entity_guid);
+            $comment['entity']['guid'] = $single->entity_guid;
+            $comment['entity']['title'] = $entity->title;
+            if ($type == 1) { //product
+                $post_images = unserialize($entity->images);
+   	        $blog['images'] = null;
+                foreach ($post_images as $key => $value) {
+                    if ($value == 1) {
+                        $blog['images'][] = elgg_normalize_url("market/image/".$entity->guid."/$key/"."large/");
+                    } 
+                }
+                $comment['entity']['images'] = $blog['images'];
+            } else if ($type == 2) { // idea
+                $comment['entity']['images'] = $entity->tip_thumbnail_image_url;
+            }
             $owner = get_entity($single->owner_guid);
             $comment['review_user']['guid'] = $owner->guid;
             $comment['review_user']['name'] = $owner->name;

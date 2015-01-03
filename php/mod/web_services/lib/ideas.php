@@ -186,7 +186,7 @@ function tip_get_detail($tip_id) {
         return $return;
     }
 
-    $return['tip_title'] = htmlspecialchars($blog->title);
+    $return['tip_title'] = $blog->title;
     $return['tip_category'] = $blog->ideascategory;
     $return['tip_thumbnail_image_url'] = $blog->tip_thumbnail_image_url;
     $return['tip_id'] = $tip_id;
@@ -346,7 +346,8 @@ function ideas_post_tip($message, $idea_id)
 
             $json['tip_thumbnail_image_url'] =
                 elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
-                $return['tip_thumbnail_image_url'] = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
+            $return['tip_thumbnail_image_url'] = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
+            $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
         }
         
     }

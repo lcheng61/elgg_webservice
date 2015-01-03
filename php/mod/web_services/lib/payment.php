@@ -804,6 +804,7 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
 
             $json['order_info']['charge_card_name'] = $single->charge_card_name;
             $json['order_info']['time_friendly'] = $single->time_friendly;
+            $json['order_info']['timestamp'] = $single->timestamp;
             $json['order_info']['order_guid'] = $single->object_guid;
 
 //            $json['seller_info'] = $single->seller_info;

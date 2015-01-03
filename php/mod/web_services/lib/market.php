@@ -176,7 +176,8 @@ function product_get_detail($product_id) {
         return $return;
     }
 
-    $return['product_name'] = htmlspecialchars($blog->title);
+//    $return['product_name'] = htmlspecialchars($blog->title);
+    $return['product_name'] = $blog->title;
 
     $images = unserialize($blog->images);
 
