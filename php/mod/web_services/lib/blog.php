@@ -331,10 +331,14 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
         foreach($comments as $single){
             $comment['guid'] = $single->id;
 
-            $comment_rate = unserialize(strip_tags($single->value));
-
-            $comment['description'] = $comment_rate['text'];
-            $comment['rate'] = $comment_rate['rate'];
+            if ($type == 1) {
+                $comment_rate = unserialize(strip_tags($single->value));
+                $comment['description'] = $comment_rate['text'];
+                $comment['rate'] = $comment_rate['rate'];
+            } else {
+                $comment['description'] = unserialize(strip_tags($single->value));
+                $comment['rate'] = 0;
+            }
         
             $owner = get_entity($single->owner_guid);
             $comment['review_user']['guid'] = $owner->guid;
@@ -390,6 +394,10 @@ function blog_post_comment($guid, $text, $rate, $type){
         $comment['rate'] = $rate;
         $comment['text'] = $text;
     } else {
+/*
+        $comment['rate'] = $rate;
+        $comment['text'] = $text;
+*/
         $comment = $text;
     }
     if ($type == 0) {

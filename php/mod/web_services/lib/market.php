@@ -212,8 +212,12 @@ function product_get_detail($product_id) {
     $return['product_seller']['user_name'] = $owner->username;
     $return['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
     $return['product_seller']['is_seller'] = ($owner->is_seller == "true");
-    $return['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);;
-
+    $me = get_loggedin_user();
+    if ($me) {
+        $return['product_seller']['do_i_follow'] = user_is_friend($me->guid, $owner->guid);;
+    } else {
+        $return['product_seller']['do_i_follow'] = false;
+    }
 ///// check if the product has already been liked
     $like = elgg_get_annotation_from_id($product_id);
 

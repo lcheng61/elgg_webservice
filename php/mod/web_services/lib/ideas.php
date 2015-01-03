@@ -217,7 +217,14 @@ function tip_get_detail($tip_id) {
     $return['tip_author']['user_name'] = $owner->username;
     $return['tip_author']['is_seller'] = $owner->is_seller;
     $return['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
-    $return['tip_author']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
+
+    $me = get_loggedin_user();
+    if ($me) {
+        $return['tip_author']['do_i_follow'] = user_is_friend($me->guid, $owner->guid);;
+    } else {
+        $return['tip_author']['do_i_follow'] = false;
+    }
+
 
     $return['likes_number'] = likes_count(get_entity($tip_id));
     $return['comments_number'] = $num_comments;
@@ -329,6 +336,20 @@ function ideas_post_tip($message, $idea_id)
 
 
     elgg_load_library('ideas');
+
+    if ($json['tip_image_local_cover'] == "true") {
+        $file_name = "tip_image_local_cover";
+        // upload image
+        if ((isset($_FILES[$file_name]['name'])) && (substr_count($_FILES[$file_name]['type'],'image/'))) {
+            $imgdata = get_uploaded_file($file_name);
+	    ideas_add_image($post, $imgdata, "0");
+
+            $json['tip_thumbnail_image_url'] =
+                elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
+                $return['tip_thumbnail_image_url'] = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
+        }
+        
+    }
 
     foreach ($json['tip_pages'] as $page) {
         if ($page['tip_image_local']) {

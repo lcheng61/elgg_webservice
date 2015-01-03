@@ -134,16 +134,16 @@ function user_get_profile($username) {
     $friends = get_user_friends($user->guid, '' , 0, 0);
     $follower_number = 0;
     if($friends){
-        $follower_number = count($friends);
-    }
-    $profile_info['follower_number'] = $follower_number;
-
-    $friends = get_user_friends_of($user->guid, '' , 0, 0);
-    $following_number = 0;
-    if($friends) {
         $following_number = count($friends);
     }
     $profile_info['following_number'] = $following_number;
+
+    $friends = get_user_friends_of($user->guid, '' , 0, 0);
+    $follower_number = 0;
+    if($friends) {
+        $follower_number = count($friends);
+    }
+    $profile_info['follower_number'] = $follower_number;
     
         $options = array(
                 'annotations_name' => 'generic_comment',
@@ -338,8 +338,11 @@ function user_register($name, $email, $username, $password) {
     } else {
         throw new RegistrationException(elgg_echo('registration:userexists'));
     }
-    return user_get_profile($username);
-//    return $return;
+    $return['username'] = $username;
+    $return['email'] = $email;
+    $return['name'] = $name;
+    $return['profile_fields'] = user_get_profile_fields();
+    return $return;
 }
 
 expose_function('user.register',
@@ -477,7 +480,7 @@ function user_get_friends($username, $limit = 10, $offset = 0) {
     if (!$user) {
         throw new InvalidParameterException(elgg_echo('registration:usernamenotvalid'));
     }
-    $friends = get_user_friends($user->guid, '' , $limit, $offset);
+    $friends = get_user_friends_of($user->guid, '' , $limit, $offset);
     
     if($friends){
         $return['total_number'] = count($friends);
@@ -488,7 +491,7 @@ function user_get_friends($username, $limit = 10, $offset = 0) {
             $friend['name'] = $single->name;
             $friend['is_seller'] = $single->is_seller;
             $friend['avatar_url'] = get_entity_icon_url($single,'small');
-            $friend['do_i_follow'] = user_is_friend($single->guid, $user->guid);
+            $friend['do_i_follow'] = user_is_friend($user->guid, $single->guid);
             $return['follower'][] = $friend;
         }
     } else {
@@ -527,7 +530,7 @@ function user_get_friends_of($username, $limit = 10, $offset = 0) {
     if (!$user) {
         throw new InvalidParameterException(elgg_echo('registration:usernamenotvalid'));
     }
-    $friends = get_user_friends_of($user->guid, '' , $limit, $offset);
+    $friends = get_user_friends($user->guid, '' , $limit, $offset);
 
     if($friends) {
         $return['total_number'] = count($friends);
