@@ -320,6 +320,56 @@ expose_function('user.check_username_availability',
                 false,
                 false);
 
+
+////////////// register new user by email and name only
+//
+//////////////
+
+function generateRandomString($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
+
+function user_register_email($email, $name="") {
+    $email = trim($email);
+
+    $username = str_replace("@", "_at_", $email);
+
+    if ($name == "") {
+        $name = $username;
+    }
+
+    $user = get_user_by_username($username);
+    $password = generateRandomString(20);
+
+    if (!$user) {
+        $return['success'] = true;
+        $return['guid'] = register_user($username, $password, $name, $email);
+    } else {
+        throw new RegistrationException(elgg_echo('registration:emailexists'));
+    }
+    $return['username'] = $username;
+    $return['email'] = $email;
+    $return['name'] = $name;
+    return $return;
+}
+
+expose_function('user.register.email',
+                "user_register_email",
+                array(
+                        'email' => array ('type' => 'string'),
+                        'name' => array ('type' => 'string', 'required' =>false),
+                    ),
+                "Register user by email only",
+                'POST',
+                false,
+                false);
+
 /**
  * Web service to register user
  *

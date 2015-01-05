@@ -429,6 +429,7 @@ function pay_checkout_direct($msg)
       	                $thinker_item['email_sent'] = $thinker->email;
                         $thinker_item['time_friendly'] = $time_friendly;
                         $thinker_item['timestamp'] = $timestamp;
+                        $thinker_item['product_id'] = $product_value['product_id'];
                         $thinker_item['product_name'] = $product_value['product_name'];
                         $thinker_item['product_image_url'] = $product_value['product_image_url'];
                         $thinker_item['product_price'] = $product_value['product_price'];
@@ -1085,7 +1086,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
                 $item['thinker']['thinker_name'] = $thinker->username;
                 $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'small');
 	    }
-	    if (!seller) {
+	    if (!$seller) {
 	        $item['seller']['guid'] = "";
 	        $item['seller']['name'] = "";
 	        $item['seller']['avatar'] = "";
@@ -1094,7 +1095,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
 	        $item['seller']['name'] = $seller->username;
 	        $item['seller']['avatar'] = get_entity_icon_url($seller, 'small');
             }
-	    if (!buyer) {
+	    if (!$buyer) {
 	        $item['buyer']['guid'] = "";
 	        $item['buyer']['name'] = "";
 	        $item['buyer']['avatar'] = "";
@@ -1104,7 +1105,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
 	        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'small');
             }
 
-	    if (!idea) {
+	    if (!$idea) {
 	        $item['idea']['guid'] = "";
 	        $item['idea']['name'] = "";
                 $item['idea']['tip_thumbnail_image_url'] = "";
@@ -1114,11 +1115,14 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
 		$item['idea']['tip_thumbnail_image_url'] = $idea->tip_thumbnail_image_url;
             }
 
+            $item['order']['time_friendly'] = $single->time_friendly;
+            $item['order']['timestamp'] = $single->timestamp;
+
+            $item['product']['id'] = $single->product_guid;
             $item['product']['name'] = $single->product_name;
             $item['product']['image_url'] = $single->product_image_url;
             $item['product']['price'] = $single->product_price;
 
-	    $item['idea']['name'] = $idea->title;
             $item['thinker_order_guid'] = $single->guid;
             $display_number ++;
             $return['thinker'][] = $item;
