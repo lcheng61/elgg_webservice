@@ -112,7 +112,7 @@ function user_get_profile($username) {
              'content' => $content,
 	     'filter' => elgg_view('liked_content/navigation/filter'),
     ));
-//    $profile_info['likes_items'] = json_decode(elgg_view_page($title, $layout), true);
+    $likes_items = json_decode(elgg_view_page($title, $layout), true);
 //~
 
 /* old get likes_number    
@@ -124,8 +124,8 @@ function user_get_profile($username) {
 */
 
 // new likes_number
-    $profile_info['likes_number'] = count($profile_info['likes_items']['object']['market']) + 
-            count($profile_info['likes_items']['object']['ideas']);
+    $profile_info['likes_number'] = count($likes_items['object']['market']) + 
+            count($likes_items['object']['ideas']);
 //~
 
 //    $profile_info['likes_total'] = $user->countAnnotations('likes');
@@ -145,16 +145,28 @@ function user_get_profile($username) {
     }
     $profile_info['follower_number'] = $follower_number;
     
-        $options = array(
-                'annotations_name' => 'generic_comment',
-                'guid' => $user->$guid,
-                'limit' => $limit,
+    $options = array(
+                'annotations_name' => 'ideas_comment',
+                'annotation_owner_guids' => array($user->guid),
+                'limit' => 0,
                 'pagination' => false,
                 'reverse_order_by' => true,
                 );
-        $comments = elgg_get_annotations($options);
-        $num_comments = count($comments);
-        $profile_info['comments_number'] = $num_comments;
+    $comments = elgg_get_annotations($options);
+    $num_comments = count($comments);
+    $profile_info['comments_number'] = $num_comments;
+
+    $options = array(
+                'annotations_name' => 'product_comment',
+                'annotation_owner_guids' => array($user->guid),
+                'limit' => 0,
+                'pagination' => false,
+                'reverse_order_by' => true,
+                );
+    $comments = elgg_get_annotations($options);
+    $num_comments = count($comments);
+    $profile_info['reviews_number'] = $num_comments;
+
 
     $profile_info['user_id'] = $user->guid;
     $profile_info['name'] = $user->name;
@@ -335,24 +347,67 @@ function generateRandomString($length = 10) {
     return $randomString;
 }
 
-function user_register_email($email, $name="") {
+function user_register_email($email, $msg="", $name="") {
     $email = trim($email);
+    $msg = trim($msg);
 
-    $username = str_replace("@", "_at_", $email);
-
-    if ($name == "") {
-        $name = $username;
-    }
-
-    $user = get_user_by_username($username);
+    $is_new_user = 0;
+    $username = substr($email, 0, strpos($email, '@'));
     $password = generateRandomString(20);
+    $user_array = get_user_by_email($email);
 
-    if (!$user) {
-        $return['success'] = true;
-        $return['guid'] = register_user($username, $password, $name, $email);
+    if (!$user_array) { // when email is not registered, check if username can be used.
+        $is_new_user = 1;
+        $user_array = get_user_by_username($username);
+        if ($user_array) { // if username is already used, change username
+            $username = $username."_".generateRandomString(10);
+        }
+        if ($name == "") {
+            $name = $username;
+        }
+        $user_guid = register_user($username, $password, $name, $email);
+        if(!user_guid) {
+            throw new RegistrationException(elgg_echo('registration:usercannotregister'));
+        }
     } else {
-        throw new RegistrationException(elgg_echo('registration:emailexists'));
+        $user = $user_array[0];
+        $name = $user->name;
+        $user_guid = $user->guid;
     }
+    $owner = get_entity($user_guid);
+    if ($is_new_user) {
+        $owner->email_subscriber = true;
+        if(!$owner->save()) {
+            throw new RegistrationException(elgg_echo('registration:usercannotsave'));
+        }
+    }
+
+    if ($msg != "") {
+	$obj = new ElggObject();
+	$obj->subtype = "new_user_email";
+	$obj->owner_guid = $owner->guid;
+	$obj->access_id = ACCESS_PUBLIC;
+	$obj->method = "api";
+	$obj->description = $msg;
+//	$obj->title = elgg_substr(strip_tags($title), 0, 140);
+	$obj->status = 'published';
+//	$obj->comments_on = 'On';
+//	$obj->excerpt = strip_tags($excerpt);
+//	$obj->tags = strip_tags($tags);
+
+	$guid = $obj->save();
+return $guid;
+	add_to_river('river/object/blog/create',
+   	    'create',
+	    $owner->guid,
+	    $obj->guid
+	);
+        $return['msg_guid'] = $guid;
+    }
+
+    $return['success'] = true;
+    $return['is_new_user'] = $is_new_user;
+    $return['guid'] = $user_guid;
     $return['username'] = $username;
     $return['email'] = $email;
     $return['name'] = $name;
@@ -363,6 +418,7 @@ expose_function('user.register.email',
                 "user_register_email",
                 array(
                         'email' => array ('type' => 'string'),
+                        'msg' => array ('type' => 'string', 'required' =>false),
                         'name' => array ('type' => 'string', 'required' =>false),
                     ),
                 "Register user by email only",
@@ -381,13 +437,23 @@ expose_function('user.register.email',
  * @return bool
  */           
 function user_register($name, $email, $username, $password) {
+
+    $username = trim($username);
+    $email = trim($email);
+    $name = trim($name);
+
     $user = get_user_by_username($username);
+    if ($name == "") {
+        $name = $username;
+    }
+
     if (!$user) {
         $return['success'] = true;
         $return['guid'] = register_user($username, $password, $name, $email);
     } else {
         throw new RegistrationException(elgg_echo('registration:userexists'));
     }
+
     $return['username'] = $username;
     $return['email'] = $email;
     $return['name'] = $name;
@@ -397,7 +463,7 @@ function user_register($name, $email, $username, $password) {
 
 expose_function('user.register',
                 "user_register",
-                array('name' => array ('type' => 'string'),
+                array('name' => array ('type' => 'string', 'required' => false),
                         'email' => array ('type' => 'string'),
                         'username' => array ('type' => 'string'),
                         'password' => array ('type' => 'string'),

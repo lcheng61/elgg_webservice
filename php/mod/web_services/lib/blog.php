@@ -230,6 +230,7 @@ function blog_get_post($guid, $username) {
     $return = array();
     $blog = get_entity($guid);
 
+//    if (!elgg_instanceof($blog, 'object', 'new_user_email')) {
     if (!elgg_instanceof($blog, 'object', 'blog')) {
         $return['content'] = elgg_echo('blog:error:post_not_found');
         return $return;
@@ -345,29 +346,32 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
                 }
                 $comment['rate'] = "0";
             }
-
             $entity = get_entity($single->entity_guid);
-            $comment['entity']['guid'] = $single->entity_guid;
-            $comment['entity']['title'] = $entity->title;
-            if ($type == 1) { //product
-                $post_images = unserialize($entity->images);
-   	        $blog['images'] = null;
-                foreach ($post_images as $key => $value) {
-                    if ($value == 1) {
-                        $blog['images'][] = elgg_normalize_url("market/image/".$entity->guid."/$key/"."large/");
-                    } 
+
+            if ($entity) {
+                $comment['entity']['guid'] = $single->entity_guid;
+                $comment['entity']['title'] = $entity->title;
+                if ($type == 1) { //product
+                    $post_images = unserialize($entity->images);
+   	            $blog['images'] = null;
+                    foreach ($post_images as $key => $value) {
+                        if ($value == 1) {
+                            $blog['images'][] = elgg_normalize_url("market/image/".$entity->guid."/$key/"."large/");
+                        } 
+                    }
+                    $comment['entity']['images'] = $blog['images'];
+                } else if ($type == 2) { // idea
+                    $comment['entity']['images'] = $entity->tip_thumbnail_image_url;
                 }
-                $comment['entity']['images'] = $blog['images'];
-            } else if ($type == 2) { // idea
-                $comment['entity']['images'] = $entity->tip_thumbnail_image_url;
             }
             $owner = get_entity($single->owner_guid);
-            $comment['review_user']['guid'] = $owner->guid;
-            $comment['review_user']['name'] = $owner->name;
-            $comment['review_user']['username'] = $owner->username;
-            $comment['review_user']['avatar_url'] = get_entity_icon_url($owner,'small');
-            $comment['review_user']['is_seller'] = $owner->is_seller;
-        
+            if ($owner) {
+                $comment['review_user']['guid'] = $owner->guid;
+                $comment['review_user']['name'] = $owner->name;
+                $comment['review_user']['username'] = $owner->username;
+                $comment['review_user']['avatar_url'] = get_entity_icon_url($owner,'small');
+                $comment['review_user']['is_seller'] = $owner->is_seller;
+            }        
             $comment['time_created'] = (int)$single->time_created;
             $return['reviews'][] = $comment;
             $total_num ++;

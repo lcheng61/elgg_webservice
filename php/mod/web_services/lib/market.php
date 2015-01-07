@@ -564,7 +564,7 @@ function product_post($product_id, $title, $category, $description, $price, $tag
     }
 
     $values = array(
-        'title' => htmlspecialchars($title, ENT_QUOTES, 'UTF-8'),
+        'title' => $title, //htmlspecialchars($title, ENT_QUOTES, 'UTF-8'),
         'marketcategory' => $category,
         'market_type' => 'sell',
         'custom' => '',
