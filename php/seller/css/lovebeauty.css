@@ -1,0 +1,151 @@
+
+
+.sortable-ghost {
+	opacity: .2;
+}
+.tile {
+	/*width: 30%;!important;*/
+	width: 500px;!important;
+	min-width: 245px;
+	/*color: #FF7270;*/
+	
+	color: #000000;
+	padding: 10px 30px;
+	text-align: center;
+	margin-top: 15px;
+	margin-left: 5px;
+	margin-right: 30px;
+	background-color: #fff;
+	display: inline-block;
+	/*Dirty IE Hack*/
+	
+	
+    overflow-y: auto;
+    
+	zoom: 1;
+	vertical-align: top;
+}
+.tile__name {
+	cursor: move;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #FF7373;
+}
+.tile__list {
+	margin-top: 10px;
+}
+.tile__list:last-child {
+	margin-right: 0;
+	min-height: 80px;
+}
+.tile__list img {
+	cursor: move;
+	margin: 10px;
+	border-radius: 100%;
+}
+.panel-body img {
+	cursor: move;
+	margin: 10px;
+	/*border-radius: 100%;*/
+	display: inline-block;
+}
+textarea {
+	resize: none;
+}
+#editable {} #editable div {
+	position: relative;
+}
+#editable i, .sortable i {
+	-webkit-transition: opacity .2s;
+	transition: opacity .2s;
+	/*opacity: 0;*/
+	display: block;
+	cursor: pointer;
+	color: #c00;
+	top: 0px;
+	right: 5px;
+	position: absolute;
+	font-style: normal;
+	font-size: large;
+}
+#editable div:hover i {
+	opacity: 1;
+}
+
+
+.sortable {
+	margin-left: -40px;
+}
+
+
+.sortable ul {
+	/*display: block;*/
+	/*float: left;*/
+}
+
+.sortable li {
+	position: relative;
+	height: 50px;
+	list-style-type: none;
+   text-align: left;   
+}
+
+.sortable li img{
+	width: 50px;
+	height: 50px;
+	float: left;
+    margin-left: 0px;
+    margin-right: 20px;
+}
+
+.sortable li:hover i {
+	opacity: 1;
+}
+
+
+#filter {}
+	#filter button {
+		color: #fff;
+		width: 100%;
+		border: none;
+		outline: 0;
+		opacity: .5;
+		margin: 10px 0 0;
+		transition: opacity .1s ease;
+		cursor: pointer;
+		background: #5F9EDF;
+		padding: 10px 0;
+		font-size: 20px;
+	}
+		#filter button:hover {
+			opacity: 1;
+		}
+
+	#filter .block__list {
+		padding-bottom: 0;
+	}
+	
+	
+
+#divselktr {
+	width: 500px;
+}
+#expln {
+	font-family: Arial;
+	font-size: 0.8em;
+	margin: 160px 0 0
+}
+.multSelktrImg span {
+	position: relative;
+	top: 10px;
+	vertical-align: middle;
+	display: inline-flex;
+}
+.multSelktrImg input {
+	vertical-align: -2px;
+}
+.multSelktrImg img {
+	position: relative;
+	height: 50px;
+	margin: 2px 6px;
+	top: -10px;
+}
