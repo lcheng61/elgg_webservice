@@ -239,6 +239,23 @@ expose_function('payment.stripe.card_get_default',
                 true,
                 true);
 
+function pay_get_shipping_address()
+{
+    $user = elgg_get_logged_in_user_entity();
+    if (!$user) {
+        throw new InvalidParameterException('registration:usernamenotvalid');
+    }
+    return $user->shipping_address;
+}
+expose_function('payment.get_shipping_address',
+                "pay_get_shipping_address",
+                array(
+                    ),
+                "get the latest shipping address of logged in user",
+                'GET',
+                true,
+                true);
+
 /*
  * Directly check out the order and save the order.
  * It doesn't use "shopping basket"
@@ -261,7 +278,7 @@ function pay_checkout_direct($msg)
     $order_info['card'] = $json['card'];
     $order_info['description'] = $json['description'];
     $order_info['shipping_address'] = $json['order_info']['shipping_address'];
-
+  
     $order_info['shipping_method'] = $json['order_info']['shipping_method'];
     $order_info['coupon'] = $json['order_info']['coupon'];
 
@@ -272,6 +289,14 @@ function pay_checkout_direct($msg)
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
 
+    // saving shipping address to user profile
+    $my_address = $json['order_info']['shipping_address'];
+    $user->shipping_address = $my_address;
+    if (!$user->save()) {
+        $return['address_copied'] = false;
+    } else {
+        $return['address_copied'] = true;
+    }
     $stripe = new StripeClient();
     $customer = new StripeCustomer($user->guid);
 

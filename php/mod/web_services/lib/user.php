@@ -348,11 +348,18 @@ function generateRandomString($length = 10) {
 }
 
 function user_register_email($email, $msg="", $name="") {
+
     $email = trim($email);
     $msg = trim($msg);
 
     $is_new_user = 0;
     $username = substr($email, 0, strpos($email, '@'));
+    if (strlen($username) < 4) {
+        $username = str_replace("@", "_at_", $email);
+    }
+    if (strlen($username) < 4) {
+        throw new RegistrationException(elgg_echo('registration:emailtooshort'));
+    }
     $password = generateRandomString(20);
     $user_array = get_user_by_email($email);
 
@@ -376,13 +383,17 @@ function user_register_email($email, $msg="", $name="") {
     }
     $owner = get_entity($user_guid);
     if ($is_new_user) {
+        login($owner);
         $owner->email_subscriber = true;
         if(!$owner->save()) {
             throw new RegistrationException(elgg_echo('registration:usercannotsave'));
         }
+        logout();
     }
 
     if ($msg != "") {
+        // create a post with the current user's msg
+        login($owner);
 	$obj = new ElggObject();
 	$obj->subtype = "new_user_email";
 	$obj->owner_guid = $owner->guid;
@@ -396,15 +407,14 @@ function user_register_email($email, $msg="", $name="") {
 //	$obj->tags = strip_tags($tags);
 
 	$guid = $obj->save();
-return $guid;
 	add_to_river('river/object/blog/create',
    	    'create',
 	    $owner->guid,
 	    $obj->guid
 	);
         $return['msg_guid'] = $guid;
+        logout();
     }
-
     $return['success'] = true;
     $return['is_new_user'] = $is_new_user;
     $return['guid'] = $user_guid;
@@ -436,7 +446,8 @@ expose_function('user.register.email',
  *
  * @return bool
  */           
-function user_register($name, $email, $username, $password) {
+function user_register($name="", $email="", $username="", $password="") {
+
 
     $username = trim($username);
     $email = trim($email);
@@ -463,7 +474,7 @@ function user_register($name, $email, $username, $password) {
 
 expose_function('user.register',
                 "user_register",
-                array('name' => array ('type' => 'string', 'required' => false),
+                array('name' => array ('type' => 'string', 'required' => false, 'default' => ""),
                         'email' => array ('type' => 'string'),
                         'username' => array ('type' => 'string'),
                         'password' => array ('type' => 'string'),
