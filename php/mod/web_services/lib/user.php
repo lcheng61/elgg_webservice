@@ -448,7 +448,6 @@ expose_function('user.register.email',
  */           
 function user_register($name="", $email="", $username="", $password="") {
 
-
     $username = trim($username);
     $email = trim($email);
     $name = trim($name);
@@ -469,6 +468,8 @@ function user_register($name="", $email="", $username="", $password="") {
     $return['email'] = $email;
     $return['name'] = $name;
     $return['profile_fields'] = user_get_profile_fields();
+    $return['token'] = create_user_token($username, 527040);
+
     return $return;
 }
 
@@ -815,12 +816,12 @@ function user_upload_avatar($display_name)
     }
     if (!$owner || !($owner instanceof ElggUser) || !$owner->canEdit()) {
         register_error(elgg_echo('avatar:upload:fail'));
-        throw new InvalidParameterException("cannot_upload_avatar");
+        throw new InvalidParameterException("cannot_upload_avatar1");
     }
 
     if ($_FILES['avatar']['error'] != 0) {
 	register_error(elgg_echo('avatar:upload:fail'));
-        throw new InvalidParameterException("cannot_upload_avatar");
+        throw new InvalidParameterException("cannot_upload_avatar2");
     }
 
     $icon_sizes = elgg_get_config('icon_sizes');
@@ -829,6 +830,7 @@ function user_upload_avatar($display_name)
     // so we can do clean up if one fails.
     $files = array();
     foreach ($icon_sizes as $name => $size_info) {
+
         $resized = get_resized_image_from_uploaded_file('avatar', 
             $size_info['w'], $size_info['h'], $size_info['square'], 
             $size_info['upscale']);
@@ -838,17 +840,18 @@ function user_upload_avatar($display_name)
             $file = new ElggFile();
             $file->owner_guid = $guid;
             $file->setFilename("profile/{$guid}{$name}.jpg");
-                $file->open('write');
-                $file->write($resized);
-                $file->close();
-                $files[] = $file;
+            $file->open('write');
+            $file->write($resized);
+            $file->close();
+            $files[] = $file;
+
         } else {
             // cleanup on fail
             foreach ($files as $file) {
                 $file->delete();
             }
             register_error(elgg_echo('avatar:resize:fail'));
-            throw new InvalidParameterException("cannot_upload_avatar");
+            throw new InvalidParameterException("cannot_upload_avatar3");
 	}
     }
 
@@ -1034,6 +1037,31 @@ expose_function('user.logout',
                 true,
                 true);
 
+function user_change_username($new_username) {
+    if (!user_check_username_availability($new_username)) {
+        throw new RegistrationException(elgg_echo('change_username:usernameexists'));
+    }
+    if(!$new_username){
+        throw new InvalidParameterException('change_username:usernamenotvalid');
+    }
+    $user = get_loggedin_user();
+
+    $user->username = $new_username;
+    if (!$user->save()) {
+        throw new InvalidParameterException('change_username:cannotsave');
+    }
+    return "username changed";
+}
+expose_function('user.change_username',
+                "user_change_username",
+                array(
+                        'new_username' => array ('type' => 'string', 'required' => true, 'default' => null),
+                    ),
+                "Change username of the logged in user",
+                'POST',
+                true,
+                true);
+
 /////
 
 /**
@@ -1077,3 +1105,135 @@ expose_function('user.request_lost_password',
 
 
 
+/**
+ * Used to Pull in the latest avatar from facebook.
+ *
+ * @access public
+ * @param array $user
+ * @param string $file_location
+ * @return void
+ * Facility function and no API exposed
+ */
+function facebook_import_avatar($user, $file_location) {
+    global $CONFIG;
+    $tempfile=$CONFIG->dataroot.$user->getGUID().'img.jpg';
+    $imgContent = file_get_contents($file_location);
+    $fp = fopen($tempfile, "w");
+    fwrite($fp, $imgContent);
+    fclose($fp);
+    $sizes = array(
+        'topbar' => array(16, 16, TRUE),
+        'tiny' => array(25, 25, TRUE),
+        'small' => array(40, 40, TRUE),
+        'medium' => array(100, 100, TRUE),
+        'large' => array(200, 200, FALSE),
+        'master' => array(550, 550, FALSE),
+    );
+
+    $filehandler = new ElggFile();
+    $filehandler->owner_guid = $user->getGUID();
+    foreach ($sizes as $size => $dimensions)
+    {
+        $image = get_resized_image_from_existing_file(
+                $tempfile,
+                $dimensions[0],
+                $dimensions[1],
+                $dimensions[2]
+        );
+
+        $filehandler->setFilename("profile/$user->guid$size.jpg");
+        $filehandler->open('write');
+        $filehandler->write($image);
+        $filehandler->close();
+    }
+
+    // update user's icontime
+    $user->icontime = time();
+    return TRUE;
+}
+
+/**
+ * Used to create user with facebook data
+ *
+ * @access public
+ * @param array $fbData facebook data of user
+ * @return void
+ */
+function user_register_facebook($msg) {
+    $user = FALSE;
+
+    $fbData = json_decode($msg, true);
+
+    $facebook_users = elgg_get_entities_from_metadata(array(
+                                                    'type' => 'user',
+                                                    'metadata_name_value_pairs' => array(
+                                                            'name' => 'facebook_uid',
+                                                            'value' => $fbData['user_profile']['id'],
+                                                    )
+                                    ));
+    if (is_array($facebook_users) && count($facebook_users) == 1) {
+            // reuse existing account
+        $user = $facebook_users[0];
+
+        $username = $user->username; // $fbData['user_profile']['username'];
+        $token = create_user_token($username, 527040);
+        return $token;
+    }
+
+    // create new user
+    if (!$user) {
+        $email= $fbData['user_profile']['email'];
+        $users= get_user_by_email($email);
+
+        if(!$users) {
+            // Elgg-ify facebook credentials
+            if(!empty($fbData['user_profile']['username'])) {
+                $username = $fbData['user_profile']['username'];
+            } else {
+                $username = str_replace(' ', '', strtolower($fbData['user_profile']['name']));
+            }
+            $usernameTmp =$username;
+            while (get_user_by_username($username)) {
+                $username = $usernameTmp . '_' . rand(1000, 9999);
+            }
+            $password = generate_random_cleartext_password();
+            $name = $fbData['user_profile']['name'];
+            $user = new ElggUser();
+            $user->username = $username;
+            $user->name = $name;
+            $user->email = $email;
+            $user->access_id = ACCESS_PUBLIC;
+            $user->salt = generate_random_cleartext_password();
+            $user->password = generate_user_password($user, $password);
+            $user->owner_guid = 0;
+            $user->container_guid = 0;
+            $user->facebook_uid = $fbData['user_profile']['id'];
+            if (!$user->save()) {
+                register_error(elgg_echo('registerbad'));
+                throw new RegistrationException(elgg_echo('registration:facebook:cannotsaveuser'));
+            } else {
+                // send mail to user
+//                send_user_password_mail($email, $name, $username, $password);
+                // pull in facebook icon
+                $url = 'https://graph.facebook.com/' . $fbData['user_profile']['id'] .'/picture?type=large';
+                    facebook_import_avatar($user, $url);
+            }
+        } else {
+            // CL: if email is used before, then we don't copy facebook's data anymore. Sounds good ? XXX
+            $user= $users[0];
+            $token = create_user_token($user->username, 527040);
+            return $token;
+        }
+    }
+    $token = create_user_token($user->username, 527040);
+    return $token;
+}
+
+expose_function('user.register.facebook',
+                "user_register_facebook",
+                array('msg' => array ('type' => 'string', 'required' => true),
+                    ),
+                "Registration using Facebook",
+                'POST',
+                true,
+                false);

@@ -936,7 +936,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
                 $item['shipping_address'] = json_decode($single->shipping_address, true);
             }
 // XXX, credit_card is the only payment
-            $item['payment_method'] = "credit_card"; //$single->payment_method;
+            $item['payment_method'] = "credit"; //$single->payment_method;
             $item['charge_card_name'] = $single->charge_card_name;
             $item['purchased_time_friendly'] = $single->time_friendly;
             $item['purchased_timestamp'] = $single->timestamp;
