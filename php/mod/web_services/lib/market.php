@@ -21,7 +21,8 @@
  * @return array $file Array of files uploaded
  */
 
-function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $category, $username) {
+function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
+    $group_guid, $category, $username) {
 
     if($context == "mine" && !get_loggedin_user()){
         throw new InvalidParameterException('registration:minenotvalid');
@@ -102,6 +103,39 @@ function product_get_posts($context, $limit = 10, $offset = 0, $group_guid, $cat
 		 //XXX: hard-code sold_count;		 		 
                  $single->sold_count = 0;
                  $blog['sold_number'] = $single->sold_count;
+
+                 if ($from_seller_portal) {
+                     $product_id = $single->guid;
+                     $like = elgg_get_annotation_from_id($product_id);
+                     if (!$like) {
+                         $likes = elgg_get_annotations(array(
+                                 'guid' => $product_id,
+                                 'annotation_owner_guid' => elgg_get_logged_in_user_guid(),
+                                 'annotation_name' => 'likes',
+                         ));
+                         $like = $likes[0];
+                     }
+                     $blog['liked'] = ($like && $like->canEdit());
+                     $blog['likes_number'] = intval(likes_count(get_entity($product_id)));
+                     $blog['tips_number'] = $single->tips_number;
+
+                     $comments = $single->getAnnotations(
+                             'product_comment',    // The type of annotation
+                              0,   // The number to return
+                              0,  // Any indexing offset
+                             'asc'   // 'asc' or 'desc' (default 'asc')
+                     );
+                     $blog['reviews_number'] = count($comments);
+
+                     $blog['delivery_time'] = $single->delivery_time;
+                     $blog['shipping_fee'] = $single->shipping_fee;
+                     $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
+                     $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
+                     $blog['product_description'] = $single->description;
+                 } // if (from_seller_portal)
+
+                 $blog['quantity'] = $single->quantity;
+
                  $blog['rate'] = $single->rate;
                  $blog['product_category'] = $single->marketcategory;
 
@@ -149,6 +183,7 @@ expose_function('product.get_posts',
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
                       'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'username' => array ('type' => 'string', 'required' => false),
@@ -205,6 +240,14 @@ function product_get_detail($product_id) {
 
     $return['category'] = $blog->marketcategory;
     $return['quantity'] = $blog->quantity;
+
+///// seller portal used
+    $return['delivery_time'] = $blog->delivery_time;
+    $return['shipping_fee'] = floatval($blog->shipping_fee);
+    $return['free_shipping_quantity_limit'] = $blog->free_shipping_quantity_limit;
+    $return['free_shipping_cost_limit'] = $blog->free_shipping_cost_limit;
+/////~
+
     $return['sold_number'] = $blog->sold_count;
     $return['rate'] = $blog->rate;
 
@@ -544,7 +587,9 @@ expose_function('product.search',
                 true,
                 false);
 
-function product_post($product_id, $title, $category, $description, $price, $tags, $quantity)
+function product_post($product_id, $title, $category, $description,
+    $price, $tags, $quantity, $delivery_time, $shipping_fee,
+    $free_shipping_quantity_limit, $free_shipping_cost_limit)
 {
     $user = elgg_get_logged_in_user_entity();
 
@@ -575,6 +620,10 @@ function product_post($product_id, $title, $category, $description, $price, $tag
         'tags' => string_to_tag_array($tags),
         'tips_number' => 0,
         'quantity' => $quantity,
+        'delivery_time' => $delivery_time,
+        'shipping_fee' => $shipping_fee,
+        'free_shipping_quantity_limit' => $free_shipping_quantity_limit,
+        'free_shipping_cost_limit' => $free_shipping_cost_limit,
         'rate' => 0,
     );
 
@@ -655,6 +704,10 @@ expose_function('product.post',
                        'price' => array('type' => 'float', 'required' => false, 'default' => ''),
                        'tags' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'quantity' => array('type' => 'int', 'required' => false, 'default' => 0),
+                       'delivery_time' => array('type' => 'string', 'required' => false, 'default' => ""),
+                       'shipping_fee' => array('type' => 'float', 'required' => false, 'default' => 0),
+                       'free_shipping_quantity_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
+                       'free_shipping_cost_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
                      ),
                 "Post a product by seller",
                 "POST",
