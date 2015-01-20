@@ -118,6 +118,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                      $blog['liked'] = ($like && $like->canEdit());
                      $blog['likes_number'] = intval(likes_count(get_entity($product_id)));
                      $blog['tips_number'] = $single->tips_number;
+                     $blog['delivery_time'] = $single->delivery_time;
 
                      $comments = $single->getAnnotations(
                              'product_comment',    // The type of annotation
@@ -127,12 +128,11 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                      );
                      $blog['reviews_number'] = count($comments);
 
-                     $blog['delivery_time'] = $single->delivery_time;
-                     $blog['shipping_fee'] = $single->shipping_fee;
-                     $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
-                     $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
                      $blog['product_description'] = $single->description;
                  } // if (from_seller_portal)
+                 $blog['shipping_fee'] = $single->shipping_fee;
+                 $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
+                 $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
 
                  $blog['quantity'] = $single->quantity;
 
@@ -396,15 +396,21 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
         // Parse products string to extract its individual product guid's.
         $tip_id_array = explode(",", $product->tips);
 
-//        echo ("tip_id_array is $product->tips <br>");
-
-
+        $total_number = 0;
         foreach ($tip_id_array as $id) {
+
             $id = intval($id);
 //            echo ("tip_id = $id <br>");
-            $tip_obj = get_entity($id);
 
+
+            $tip_obj = get_entity($id);
             if ($tip_obj) { // if the tip id is a valid one
+/*
+                if (!elgg_instanceof($blog, 'object', 'ideas')) {
+		    continue;
+                }
+*/
+                $total_number ++;
 //                echo ("$id is valid <br>");
                 // print tip details here
                 
@@ -436,9 +442,10 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
                 $tip['comments_number'] = $num_comments;
                 $tip['products_number'] = $tip_obj->products_number;
                 $tip['time_created'] = (int)$tip_obj->time_created;
-                $return['products'][] = $tip;
+                $return['tips'][] = $tip;
             }
         }
+        $return['total_number'] = $total_number;
 
     } else {
         $msg = elgg_echo('product_comment:none');
@@ -479,7 +486,8 @@ function product_get_seller_other_posts($limit = 10,
     }
     $owner = get_entity($product_post->owner_guid);
     $seller_username = $owner->username;
-    $return = product_get_posts($context, $limit, $offset, 0, $category, $seller_username);
+
+    $return = product_get_posts($context, $limit, $offset, 0, 0, $category, $seller_username);
 
     return $return;
 
@@ -510,6 +518,28 @@ function product_search($query, $category, $offset, $limit,
         $entity_subtype, $owner_guid, $container_guid){
     
     $return = "";
+// get total number
+    $params = array(
+                    'query' => $query,
+                    'offset' => $offset,
+                    'limit' => 0,
+                    'sort' => $sort,
+                    'order' => $order,
+                    'search_type' => $search_type,
+                    'type' => $entity_type,
+                    'subtype' => $entity_subtype,
+                    'owner_guid' => $owner_guid,
+                    'container_guid' => $container_guid,
+                    );
+    $type = $entity_type;
+    $results = elgg_trigger_plugin_hook('search', $type, $params, array());
+    if ($results === FALSE) {
+        throw new InvalidParameterException("search engine returns error");
+    }
+    $return['total_number'] = $results['count'];
+
+// ~
+
     $params = array(
                     'query' => $query,
                     'offset' => $offset,

@@ -355,7 +355,10 @@ function pay_checkout_direct($msg)
     $item->timestamp = $timestamp;
 
     $item->msg = $msg;
-    $item->status = "paid";
+    $item->status = "Paid";
+    $item->shipping_vendor = "None";
+    $item->tracking_number = "None";
+    $item->shipping_speed = "None";
 
     if($item->save()){
         $return['card_name'] = $item->charge_card_name;
@@ -380,9 +383,12 @@ function pay_checkout_direct($msg)
 		    continue;
                 }
                 // decrease the product quantity
-                if ($product->quanity != 0) {
+                if ($product->quantity != 0) {
                     $product->quantity --;
-               }
+		    $product->save();
+                } else {
+                    throw new InvalidParameterException(elgg_echo("pay:charge:product:outofstock"));
+		}
                 // create a seller product selling order object
 		$seller_order = new ElggObject();
                 $seller_order->type = 'object';
@@ -400,12 +406,26 @@ function pay_checkout_direct($msg)
 		$seller_order->shipping_address = json_encode($order_info['shipping_address']);
 
 		$seller_order->charge_card_name = $item->charge_card_name;
+
+// newly added on 1/16
+                $seller_order->buyer_order_id = $item->guid;
+                $seller_order->charge_card_info = 
+                        "{$user->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
+
+                $seller_order->status = "Paid";
+                $seller_order->shipping_vendor = "None";
+                $seller_order->tracking_number = "None";
+                $seller_order->shipping_speed = "None";
+
+// ~
+
 		$seller_order->time_friendly = $time_friendly;
 		$seller_order->timestamp = $timestamp;
 
 		$seller_order->status = "paid";
 
                 $seller_item = "";
+
                 if ($seller_order->save()) {
        	            $seller_item['order_id'] = $seller_order->guid;
 
@@ -421,7 +441,12 @@ function pay_checkout_direct($msg)
   		    $seller_item['product_quantity'] = $product_value['item_number'];
                     $seller_item['avatar_url'] = get_entity_icon_url($seller, 'small');
    		    $seller_item['shipping_address'] = $seller_order->shipping_address;
-                }
+
+                    $seller_item['left_product_quantity'] = intval($product->quantity);
+
+                } else {
+                    throw new InvalidParameterException(elgg_echo("pay:charge:seller_order:saveerror"));
+		}
                 $person_info['seller_orders'][] = $seller_item;
 
                 // find the tip owner (if exist) and create the tip owner's credit object, XXX
@@ -825,13 +850,18 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
                 $return['delete'][] = false;
             }
 */
-            $json = json_decode($single->msg, true);
 
+            $json = json_decode(html_entity_decode($single->msg), true);
 
             $json['order_info']['charge_card_name'] = $single->charge_card_name;
             $json['order_info']['time_friendly'] = $single->time_friendly;
             $json['order_info']['timestamp'] = $single->timestamp;
             $json['order_info']['order_guid'] = $single->object_guid;
+
+            $json['order_info']['status'] = $single->status;
+            $json['order_info']['shipping_vendor'] = $single->shipping_vendor;
+            $json['order_info']['tracking_number'] = $single->tracking_number;
+            $json['order_info']['shipping_speed'] = $single->shipping_speed;
 
 //            $json['seller_info'] = $single->seller_info;
 //            $json['thinker_info'] = $single->thinker_info;
@@ -938,9 +968,14 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
 // XXX, credit_card is the only payment
             $item['payment_method'] = "credit"; //$single->payment_method;
             $item['charge_card_name'] = $single->charge_card_name;
+            $item['charge_card_info'] = $single->charge_card_info;
+
             $item['purchased_time_friendly'] = $single->time_friendly;
             $item['purchased_timestamp'] = $single->timestamp;
 	    $item['status'] = $single->status;
+            $item['shipping_vendor'] = $single->shipping_vendor;
+            $item['tracking_number'] = $single->tracking_number;
+            $item['shipping_speed'] = $single->shipping_speed;
 
             $seller = get_user($single->seller_guid);
             if (!$seller) {
@@ -1003,15 +1038,21 @@ function pay_detail_seller_order($order_id)
     $item['shipping_code'] = $single->shipping_code;
     $item['shipping_cost'] = $single->shipping_cost;
 
+    $item['status'] = $single->status;
+    $item['shipping_vendor'] = $single->shipping_vendor;
+    $item['tracking_number'] = $single->tracking_number;
+    $item['shipping_speed'] = $single->shipping_speed;
+
     if ($single->shipping_address) {
         $item['shipping_address'] = json_decode($single->shipping_address, true);
     }
 // XXX, credit_card is the only payment
     $item['payment_method'] = "credit_card"; //$single->payment_method;
     $item['charge_card_name'] = $single->charge_card_name;
+    $item['charge_card_info'] = $single->charge_card_info;
     $item['purchased_time_friendly'] = $single->time_friendly;
     $item['purchased_timestamp'] = $single->timestamp;
-    $item['status'] = "paid";
+
 
     $seller = get_user($single->seller_guid);
     if (!$seller) {
@@ -1249,7 +1290,7 @@ expose_function('payment.detail.thinker_order',
                 true);
 
 // seller order update: paid -> shipped -> delivered
-
+/*
 function pay_order_update($id, $status)
 {
     $seller_order = get_entity($id);
@@ -1269,6 +1310,65 @@ expose_function('payment.order_update',
                       'status' => array ('type' => 'string', 'required' => true, 'default' => ""),
                     ),
                 "detail of a particular thinker order",
+                'POST',
+                true,
+                true);
+*/
+// seller order update:         status:          paid -> shipped -> delivered
+//                              shipping_vendor: fedex/ups/
+//                              tracking_number: xxx
+//                              shipping_speed:  3-5 days
+
+function pay_order_shipping_update($order_id, $shipping_vendor, 
+        $tracking_number, $shipping_speed, $status)
+{
+    $return['seller_order_id'] = $order_id;
+    $seller_order = get_entity($order_id);
+    $seller_order->status = $status;
+    $seller_order->shipping_vendor = $shipping_vendor;
+    $seller_order->tracking_number = $tracking_number;
+    $seller_order->shipping_speed = $shipping_speed;
+
+    $seller_save_result = $seller_order->save();
+
+    if (!$seller_save_result) {
+        throw new InvalidParameterException("seller_order is not saved properly");
+    }
+    // update the buyer order status
+    if ($seller_order->buyer_order_id == 0) {
+        throw new InvalidParameterException("seller_order doesn't have associated buyer order");
+    }
+    $buyer_order = get_entity($seller_order->buyer_order_id);
+    $buyer_order->status = $status;
+    $buyer_order->shipping_vendor = $shipping_vendor;
+    $buyer_order->tracking_number = $tracking_number;
+    $buyer_order->shipping_speed = $shipping_speed;
+
+    $return['buyer_id'] = $seller_order->buyer_order_id;
+
+    $return['status'] = $status;
+    $return['shipping_vendor'] = $shipping_vendor;
+    $return['tracking_number'] = $tracking_number;
+    $return['shipping_speed'] = $shipping_speed;
+
+    $buyer_save_result = $buyer_order->save();
+    if (!$buyer_save_result) {
+        throw new InvalidParameterException("buyer_order is not saved properly");
+    }
+
+    return $return;
+}
+
+expose_function('payment.order_shipping_update',
+                "pay_order_shipping_update",
+                array(
+                      'order_id' => array ('type' => 'int', 'required' => true, 'default' => 0),
+                      'shipping_vendor' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                      'track_number' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                      'shipping_speed' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                      'status' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                    ),
+                "seller update shipping information",
                 'POST',
                 true,
                 true);

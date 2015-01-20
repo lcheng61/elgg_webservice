@@ -79,13 +79,29 @@ expose_function('messages.count',
  */
 function messages_inbox($limit = 10, $offset = 0) {    
 
-        $user = get_loggedin_user();
-        $params = array(
+    $user = get_loggedin_user();
+
+    $total_params = array(
             'type' => 'object',
             'subtype' => 'messages',
             'metadata_name' => 'toId',
             'metadata_value' => $user->guid,
             'owner_guid' => $user->guid,
+            'limit' => 0,
+            'offset' => 0,
+            'full_view' => false,
+                        );
+    $total_list = elgg_get_entities_from_metadata($total_params);
+    $message['total_number'] = count($total_list);
+
+    $params = array(
+            'type' => 'object',
+            'subtype' => 'messages',
+            'metadata_name' => 'toId',
+            'metadata_value' => $user->guid,
+            'owner_guid' => $user->guid,
+            'limit' => $limit,
+            'offset' => $offset,
             'full_view' => false,
                         );
     $list = elgg_get_entities_from_metadata($params);

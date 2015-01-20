@@ -317,9 +317,9 @@ expose_function('user.get_user_by_email',
 function user_check_username_availability($username) {
     $user = get_user_by_username($username);
     if (!$user) {
-        return true;
+        return 1;
     } else {
-        return false;
+        return 0;
     }
 }
 
@@ -599,7 +599,7 @@ expose_function('user.friend.unfollow',
  *
  * @return array
  */           
-function user_get_friends($username, $limit = 10, $offset = 0) {
+function user_get_friends($limit = 10, $offset = 0, $username) {
     if($username){
         $user = get_user_by_username($username);
     } else {
@@ -631,9 +631,10 @@ function user_get_friends($username, $limit = 10, $offset = 0) {
 
 expose_function('user.friend.get_follower',
                 "user_get_friends",
-                array('username' => array ('type' => 'string', 'required' => false),
+                array(
                         'limit' => array ('type' => 'int', 'required' => false),
                         'offset' => array ('type' => 'int', 'required' => false),
+			'username' => array ('type' => 'string', 'required' => false),
                     ),
                 "friend get follower",
                 'GET',
@@ -1160,6 +1161,11 @@ function facebook_import_avatar($user, $file_location) {
  * @return void
  */
 function user_register_facebook($msg) {
+
+//    $users= get_user_by_email("jinpeifamily@gmail.com");
+//    return $users[0]->username;
+
+
     $user = FALSE;
 
     $fbData = json_decode($msg, true);
@@ -1171,13 +1177,17 @@ function user_register_facebook($msg) {
                                                             'value' => $fbData['user_profile']['id'],
                                                     )
                                     ));
+    $return['status'] = "";
     if (is_array($facebook_users) && count($facebook_users) == 1) {
             // reuse existing account
         $user = $facebook_users[0];
-
         $username = $user->username; // $fbData['user_profile']['username'];
+
+        $return['status'] = "facebook account already exist";
+        $return['username'] = $username;
         $token = create_user_token($username, 527040);
-        return $token;
+        $return['token'] = $token;
+        return $return;
     }
 
     // create new user
@@ -1211,22 +1221,29 @@ function user_register_facebook($msg) {
             if (!$user->save()) {
                 register_error(elgg_echo('registerbad'));
                 throw new RegistrationException(elgg_echo('registration:facebook:cannotsaveuser'));
-            } else {
-                // send mail to user
-//                send_user_password_mail($email, $name, $username, $password);
-                // pull in facebook icon
-                $url = 'https://graph.facebook.com/' . $fbData['user_profile']['id'] .'/picture?type=large';
-                    facebook_import_avatar($user, $url);
             }
+            // send mail to user
+            // send_user_password_mail($email, $name, $username, $password);
+            // pull in facebook icon
+            $url = 'https://graph.facebook.com/' . $fbData['user_profile']['id'] .'/picture?type=large';
+                    facebook_import_avatar($user, $url);
+
+            $return['status'] = "new facebook account is created";
+            $return['username'] = $user->username;
+            $token = create_user_token($user->username, 527040);
+            $return['token'] = $token;
+
         } else {
             // CL: if email is used before, then we don't copy facebook's data anymore. Sounds good ? XXX
             $user= $users[0];
-            $token = create_user_token($user->username, 527040);
-            return $token;
+
+            $return['status'] = "email used before, won't copy facebook data";
+            $return['username'] = $user->username;
+            $token = create_user_token($username, 527040);
+            $return['token'] = $token;
         }
     }
-    $token = create_user_token($user->username, 527040);
-    return $token;
+    return $return;
 }
 
 expose_function('user.register.facebook',
