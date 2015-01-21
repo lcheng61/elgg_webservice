@@ -383,12 +383,13 @@ function pay_checkout_direct($msg)
 		    continue;
                 }
                 // decrease the product quantity
-                if ($product->quantity != 0) {
-                    $product->quantity --;
-		    $product->save();
-                } else {
+                $product->quantity -= $product_value['item_number'];
+                if ($product->quantity < 0) {
                     throw new InvalidParameterException(elgg_echo("pay:charge:product:outofstock"));
-		}
+                }
+                $product->sold_count += $product_value['item_number'];
+                $product->save();
+
                 // create a seller product selling order object
 		$seller_order = new ElggObject();
                 $seller_order->type = 'object';
@@ -439,6 +440,7 @@ function pay_checkout_direct($msg)
                     $seller_item['product_image_url'] = $product_value['product_image_url'];
                     $seller_item['product_price'] = $product_value['product_price'];
   		    $seller_item['product_quantity'] = $product_value['item_number'];
+  		    $seller_item['product_sold_count'] = $product->sold_count;
                     $seller_item['avatar_url'] = get_entity_icon_url($seller, 'small');
    		    $seller_item['shipping_address'] = $seller_order->shipping_address;
 

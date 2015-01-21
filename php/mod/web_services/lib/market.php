@@ -102,7 +102,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                  $blog['tips_number'] = $single->tips_number;
 		 //XXX: hard-code sold_count;		 		 
                  $single->sold_count = 0;
-                 $blog['sold_number'] = $single->sold_count;
+                 $blog['sold_count'] = $single->sold_count;
 
                  if ($from_seller_portal) {
                      $product_id = $single->guid;
@@ -248,7 +248,7 @@ function product_get_detail($product_id) {
     $return['free_shipping_cost_limit'] = $blog->free_shipping_cost_limit;
 /////~
 
-    $return['sold_number'] = $blog->sold_count;
+    $return['sold_count'] = $blog->sold_count;
     $return['rate'] = $blog->rate;
 
     $owner = get_entity($blog->owner_guid);
@@ -578,7 +578,7 @@ function product_search($query, $category, $offset, $limit,
                  $blog['product_name'] = $single->title;
                  $blog['product_price'] = floatval($single->price);
                  $blog['tips_number'] = $single->tips_number;
-                 $blog['sold_number'] = $single->sold_count;
+                 $blog['sold_count'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
                  $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
 
@@ -645,7 +645,7 @@ function product_post($product_id, $title, $category, $description,
         'custom' => '',
         'description' => $description,
         'price' => $price,
-        'sold_count' => '',
+        'sold_count' => 0,
         'access_id' => ACCESS_PUBLIC,
         'tags' => string_to_tag_array($tags),
         'tips_number' => 0,
