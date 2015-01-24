@@ -18,16 +18,19 @@ function likes_add($entity_guid) {
 //     echo ("user = \n");
 
      if (elgg_annotation_exists($entity_guid, 'likes')) {
-         return elgg_echo("likes:alreadyliked");
+//         return elgg_echo("likes:alreadyliked");
+         return "likes:alreadyliked";
      }
      // Let's see if we can get an entity with the specified GUID
      $entity = get_entity($entity_guid);
      if (!$entity) {
-         return elgg_echo("likes:notfound");
+//         return elgg_echo("likes:notfound");
+         return "likes:notfound";
      }
      // limit likes through a plugin hook (to prevent liking your own content for example)
      if (!$entity->canAnnotate(0, 'likes')) {
-         return elgg_echo("likes:notallowed");
+//         return elgg_echo("likes:notallowed");
+         return "likes:notallowed";
      }
      $user = elgg_get_logged_in_user_entity();
      $annotation = create_annotation($entity->guid,
@@ -38,7 +41,8 @@ function likes_add($entity_guid) {
                                         $entity->access_id);
       // tell user annotation didn't work if that is the case
       if (!$annotation) {
-          return elgg_echo("likes:failure");
+//          return elgg_echo("likes:failure");
+          return "likes:failure";
       }
       add_to_river('annotation/annotatelike', 'likes', $user->guid, $entity->guid, "", 0, $annotation);
 
@@ -47,7 +51,8 @@ function likes_add($entity_guid) {
      } else if ($entity->getsubtype() == "ideas") {
           $user->liked_ideas .= "$entity_guid,";
      }
-     return elgg_echo("likes:likes");
+//     return elgg_echo("likes:likes");
+     return "likes:likes";
 } 
             
 expose_function('likes.add',
@@ -69,7 +74,8 @@ expose_function('likes.add',
 function likes_delete($entity_guid) {
      $entity = get_entity($entity_guid);
      if (!$entity) {
-         return elgg_echo("likes:notfound");
+//         return elgg_echo("likes:notfound");
+         return "likes:notfound";
      }
     $likes = elgg_get_annotations(array(
         'guid' => $entity_guid,
@@ -94,11 +100,13 @@ function likes_delete($entity_guid) {
             } else if ($entity->getsubtype() == "ideas") {
                $user->liked_ideas = preg_replace($pattern, $replacement, $user->liked_ideas, $match_limit, $match_count);
             }
-            return elgg_echo("likes:deleted");
+//            return elgg_echo("likes:deleted");
+            return "likes:deleted";
         }
     }
  
-    return elgg_echo("likes:notdeleted");
+//    return elgg_echo("likes:notdeleted");
+    return "likes:notdeleted";
 } 
             
 expose_function('likes.delete',
@@ -150,7 +158,8 @@ function likes_getusers($entity_guid) {
         }
     }
     else {
-        $likes = elgg_echo('likes:userslikedthis', array(likes_count($entity)));
+//        $likes = elgg_echo('likes:userslikedthis', array(likes_count($entity)));
+        $return = "likes:userslikedthis is 0";
     }
     return $return;
 }
