@@ -510,7 +510,8 @@ function user_friend_add($friend, $username) {
     }
     
     if($friend_user->isFriendOf($user->guid)) {
-        $msg = elgg_echo('friends:alreadyadded', array($friend_user->name));
+//        $msg = elgg_echo('friends:alreadyadded', array($friend_user->name));
+        $msg = "friends:alreadyadded";
          throw new InvalidParameterException($msg);
     }
     
@@ -519,7 +520,8 @@ function user_friend_add($friend, $username) {
         // add to river
         add_to_river('river/relationship/friend/create', 'friend', $user->guid, $friend_user->guid);
         $return['success'] = true;
-        $return['message'] = elgg_echo('friends:add:successful' , array($friend_user->name));
+//        $return['message'] = elgg_echo('friends:add:successful' , array($friend_user->name));
+        $return['message'] = "friends:add:successful";
     } else {
         $msg = elgg_echo("friends:add:failure", array($friend_user->name));
          throw new InvalidParameterException($msg);
@@ -570,7 +572,8 @@ function user_friend_remove($friend,$username) {
     
     
     if ($user->removeFriend($friend_user->guid)) {
-        $return['message'] = elgg_echo("friends:remove:successful", array($friend->name));
+//        $return['message'] = elgg_echo("friends:remove:successful", array($friend->name));
+        $return['message'] = "friends:remove:successful";
         $return['success'] = true;
     } else {
         $msg = elgg_echo("friends:remove:failure", array($friend_user->name));
