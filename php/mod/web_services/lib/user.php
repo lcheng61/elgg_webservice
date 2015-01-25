@@ -602,7 +602,7 @@ expose_function('user.friend.unfollow',
  *
  * @return array
  */           
-function user_get_friends($limit = 10, $offset = 0, $username) {
+function user_get_friends($limit = 10, $offset = 0, $username = "") {
     if($username){
         $user = get_user_by_username($username);
     } else {
@@ -653,7 +653,7 @@ expose_function('user.friend.get_follower',
  *
  * @return array
  */           
-function user_get_friends_of($username, $limit = 10, $offset = 0) {
+function user_get_friends_of($limit = 10, $offset = 0, $username = "") {
     if(!$username){
         $user = get_loggedin_user();
     } else {
@@ -685,9 +685,10 @@ function user_get_friends_of($username, $limit = 10, $offset = 0) {
 
 expose_function('user.friend.get_following', //friends_of',
                 "user_get_friends_of",
-                array('username' => array ('type' => 'string', 'required' => false),
+                array(
                         'limit' => array ('type' => 'int', 'required' => false),
                         'offset' => array ('type' => 'int', 'required' => false),
+                        'username' => array ('type' => 'string', 'required' => false),
                     ),
                 "Get following friends of current user",
                 'GET',
