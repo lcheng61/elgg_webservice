@@ -1019,6 +1019,82 @@ expose_function('payment.list.seller_order',
                 true,
                 true);
 
+///// analytical
+// This is seller's transaction history
+function pay_analyze_seller_order($time_start, $time_end)
+{
+    $user = get_loggedin_user();
+    
+    $lb_commission_rate = 0.1;
+    if ($user->lb_commission_rate) {
+        $lb_commission_rate = $user->lb_commission_rate;
+    }
+
+    if (!$user) {
+        throw new InvalidParameterException('pay_list_seller_order:loginusernamenotvalid');
+    }
+    $params = array(
+        'types' => 'object',
+        'subtypes' => 'seller_order',
+        'limit' => 0,
+        'offset' => 0,
+        'metadata_name_value_pairs'=>array(
+            array('name' => 'seller_guid', 
+                  'value' => $user->guid, 
+                  'operand' => '=' )));
+    $latest_blogs = elgg_get_entities_from_metadata($params);
+
+    if (!$latest_blogs) {
+        $msg = elgg_echo('payment_seller_order:none');
+        throw new InvalidParameterException($msg);
+    }
+    $display_number = 0;
+    foreach($latest_blogs as $single ) {
+        if (($item['timestamp'] < $time_start) || ($item['timestamp'] > $time_end)) {
+            continue;
+        }
+        $time_array = getdate($single->timestamp);
+        $year = $time_array['year'];
+        $month = $time_array['mon'];
+
+        $revenue = ($single->product_price + $single->shipping_cost);
+        $cost = ($single->product_price + $single->shipping_cost) * 
+                $lb_commission_rate;
+        $profit = $revenue - $cost;
+
+        $total_revenue += $revenue;
+        $total_cost += $cost;
+
+        $seller_revenue[$year][$month] += $revenue;
+        $seller_cost[$year][$month] += $cost;
+        $seller_profit[$year][$month] += $profit;
+
+        $display_number ++;
+    }
+    $return['revenue'][] = $seller_revenue;
+    $return['cost'][] = $seller_cost;
+    $return['profit'][] = $seller_profit;
+
+    $return['total_revenue'] = $total_revenue;
+    $return['total_cost'] = $total_cost;
+    $return['total_profit'] = $total_revenue - $total_cost;
+    $return['total_orders'] = $display_number;
+    $return['lb_commission_rate'] = $lb_commission_rate;
+
+    return $return;
+}
+expose_function('payment.analyze.seller_order',
+                "pay_analyze_seller_order",
+                array(
+                      'start_time' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'end_time' => array ('type' => 'int', 'required' => false, 'default' => 5555555555),
+                    ),
+                "Get revenue by month",
+                'GET',
+                true,
+                true);
+// ~
+
 
 // This is seller's transaction history
 function pay_detail_seller_order($order_id)

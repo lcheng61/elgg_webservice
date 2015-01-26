@@ -391,66 +391,42 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
 //    echo("product is $product_id <br>");
 //    echo("product->tips is $product->tips <br>");
 
+////////////
+    // get ideas linked to this product
+    $items = $product->getEntitiesFromRelationship("sponsor", true, 0, 0);
 
-    if($product->tips){
-        // Parse products string to extract its individual product guid's.
-        $tip_id_array = explode(",", $product->tips);
+    $total_number = 0;
+    foreach ($items as $item) {
+        $total_number ++;
+        $tip['tip_id'] = $item->guid;
+        $tip['tip_title'] = $item->title;
+        $tip['tip_thumbnail_image_url'] = $item->tip_thumbnail_image_url;
+        $tip['tip_category'] = $item->ideascategory;
 
-        $total_number = 0;
-        foreach ($tip_id_array as $id) {
-
-            $id = intval($id);
-//            echo ("tip_id = $id <br>");
-
-
-            $tip_obj = get_entity($id);
-            if ($tip_obj) { // if the tip id is a valid one
-/*
-                if (!elgg_instanceof($blog, 'object', 'ideas')) {
-		    continue;
-                }
-*/
-                $total_number ++;
-//                echo ("$id is valid <br>");
-                // print tip details here
-                
-                $tip['tip_id'] = $id;
-                $tip['tip_title'] = $tip_obj->title;
-                $tip['tip_thumbnail_image_url'] = $tip_obj->tip_thumbnail_image_url;
-                $tip['tip_category'] = $tip_obj->ideascategory;
-
-                $owner = get_entity($tip_obj->owner_guid);
-
-                $tip['owner']['user_id'] = $owner->guid;
-                $tip['owner']['user_name'] = $owner->username;
-                $tip['owner']['user_avatar_url'] = get_entity_icon_url($owner,'small');
-//                echo ("tip = $tip <br>");
+        $owner = get_entity($item->owner_guid);
+        $tip['owner']['user_id'] = $owner->guid;
+        $tip['owner']['user_name'] = $owner->username;
+        $tip['owner']['user_avatar_url'] = get_entity_icon_url($owner,'small');
         
-                $tip['likes_number'] = likes_count(get_entity($id));
+        $tip['likes_number'] = likes_count($item);
+        $options = array(
+                'annotations_name' => 'product_comment',
+                'guid' => $item->guid,
+                'limit' => 0,
+                'pagination' => false,
+                'reverse_order_by' => true,
+                );
+        $comments = elgg_get_annotations($options);
+        $num_comments = count($comments);
 
-                $options = array(
-                        'annotations_name' => 'product_comment',
-                        'guid' => $id,
-                        'limit' => 0,
-                        'pagination' => false,
-                        'reverse_order_by' => true,
-                        );
+        $tip['comments_number'] = $num_comments;
+        $tip['products_number'] = $item->countEntitiesFromRelationship("sponsor", false);
 
-                $comments = elgg_get_annotations($options);
-                $num_comments = count($comments);
-
-                $tip['comments_number'] = $num_comments;
-                $tip['products_number'] = $tip_obj->products_number;
-                $tip['time_created'] = (int)$tip_obj->time_created;
-                $return['tips'][] = $tip;
-            }
-        }
-        $return['total_number'] = $total_number;
-
-    } else {
-        $msg = elgg_echo('product_comment:none');
-        throw new InvalidParameterException($msg);
+        $tip['time_created'] = (int)$item->time_created;
+        $return['tips'][] = $tip;
     }
+    $return['total_number'] = $total_number;
+
     return $return;
 }
 expose_function('product.get_tips_by_product',
