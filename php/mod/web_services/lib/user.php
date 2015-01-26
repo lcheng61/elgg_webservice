@@ -195,6 +195,7 @@ expose_function('user.get_profile',
  * @return bool 
  */
 function user_save_profile($username, $profile) {
+
     if(!$username){
         $user = get_loggedin_user();
     } else {
@@ -218,6 +219,7 @@ function user_save_profile($username, $profile) {
             $value = string_to_tag_array($value);
         }
         $input[$shortname] = $value;
+
     }
     
     $name = strip_tags($profile['name']);
@@ -959,7 +961,7 @@ function user_edit_profile($profile_str)
     }
 
     // display name is handled separately
-    $name = strip_tags(get_input('name'));
+    $name = strip_tags($json["name"]);
     if ($name) {
         if (elgg_strlen($name) > 50) {
                 register_error(elgg_echo('user:name:fail'));
@@ -967,7 +969,30 @@ function user_edit_profile($profile_str)
                 $owner->name = $name;
                 $owner->save();
         }
+        $input["name"] = $name;
     }
+    // user name is handled seperately
+    $new_username = strip_tags($json["username"]);
+    if ($new_username) {
+        if (!user_check_username_availability($new_username)) {
+            throw new RegistrationException(elgg_echo('change_username:usernameexists'));
+        }
+        if (elgg_strlen($new_username) > 50) {
+                register_error(elgg_echo('user:name:fail'));
+        }
+        $owner->username = $new_username;
+        $owner->save();
+        $input["username"] = $new_username;
+    }
+    $new_password = strip_tags($json["password"]);
+    if ($new_password) {
+        $owner->salt = _elgg_generate_password_salt();
+        $owner->password = generate_user_password($owner, $new_password);
+        $owner->save();
+        $input["password"] = $new_password;
+    }
+
+    //~
 
     // go through custom fields
     if (sizeof($input) > 0) {
