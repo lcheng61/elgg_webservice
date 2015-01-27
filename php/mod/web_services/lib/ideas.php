@@ -190,6 +190,10 @@ function tip_get_detail($tip_id) {
     $return['tip_category'] = $blog->ideascategory;
     $return['tip_thumbnail_image_url'] = $blog->tip_thumbnail_image_url;
     $return['tip_id'] = $tip_id;
+
+    $return['tip_notes'] = $blog->tip_notes;
+    $return['tip_tags'] = $blog->tip_tags;
+
     $return['tip_pages'] =             json_decode($blog->tip_pages, true);
 
 ////// get products
@@ -304,6 +308,9 @@ function ideas_post_tip($message, $idea_id)
     $post->title = $json['tip_title'];
     $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
     $post->ideascategory = $json['category'];
+
+    $post->tip_notes = $json['tip_notes'];
+    $post->tip_tags = $json['tip_tags'];
 
     $post->products = json_encode($json['products'], true);
 
