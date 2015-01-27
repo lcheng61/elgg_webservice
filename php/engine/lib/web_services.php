@@ -855,7 +855,7 @@ function pam_auth_session() {
  *
  * @return bool
  */
-function create_user_token($username, $expire = 60) {
+function create_user_token($username, $expire = 5256000/*60*/) {
 	global $CONFIG;
 
 	$site_guid = $CONFIG->site_id;
