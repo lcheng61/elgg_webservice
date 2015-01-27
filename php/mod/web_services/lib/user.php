@@ -351,6 +351,13 @@ function generateRandomString($length = 10) {
 
 function user_register_email($email, $msg="", $name="") {
 
+/*
+$return['email'] = $email;
+$return['msg']   = $msg;
+$return['name']  = $name;
+return $return;
+*/
+
     $email = trim($email);
     $msg = trim($msg);
 
@@ -429,9 +436,9 @@ function user_register_email($email, $msg="", $name="") {
 expose_function('user.register.email',
                 "user_register_email",
                 array(
-                        'email' => array ('type' => 'string'),
-                        'msg' => array ('type' => 'string', 'required' =>false),
-                        'name' => array ('type' => 'string', 'required' =>false),
+                        'email' => array ('type' => 'string', 'default' =>""),
+                        'msg' => array ('type' => 'string', 'required' =>false, 'default' =>""),
+                        'name' => array ('type' => 'string', 'required' =>false, 'default' =>""),
                     ),
                 "Register user by email only",
                 'POST',
