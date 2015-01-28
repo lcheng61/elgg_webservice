@@ -982,7 +982,9 @@ function user_edit_profile($profile_str)
     $new_username = strip_tags($json["username"]);
     if ($new_username) {
         if (!user_check_username_availability($new_username)) {
-            throw new RegistrationException(elgg_echo('change_username:usernameexists'));
+           if ($owner->username != $new_username) { // you are using the username of someone else
+               throw new RegistrationException(elgg_echo('change_username:usernameexists'));
+           }
         }
         if (elgg_strlen($new_username) > 50) {
                 register_error(elgg_echo('user:name:fail'));
