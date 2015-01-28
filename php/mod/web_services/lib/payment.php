@@ -469,6 +469,8 @@ function pay_checkout_direct($msg)
 		    $thinker_order->time_friendly = $time_friendly;
 		    $thinker_order->timestamp = $timestamp;
 		    $thinker_order->status = "paid";
+                    $thinker_order->product_price = $product_value['product_price'];
+                    $thinker_order->product_quantity = $product_value['item_number'];
 
                     $thinker = get_user($product_value['thinker_id']);
                 
@@ -485,6 +487,7 @@ function pay_checkout_direct($msg)
                         $thinker_item['product_name'] = $product_value['product_name'];
                         $thinker_item['product_image_url'] = $product_value['product_image_url'];
                         $thinker_item['product_price'] = $product_value['product_price'];
+                        $thinker_item['product_quantity'] = $product_value['item_number'];
                         $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
                         $thinker_item['thinker_idea_id'] = $product_value['thinker_idea_id'];
                     }
@@ -1266,6 +1269,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             $item['product']['name'] = $single->product_name;
             $item['product']['image_url'] = $single->product_image_url;
             $item['product']['price'] = $single->product_price;
+            $item['product']['quantity'] = $single->product_quantity;
 
             $item['thinker_order_guid'] = $single->guid;
             $display_number ++;
