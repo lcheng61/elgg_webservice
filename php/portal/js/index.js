@@ -1,7 +1,8 @@
 // Sets the min-height of #page-wrapper to window size
 $(function() {
 
-	var formUrl = "http://social.routzi.com/services/api/rest/json/?method=user.register.email"
+//	var formUrl = "http://social.routzi.com/services/api/rest/json/?method=user.register.email"
+	var formUrl = "http://m.lovebeauty.me/services/api/rest/json/?method=user.register.email"
 
 	$('#submit-signup').click(function() {
 		console.log("sign up form, submit button is clicked");
