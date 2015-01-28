@@ -23,13 +23,15 @@ $(function() {
 
 	$('#login').click(function() {
 
-		var formUrl = server + "services/api/rest/json/?method=auth.gettoken2&api_key=" + api_key;
+		var formUrl = server + get_token + "&api_key=" + api_key;
+		
+		var username = $('#username').val();
 
 		$.ajax({
 			url: formUrl,
 			type: "POST",
-			data: 'username=leo123&password=password123',
-			//data: 'username=robin&password=robin123',
+			//data: 'username=robin123&password=robin123',
+			data: 'username=' + username + '&password=' + $('#password').val(),
 			//data: $('#login_form').serialize(),
 			crossDomain: true,
 			success: function(data, textStatus, jqXHR) {
@@ -37,14 +39,9 @@ $(function() {
 				console.log(data);
 				//alert(data.result);
 				if (data.status == 0) {
-					//console.log('read token from server: ' + data.result)
-					//alert($('#remember').is(':checked') );
-					if ($('#remember').is(':checked')) {
-						setCookie('username', $('#username').val(), 1000);
-						setCookie('username', 'leo123', 1000);
-					} else {
-						setCookie('username', "", 1000);
-					}
+					
+					setCookie('username', username, 1000);
+					//setCookie('username', 'test123', 1000);
 					token = data.result;
 					setCookie('token', data.result, 1000);
 					window.location.href = 'index.html';

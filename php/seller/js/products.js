@@ -3,11 +3,16 @@ $(function() {
 	$('#delete').hide();
 	$('#view').hide();
 
+
+    var formUrl = server + 'services/api/rest/json/?method=product.get_posts&offset=0&limit=0&context=user&username=' + 
+			     getCookie('username') + '&api_key=' +
+				api_key + '&auth_token=' + getCookie('token');
+	console.log("form url=" + formUrl);
+	
 	var tableProducts = $('#products').DataTable({
 		"ajax": {
 			//"url": "js/objects_deep_loop.txt",
-			"url": server + 'services/api/rest/json/?method=product.get_posts&offset=0&limit=0&context=mine&api_key=' +
-				api_key + '&auth_token=' + getCookie('token'),
+			"url": formUrl,
 			"dataSrc": "result.products"
 		},
 
@@ -24,14 +29,6 @@ $(function() {
 			}, {
 				"data": "sold_number"
 			}]
-			//        "columns": [
-			//            { "data": "name" },
-			//            { "data": "hr.position" },
-			//            { "data": "contact.0" },
-			//            { "data": "contact.1" },
-			//            { "data": "hr.start_date" },
-			//            { "data": "hr.salary" }
-			//        ]
 	});
 	$('#products tbody').on('click', 'tr', function() {
 		if ($(this).hasClass('selected')) {

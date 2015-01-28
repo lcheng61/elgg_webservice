@@ -68,7 +68,7 @@
                         <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-user">
-                        <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                        <li><a href="edit_profile.html"><i class="fa fa-user fa-fw"></i> User Profile</a>
                         </li>
                         <!--
                         	描述： No settings for the moment.
@@ -136,21 +136,29 @@
             </div>           
             
 			<!-- /.row of search-->
-			<div class="row">	
+			<!--<div class="row">	
 					<p>Start Date: <input type="text" id="datepickerStart">
 					End Date: <input type="text" id="datepickerEnd">
 					<button type="button" class="btn btn-default btn-circle" id="search"><i class="fa fa-search"></i></button>
 					</p>
-			</div>
+			</div>-->
             <!-- /.row of Search -->
 			
             <!-- /.row -->
 			 <div class="row">			
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						Order History
+						<div class="row">
+							<div class="col-lg-10">
+								Double click to view order detail.
+							</div>
+							<div class="col-lg-1">
+								<button class="btn btn-primary btn-xs" id="view">View / Edit</button>
+							</div>
+						</div>
 					</div>
 					<!-- /.panel-heading -->
+
 					<div class="panel-body">
 						<div class="table-responsive">
 							<table class="display" id="orders">

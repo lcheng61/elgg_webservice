@@ -53,12 +53,13 @@ p {
 
 .form-control {
   border-radius: 0;
+  height: 100%;
   border: 1px solid #ccc;
   -webkit-transition: background 0.5s ease;
   -moz-transition: background 0.5s ease;
   -o-transition: background 0.5s ease;
   transition: background 0.5s ease;
-  padding: 20px;
+  padding: 10px;
   box-sizing: border-box; }
   .form-control:focus {
     background-color: #eee;
@@ -252,13 +253,13 @@ nav a {
   border: 1px solid #fff; }
 
 /* ======= PARALLAX SECTION =========== */
-#parallax {
+#seller {
   position: relative;
   width: 100%;
   background: url(../images/parallaxBg.jpg) no-repeat 50% 0 fixed;
   background-size: cover;
   height: 350px; }
-  #parallax h2 {
+  #seller h2 {
     color: #fff;
     margin-top: 130px;
     text-align: center;

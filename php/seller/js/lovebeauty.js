@@ -1,11 +1,13 @@
-var server = 'http://social.routzi.com/'
-var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
+//var server = 'http://social.routzi.com/'
+//var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
 
 
 //dev server
 //var server = 'http://dev-lovebeauty.rhcloud.com/';
-//var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
+var server = 'http://m.lovebeauty.me/';
+var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
 
+var get_token = 'services/api/rest/json/?method=auth.gettoken2';
 
 var reset_password = 'services/api/rest/json/?method=user.request_lost_password';
 var product_post = 'services/api/rest/json/?method=product.post';
@@ -16,6 +18,20 @@ var product_search = 'services/api/rest/json/?method=product.search';
 var idea_delete = 'services/api/rest/json/?method=ideas.delete_tip';
 var idea_get = 'services/api/rest/json/?method=ideas.get_detail';
 var idea_post = 'services/api/rest/json/?method=ideas.post_tip';
+//var order_list = 'services/api/rest/json/?method=ideas.post_tip';
+var order_detail = 'services/api/rest/json/?method=payment.detail.seller_order';
+//var order_post = 'services/api/rest/json/?method=payment.order_update';
+var order_post = 'services/api/rest/json/?method=payment.order_shipping_update';
+
+
+var user_get_profile = 'services/api/rest/json?method=user.get_profile';
+var user_edit_profile = 'services/api/rest/json/?method=user.edit_profile';
+var user_register = 'services/api/rest/json/?method=user.register';
+var check_user_availability = 'services/api/rest/json/?method=user.check_username_availability';
+
+var statistics = 'services/api/rest/json/?method=payment.analyze.seller_order';
+
+
 var username;
 var token;
 
@@ -53,7 +69,7 @@ $(function() {
 
 	username = getCookie("username");
 	console.log("username=" + username);
-	if (window.location.href.indexOf("login.html") < 0 && (username == undefined || username.length == 0)) {
+	if (window.location.href.indexOf("login.html") < 0 && (username == undefined || username == "")) {
 		window.location.href = "login.html"
 	}
 
