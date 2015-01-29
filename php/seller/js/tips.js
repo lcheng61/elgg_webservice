@@ -8,7 +8,7 @@ $(function() {
 		"ajax": {
 			//            "url": server + 'services/api/rest/json/?method=product.get_posts&api_key=' +
 			//				api_key + '&auth_token=' + token,
-			"url": server + "services/api/rest/json/?method=ideas.get_posts&limit=0&context=mine&api_key=" +
+			"url": server + idea_get_posts + "&limit=0&context=mine&api_key=" +
 				api_key + '&auth_token=' + getCookie('token'),
 			"dataSrc": "result.tips"
 		},

@@ -3,10 +3,12 @@ $(document).ready(function() {
 
 		// Parallax
 		$(window).scroll(function() {
-			var yPos = -($window.scrollTop() / $('#parallax').data('speed') - 280);
+			//var yPos = -($window.scrollTop() / $('#parallax').data('speed') - 280);
+			var yPos = -($window.scrollTop() / $('#seller').data('speed') - 280);
 			// Put together our final background position
 			var coords = '50%' + yPos + 'px';
 			// Move the background
+			//$('#parallax').css({
 			$('#parallax').css({
 				backgroundPosition: coords
 			});

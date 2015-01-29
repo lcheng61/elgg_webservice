@@ -299,6 +299,18 @@ nav a {
   #signup h3 {
     color: #fff; }
 
+
+/* ================= PARTNERS SECTION ======================== */
+#partners {
+  background: #f8f8f8;
+  padding: 40px 0 60px 0;
+  text-align: center;
+  border-bottom: 1px solid #ccc; }
+  #contact p {
+    margin: 10px 0; }
+  #contact .btn {
+    width: 100%; }
+
 /* ================= CONTACT SECTION ======================== */
 #contact {
   background: #f8f8f8;

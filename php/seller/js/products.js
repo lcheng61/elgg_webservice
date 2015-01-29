@@ -4,7 +4,7 @@ $(function() {
 	$('#view').hide();
 
 
-    var formUrl = server + 'services/api/rest/json/?method=product.get_posts&offset=0&limit=0&context=user&username=' + 
+    var formUrl = server + product_get_posts + '&offset=0&limit=0&context=user&username=' + 
 			     getCookie('username') + '&api_key=' +
 				api_key + '&auth_token=' + getCookie('token');
 	console.log("form url=" + formUrl);
@@ -27,7 +27,7 @@ $(function() {
 			}, {
 				"data": "product_price"
 			}, {
-				"data": "sold_number"
+				"data": "sold_count"
 			}]
 	});
 	$('#products tbody').on('click', 'tr', function() {

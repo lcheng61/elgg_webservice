@@ -1,22 +1,26 @@
 //var server = 'http://social.routzi.com/'
-//var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
+var server = 'http://m.lovebeauty.me/'
+var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
 
 
 //dev server
 //var server = 'http://dev-lovebeauty.rhcloud.com/';
-var server = 'http://m.lovebeauty.me/';
-var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
+//var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
 
 var get_token = 'services/api/rest/json/?method=auth.gettoken2';
 
 var reset_password = 'services/api/rest/json/?method=user.request_lost_password';
 var product_post = 'services/api/rest/json/?method=product.post';
 var product_get = 'services/api/rest/json/?method=product.get_detail';
+var product_get_posts = 'services/api/rest/json/?method=product.get_posts';
 var product_delete = 'services/api/rest/json/?method=product.delete';
 var product_image_delete = 'services/api/rest/json/?method=product.image.delete';
 var product_search = 'services/api/rest/json/?method=product.search';
+
+
 var idea_delete = 'services/api/rest/json/?method=ideas.delete_tip';
 var idea_get = 'services/api/rest/json/?method=ideas.get_detail';
+var idea_get_posts = 'services/api/rest/json/?method=ideas.get_posts';
 var idea_post = 'services/api/rest/json/?method=ideas.post_tip';
 //var order_list = 'services/api/rest/json/?method=ideas.post_tip';
 var order_detail = 'services/api/rest/json/?method=payment.detail.seller_order';
@@ -69,7 +73,7 @@ $(function() {
 
 	username = getCookie("username");
 	console.log("username=" + username);
-	if (window.location.href.indexOf("login.html") < 0 && (username == undefined || username == "")) {
+	if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0 && (username == undefined || username == "")) {
 		window.location.href = "login.html"
 	}
 

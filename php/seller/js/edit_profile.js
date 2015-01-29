@@ -14,7 +14,7 @@ $(function() {
 			//console.log(JSON.stringify(data));
 			if (data.status == 0) { //read prodcut detail successfully.
 				original_username = data.result.username;
-				$('#name').val(original_username);
+				$('#username').val(original_username);
 				$('#nick_name').val(data.result.name);
 
 
@@ -49,20 +49,22 @@ $(function() {
 		console.log(formUrl);
 
 		profile = {
-			"name": $('#name').val(),
+			"name": $('#nick_name').val(),
 			"username": $('#username').val(),
 			"password": $('#password1').val()
 
 		}
 
 		var formData = new FormData();
-		formData.append("profile", profile);
+		formData.append("profile", JSON.stringify(profile));
+		console.log("profile: " + JSON.stringify(profile));
 
 		$.ajax({
 			url: formUrl,
 			type: "POST",
 			//data: 'message:' + message,
 			data: formData,
+			//data: 'profile:' + JSON.stringify(profile),
 			processData: false,
 			contentType: false,
 			crossDomain: true,
