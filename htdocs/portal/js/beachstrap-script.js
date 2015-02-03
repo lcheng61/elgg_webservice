@@ -2,17 +2,17 @@ $(document).ready(function() {
 		$window = $(window);
 
 		// Parallax
-		$(window).scroll(function() {
-			//var yPos = -($window.scrollTop() / $('#parallax').data('speed') - 280);
-			var yPos = -($window.scrollTop() / $('#seller').data('speed') - 280);
-			// Put together our final background position
-			var coords = '50%' + yPos + 'px';
-			// Move the background
-			//$('#parallax').css({
-			$('#parallax').css({
-				backgroundPosition: coords
-			});
-		});
+//		$(window).scroll(function() {
+//			//var yPos = -($window.scrollTop() / $('#parallax').data('speed') - 280);
+//			var yPos = -($window.scrollTop() / $('#seller').data('speed') - 280);
+//			// Put together our final background position
+//			var coords = '50%' + yPos + 'px';
+//			// Move the background
+//			//$('#parallax').css({
+//			$('#seller').css({
+//				backgroundPosition: coords
+//			});
+//		});
 
 		//when top hits the first cta btn, run this
 		$(".cont-wrapper .btn-wrp").waypoint(function() {
@@ -30,18 +30,19 @@ $(document).ready(function() {
 
 		// Navigation
 
-		$("#navigation li").click(function(){
-			$("#navigation li ").removeClass("active");
-			$(this).addClass("active");
-		});
+//		$("#navigation li").click(function(){
+//			$("#navigation li ").removeClass("active");
+//			$(this).addClass("active");
+//		});
 
 		$("nav").onePageNav({
+			currentClass: 'active',
 			changeHash: false,
 			scrollSpeed: 750,
 			scrollOffset: 5
 		});
 
-		$('#navigation').scrollspy();
+//		$('#navigation').scrollspy();
 
 		$(".post").hover(
 		function() {
