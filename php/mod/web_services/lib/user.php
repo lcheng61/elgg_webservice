@@ -1429,3 +1429,72 @@ expose_function('user.register.facebook',
                 'POST',
                 true,
                 false);
+
+function user_list_signup($signup_only) {
+
+    $user = FALSE;
+    $value = true;
+    if ($signup_only != "true") {
+        $value = NULL;
+    }
+    $signup_users = elgg_get_entities_from_metadata(array(
+            'types' => 'user',
+            'metadata_name_value_pairs' => array(
+                'name' => 'email_subscriber',
+                'value' => $value,
+             ),
+            'limit' => 0
+        ));
+
+    $return['total_number'] = count($signup_users);
+    foreach($signup_users as $user) {
+        $result = "";
+        if ($user->email_subscriber == true) {
+            $state = "Email subscriber";
+        } else {
+            $state = "Common user";
+	}
+        $result['state'] = $state;
+        $result['email'] = $user->email;
+        $result['username'] = $user->username;
+        $result['name'] = $user->name;
+        $result['time'] = date('Y-m-d H:i:sP', $user->time_created);
+
+//        $user_string = $state."    ".$user->email."    ".$user->username."    ".$user->name."    ";
+//        $user_string = $user_string.date('Y-m-d H:i:sP', $user->time_created)."    ";
+
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'new_user_email',
+            'owner_guid' => $user->guid,
+            'limit' => 0,
+            'full_view' => FALSE,
+        );
+        $blogs = elgg_get_entities($params);
+//        $user_string = $user_string.count($blogs);
+
+        if(blogs) {
+            $result['contact_us'] = "";
+            foreach($blogs as $single ) {
+                $item['title'] = $single->title;
+                $item['description'] = $single->description;
+                $item['time'] = date('Y-m-d H:i:sP', $single->time_created);
+
+//                $user_string = $user_string.$single->title."->";
+//                $user_string = $user_string.$single->description."##";
+                $result['contact_us'][] = $item;
+            }
+        }
+        $return['user'][] = $result;
+    }
+    return $return;
+}
+
+expose_function('user.list.signup',
+                "user_list_signup",
+                array('signup_only' => array ('type' => 'string', 'required' => false, 'default' => "true"),
+                    ),
+                "Get email signup or all users",
+                'GET',
+                true,
+                false);
