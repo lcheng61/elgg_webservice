@@ -445,6 +445,40 @@ expose_function('user.register.email',
                 false,
                 false);
 
+
+function user_reset_password2($guid) {
+
+    $user = get_entity($guid);
+ 
+    if (($user instanceof ElggUser) && ($user->canEdit())) {
+        $password = generate_random_cleartext_password();
+
+         if (force_user_password_reset($user->guid, $password)) {
+             system_message(elgg_echo('admin:user:resetpassword:yes'));
+
+             $subject = "password reset";
+             $body = "
+                         Hi $user->username, \n
+                         Your password was reset. New password: $password \n\n
+                         Yours truly, \n
+                         Lovebeauty Team
+                     ";
+             notify_user($user->guid,
+                 elgg_get_site_entity()->guid,
+                 $subject,
+                 $body,
+                 array(),
+                 'email');
+         } else {
+             register_error(elgg_echo('admin:user:resetpassword:no'));
+         }
+    } else {
+        register_error(elgg_echo('admin:user:resetpassword:no'));
+    }
+    return true;
+}
+
+
 /**
  * Web service to register user
  *
@@ -462,6 +496,11 @@ function user_register($name="", $email="", $username="", $password="") {
     $name = trim($name);
 
     $user = get_user_by_username($username);
+    if (!$user) {
+        $user = get_user_by_email($email);
+        $user = $user[0];
+    }
+
     if ($name == "") {
         $name = $username;
     }
@@ -469,8 +508,11 @@ function user_register($name="", $email="", $username="", $password="") {
     if (!$user) {
         $return['success'] = true;
         $return['guid'] = register_user($username, $password, $name, $email);
+        user_send_register_mail($email, $name, $username, $password);
+        $return['email_sent'] = true;
     } else {
-        throw new RegistrationException(elgg_echo('registration:userexists'));
+        user_reset_password2($user->guid);
+        throw new RegistrationException(elgg_echo('registration:userexists:passwordreset:emailsent'));
     }
 
     $return['username'] = $username;
@@ -1103,6 +1145,41 @@ expose_function('user.change_username',
 
 /////
 
+
+function send_new_password_request2($user_guid) {
+    $user_guid = (int)$user_guid;
+    $user = get_entity($user_guid);
+    if ($user instanceof ElggUser) {
+        // generate code
+        $code = generate_random_cleartext_password();
+        $user->setPrivateSetting('passwd_conf_code', $code);
+        $user->setPrivateSetting('passwd_conf_time', time());
+ 
+        // email subject
+        $subject = elgg_echo('email:changereq:subject', array(), $user->language);
+
+        // link for changing the password
+        $link = elgg_get_site_url() . "changepassword?u=$user_guid&c=$code";
+ 
+        // IP address of the current user
+        $ip_address = _elgg_services()->request->getClientIp();
+
+        // email message body
+        $email = elgg_echo('email:changereq:body', array(
+            $user->name,
+            $ip_address,
+            $link
+        ), $user->language);
+
+//        user_reset_password2($user->guid);
+        return true;
+        return notify_user($user->guid, elgg_get_site_entity()->guid,
+            $subject, $email, array(), 'email');
+    }
+
+    return false;
+}
+
 /**
  * Web service to request lost password
  *
@@ -1116,6 +1193,7 @@ function user_request_lost_password($username) {
     }
     $user = get_user_by_username($username);
     if ($user) {
+//        if (user_reset_password2($user->guid)) {
         if (send_new_password_request($user->guid)) {
                 system_message(elgg_echo('user:password:resetreq:success'));
                 $return['username'] = $user->username;
@@ -1142,6 +1220,65 @@ expose_function('user.request_lost_password',
                 true,
                 false);
 
+
+function user_send_register_mail($email, $name, $username, $password) {
+    $site = elgg_get_site_entity();
+    $email = trim($email);
+
+    // send out other email addresses
+    if (!is_email_address($email)) {
+        register_error(elgg_echo('user:email:wrong'));
+        return false;
+    }
+
+    $message = "
+                   Dear $name, \n\n
+                   Thank you for regisering Lovebeauty! \n
+                   We will contact you shortly. \n\n
+                   Your username/password is: \n
+                   username: $username \n
+                   password: $password \n
+                   \n\n\n
+                   Regards,
+                   Lovebeauty Team
+               ";
+
+        $subject = "Thank you for your register";
+
+        $from = "team@lovebeauty.me";
+        elgg_send_email($from, $email, $subject, $message);
+        return 1;
+}
+
+function user_register_dupemail($email, $username, $name) {
+    $email = trim($email);
+    $site = elgg_get_site_entity();
+
+    // send out other email addresses
+    if (!is_email_address($email)) {
+        register_error(elgg_echo('user:email:wrong'));
+        return false;
+    }
+
+    $message = "
+                   Dear $name, \n\n
+                   Someone used this email to register at lovebeauty.me! \n
+                   This email has already been associated with an account at Lovebeauty.
+                   Please use another email and register again.
+                   If you forgot your password, please go to $site/seller/reset_password.html to reset your password.
+                   Your username is
+                   $username
+                   \n\n\n
+                   Regards,
+                   Lovebeauty Team
+               ";
+
+        $subject = "Email reset";
+
+        $from = "team@lovebeauty.me";
+        elgg_send_email($from, $email, $subject, $message);
+        return 1;
+}
 
 
 /**
