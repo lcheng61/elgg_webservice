@@ -449,8 +449,8 @@ expose_function('user.register.email',
 function user_reset_password2($guid) {
 
     $user = get_entity($guid);
- 
-    if (($user instanceof ElggUser) && ($user->canEdit())) {
+
+    if (($user instanceof ElggUser)) {
         $password = generate_random_cleartext_password();
 
          if (force_user_password_reset($user->guid, $password)) {
@@ -500,7 +500,6 @@ function user_register($name="", $email="", $username="", $password="") {
         $user = get_user_by_email($email);
         $user = $user[0];
     }
-
     if ($name == "") {
         $name = $username;
     }
@@ -527,9 +526,9 @@ function user_register($name="", $email="", $username="", $password="") {
 expose_function('user.register',
                 "user_register",
                 array('name' => array ('type' => 'string', 'required' => false, 'default' => ""),
-                        'email' => array ('type' => 'string'),
-                        'username' => array ('type' => 'string'),
-                        'password' => array ('type' => 'string'),
+                        'email' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                        'username' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                        'password' => array ('type' => 'string', 'required' => true, 'default' => ""),
                     ),
                 "Register user",
                 'POST',
