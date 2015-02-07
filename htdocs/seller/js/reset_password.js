@@ -18,7 +18,7 @@ $(function() {
 				console.log(data);
 				if (data.status == 0) {
 					//console.log('read token from server: ' + data.result)
-					$("#message").html("Password has been reset. ");
+					$("#message").html("Password reset email has been sent to your email. ");
 				} else {
 					$("#message").html("There is an error during reset password. " + data.message);
 				}
