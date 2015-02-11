@@ -222,8 +222,14 @@ expose_function('messages.sent',
  */
  function message_send_one($subject,$body, $send_to, $reply = 0) {    
          
+    $user = get_loggedin_user();
     $recipient = get_user_by_username($send_to);
     $recipient_guid = $recipient->guid;
+
+    if ($user->guid == $recipient_guid) {
+        $msg = elgg_echo('messages:cannotsendtoself');
+        throw new InvalidParameterException($msg);
+    }
     $result = messages_send($subject, $body, $recipient_guid, 0, $reply);
 
     return $result;
