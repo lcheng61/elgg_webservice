@@ -346,6 +346,7 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
                 }
                 $comment['rate'] = "0";
             }
+
             $entity = get_entity($single->entity_guid);
 
             if ($entity) {
@@ -518,3 +519,36 @@ expose_function('blog.post_comment',
                 'POST',
                 true,
                 true);
+
+/**
+ * Web service for delete a blog post
+ *
+ * @param string $guid     GUID of a blog entity
+ * @param string $username Username of reader (Send NULL if no user logged in)
+ * @param string $password Password for authentication of username (Send NULL if no user logged in)
+ *
+ * @return bool
+ */
+function blog_delete_post2($guid) {
+        if (!elgg_is_logged_in()) {
+            register_error(elgg_echo("blog:notloggedin"));
+        }
+        $comment = elgg_get_annotation_from_id($guid);
+        $user = elgg_get_logged_in_user_entity();
+        if ($user->guid != $comment->owner_guid) {
+            throw new InvalidParameterException("user is not authorized to delete");
+        }
+
+	$return = array();
+	$return['success'] = elgg_delete_annotation_by_id($guid);
+	return $return;
+}
+	
+expose_function('blog.delete_post2',
+    "blog_delete_post2",
+    array('guid' => array ('type' => 'string'),
+    ),
+    "Delete a blog post",
+    'POST',
+    true,
+    true);			
