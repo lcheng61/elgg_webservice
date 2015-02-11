@@ -71,10 +71,39 @@ function user_get_profile($username) {
             'owner_guid' => $user->guid,
             'limit' => 0,
             'full_view' => FALSE,
-            'offset' => $offset,
+
 	    );
     $ideas_num = count(elgg_get_entities($params));
     $profile_info['ideas_num'] = $ideas_num;
+
+////////Add message number
+   $total_params = array(
+            'type' => 'object',
+            'subtype' => 'messages',
+            'metadata_name' => 'toId',
+            'metadata_value' => $user->guid,
+
+//            'metadata_name' => 'readYet',
+//            'metadata_value' => false,
+
+            'owner_guid' => $user->guid,
+            'limit' => 0,
+            'offset' => 0,
+            'full_view' => false,
+                        );
+    $total_list = elgg_get_entities_from_metadata($total_params);
+
+    $msg_count = 0;
+    if ($total_list) {
+        foreach($total_list as $single ) {
+            if($single->readYet == false){
+                $msg_count ++;
+            }
+        }
+    }
+    $profile_info['message_unread_number'] = $msg_count; //count($total_list);
+
+////////
 ////////
 /*
     $options = array(
@@ -173,6 +202,8 @@ function user_get_profile($username) {
     $profile_info['username'] = $user->username;
     $profile_info['profile_fields'] = $profile_fields;
     $profile_info['avatar_url'] = get_entity_icon_url($user,'medium');
+
+    $profile_info['is_seller'] = $user->is_seller;
 
     $profile_info['do_i_follow'] = user_is_friend($me->guid, $user->guid);
 
@@ -335,6 +366,24 @@ expose_function('user.check_username_availability',
                 false);
 
 
+function user_check_email_availability($email) {
+    $user = get_user_by_email($email);
+    if (!$user) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+expose_function('user.check_email_availability',
+                "user_check_email_availability",
+                array('email' => array ('type' => 'string'),
+                    ),
+                "Check email availability",
+                'GET',
+                false,
+                false);
+
 ////////////// register new user by email and name only
 //
 //////////////
@@ -350,13 +399,6 @@ function generateRandomString($length = 10) {
 }
 
 function user_register_email($email, $msg="", $name="") {
-
-/*
-$return['email'] = $email;
-$return['msg']   = $msg;
-$return['name']  = $name;
-return $return;
-*/
 
     $email = trim($email);
     $msg = trim($msg);
@@ -489,14 +531,16 @@ function user_reset_password2($guid) {
  *
  * @return bool
  */           
-function user_register($name="", $email="", $username="", $password="") {
+function user_register($name="", $email="", $username="", $password="", $is_seller=0) {
 
     $username = trim($username);
     $email = trim($email);
     $name = trim($name);
 
     $user = get_user_by_username($username);
-    if (!$user) {
+    if ($user) {
+        throw new RegistrationException(elgg_echo('registration:userexists'));
+    } else {
         $user = get_user_by_email($email);
         $user = $user[0];
     }
@@ -507,11 +551,15 @@ function user_register($name="", $email="", $username="", $password="") {
     if (!$user) {
         $return['success'] = true;
         $return['guid'] = register_user($username, $password, $name, $email);
-        user_send_register_mail($email, $name, $username, $password);
+        if ($is_seller == 0) {
+            user_send_register_mail($email, $name, $username, $password);
+        } else if ($is_seller == 1) {
+            user_send_seller_register_mail($email, $name, $username, $password);
+        }
         $return['email_sent'] = true;
     } else {
-        user_reset_password2($user->guid);
-        throw new RegistrationException(elgg_echo('registration:userexists:passwordreset:emailsent'));
+        $result = send_new_password_request2($user->guid);
+        throw new RegistrationException("Note: Email exists. This was reported to $user->email ");
     }
 
     $return['username'] = $username;
@@ -529,6 +577,7 @@ expose_function('user.register',
                         'email' => array ('type' => 'string', 'required' => true, 'default' => ""),
                         'username' => array ('type' => 'string', 'required' => true, 'default' => ""),
                         'password' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                        'is_seller' => array ('type' => integer, 'required' => false, 'default' => 0),
                     ),
                 "Register user",
                 'POST',
@@ -951,7 +1000,7 @@ expose_function('user.upload_avatar',
  * wrapper for recursive array walk decoding
  */
 function profile_array_decoder2(&$v) {
-        $v = _elgg_html_decode($v);
+    $v = _elgg_html_decode($v);
 }
 
 function user_edit_profile($profile_str)
@@ -1145,9 +1194,82 @@ expose_function('user.change_username',
 /////
 
 
-function send_new_password_request2($user_guid) {
+function execute_new_password_request2($user_guid, $conf_code) {
+
+    $password = null;
     $user_guid = (int)$user_guid;
     $user = get_entity($user_guid);
+    if (!$user) {
+        return "user_id $user_guid doesn't exist";
+    }
+
+    if ($password === null) {
+        $password = generate_random_cleartext_password();
+        $reset = true;
+    }
+
+    if (!elgg_instanceof($user, 'user')) {
+        return false;
+    }
+
+    $saved_code = $user->getPrivateSetting('passwd_conf_code');
+    $code_time = (int) $user->getPrivateSetting('passwd_conf_time');
+
+    if (!$saved_code || $saved_code != $conf_code) {
+        return false;
+    }
+
+    // Discard for security if it is 24h old
+    if (!$code_time || $code_time < time() - 24 * 60 * 60) {
+        return false;
+    }
+
+    if (force_user_password_reset($user_guid, $password)) {
+        remove_private_setting($user_guid, 'passwd_conf_code');
+        remove_private_setting($user_guid, 'passwd_conf_time');
+        // clean the logins failures
+        reset_login_failure_count($user_guid);
+
+        $ns = $reset ? 'resetpassword' : 'changepassword';
+ 
+$subject = "Lovebeauty password reset";
+$body = "
+   Hi $user->username, \n\n
+   Your password was reset. New password: $password \n\n
+
+   Yours truly,
+   Lovebeauty Team
+        ";
+
+        notify_user($user->guid,
+            elgg_get_site_entity()->guid,
+            $subject, $body, $user->language,
+            array(),
+            'email'
+        );
+
+        return "Your password was reset. Check your email $user->email";
+    }
+
+    return false;
+}
+
+expose_function('user.execute_password_reset',
+                "execute_new_password_request2",
+                array(
+                        'user_id' => array ('type' => 'string', 'required' => true, 'default' => null),
+                        'conf_code' => array ('type' => 'string', 'required' => true, 'default' => null),
+                    ),
+                "Reset Password",
+                'GET',
+                false,
+                false);
+
+function send_new_password_request2($user_guid) {
+    $user_guid = (int)$user_guid;
+
+    $user = get_entity($user_guid);
+
     if ($user instanceof ElggUser) {
         // generate code
         $code = generate_random_cleartext_password();
@@ -1155,29 +1277,37 @@ function send_new_password_request2($user_guid) {
         $user->setPrivateSetting('passwd_conf_time', time());
  
         // email subject
-        $subject = elgg_echo('email:changereq:subject', array(), $user->language);
+        $subject = "[LoveBeauty] Email reset request";
 
         // link for changing the password
-        $link = elgg_get_site_url() . "changepassword?u=$user_guid&c=$code";
- 
-        // IP address of the current user
-        $ip_address = _elgg_services()->request->getClientIp();
+        $link = elgg_get_site_url()."/services/api/rest/json/?method="."user.execute_password_reset"."&user_id=".$user_guid."&conf_code=".$code;
 
         // email message body
-        $email = elgg_echo('email:changereq:body', array(
-            $user->name,
-            $ip_address,
-            $link
-        ), $user->language);
+        $email = "
+Dear $user->username,\n\n
+Someone requrested to reset your password. You can ignore this message if you don't know it. Your password will not be changed. To reset your password, click on the link below: \n
+$link.\n\n
 
-//        user_reset_password2($user->guid);
-        return true;
+Best regards,\n
+Lovebeauty Team\n
+                 ";
         return notify_user($user->guid, elgg_get_site_entity()->guid,
             $subject, $email, array(), 'email');
     }
-
+ 
     return false;
 }
+
+expose_function('user.send_new_pw',
+                "send_new_password_request2",
+                array(
+                        'user_id' => array ('type' => 'string', 'required' => true, 'default' => null),
+                    ),
+                "Reset Password",
+                'POST',
+                false,
+                false);
+
 
 /**
  * Web service to request lost password
@@ -1249,9 +1379,9 @@ function user_send_register_mail($email, $name, $username, $password) {
         return 1;
 }
 
-function user_register_dupemail($email, $username, $name) {
-    $email = trim($email);
+function user_send_seller_register_mail($email, $name, $username, $password) {
     $site = elgg_get_site_entity();
+    $email = trim($email);
 
     // send out other email addresses
     if (!is_email_address($email)) {
@@ -1260,25 +1390,27 @@ function user_register_dupemail($email, $username, $name) {
     }
 
     $message = "
-                   Dear $name, \n\n
-                   Someone used this email to register at lovebeauty.me! \n
-                   This email has already been associated with an account at Lovebeauty.
-                   Please use another email and register again.
-                   If you forgot your password, please go to $site/seller/reset_password.html to reset your password.
-                   Your username is
-                   $username
-                   \n\n\n
-                   Regards,
-                   Lovebeauty Team
+Dear $name,
+
+Thank you for regisering Lovebeauty as a seller! We will contact you shortly.
+
+Once your request is approved, you'll be able to use Lovebeauty's seller portal. Now feel free to download an APP and have fun.
+
+Your username/password is:
+    username: $username
+    password: $password
+
+Regards,
+Lovebeauty Team
                ";
 
-        $subject = "Email reset";
+        $subject = "Thank you for your register as a seller";
 
         $from = "team@lovebeauty.me";
         elgg_send_email($from, $email, $subject, $message);
+        elgg_send_email($from, $from, $subject, $message);
         return 1;
 }
-
 
 /**
  * Used to Pull in the latest avatar from facebook.
@@ -1335,10 +1467,6 @@ function facebook_import_avatar($user, $file_location) {
  * @return void
  */
 function user_register_facebook($msg) {
-
-//    $users= get_user_by_email("jinpeifamily@gmail.com");
-//    return $users[0]->username;
-
 
     $user = FALSE;
 
@@ -1453,6 +1581,7 @@ function user_list_signup($signup_only) {
         } else {
             $state = "Common user";
 	}
+        $result['is_seller'] = $user->is_seller;
         $result['state'] = $state;
         $result['email'] = $user->email;
         $result['username'] = $user->username;
