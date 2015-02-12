@@ -86,6 +86,8 @@ $(function() {
 	
 	
 	$('#signout').click(function() { //delete the uploaded4 image
+		setCookie('username', "", 1000);
+		setCookie('token', '', 1000);
 		
 		var formUrl = server + signout + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
 		//console.log(get_url);
@@ -104,7 +106,7 @@ $(function() {
 				if (data.status == 0) {
 					setCookie('username', "", 1000);
 					setCookie('token', '', 1000);
-					window.location.href = 'login.html';
+					//window.location.href = 'login.html';
 				} 
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
