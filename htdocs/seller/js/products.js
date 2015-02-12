@@ -28,6 +28,8 @@ $(function() {
 				"data": "product_price"
 			}, {
 				"data": "sold_count"
+			}, {
+				"data" : "quantity"
 			}]
 	});
 	$('#products tbody').on('click', 'tr', function() {
