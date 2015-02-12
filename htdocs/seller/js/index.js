@@ -106,8 +106,8 @@ $(function() {
 				if (data.status == 0) {
 					setCookie('username', "", 1000);
 					setCookie('token', '', 1000);
-					//window.location.href = 'login.html';
 				} 
+				window.location.href = 'login.html';
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				console.log(textStatus);
