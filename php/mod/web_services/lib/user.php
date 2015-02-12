@@ -200,6 +200,7 @@ function user_get_profile($username) {
     $profile_info['user_id'] = $user->guid;
     $profile_info['name'] = $user->name;
     $profile_info['username'] = $user->username;
+    $profile_info['email'] = $user->email;
     $profile_info['profile_fields'] = $profile_fields;
     $profile_info['avatar_url'] = get_entity_icon_url($user,'medium');
 
@@ -1323,7 +1324,7 @@ function user_request_lost_password($username) {
     $user = get_user_by_username($username);
     if ($user) {
 //        if (user_reset_password2($user->guid)) {
-        if (send_new_password_request($user->guid)) {
+        if (send_new_password_request2($user->guid)) {
                 system_message(elgg_echo('user:password:resetreq:success'));
                 $return['username'] = $user->username;
                 $return['email_sent'] = $user->email;
