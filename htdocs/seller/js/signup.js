@@ -2,6 +2,7 @@
 $(function() {
 
 	var is_user_exists = false;
+	var is_user_email_exists = false;
 
 
 	$.validate({
@@ -14,10 +15,13 @@ $(function() {
 			//alert('Validation failed');
 		},
 		onSuccess: function() {
-			if (is_user_exists == false) {
-				submit_form();
-			} else {
+			if (is_user_exists != false) {
 				BootstrapDialog.alert('Username already exists. Please change to another one.');
+
+			} else 	if (is_user_email_exists != false) {
+				BootstrapDialog.alert('Email already exists. Please change to another one.');
+			} else {
+				submit_form();
 			}
 			return false; // Will stop the submission of the form
 		}
@@ -78,6 +82,10 @@ $(function() {
 		checkUserAvailability();
 	});
 
+	$("#email").blur(function() {
+		checkUserEmailAvailability();
+	});
+
 	function checkUserAvailability() {
 		var user_availability_url = server + check_user_availability + "&username=" + $("#name").val();
 		console.log(user_availability_url);
@@ -100,6 +108,33 @@ $(function() {
 
 			} else {
 				is_user_exists = true;
+				//BootstrapDialog.alert('Could not check user name from server.');
+			}
+		});
+	}
+
+	function checkUserEmailAvailability() {
+		var user_email_availability_url = server + check_user_email_availability + "&email=" + $("#email").val();
+		console.log(user_email_availability_url);
+
+		$.getJSON(user_email_availability_url, function(data) {
+			console.log(JSON.stringify(data));
+			if (data.status == 0 && data.result != undefined) {
+				//get return for the user availability successfully.
+				if (data.result == 0) { //user email exists.
+					is_user_email_exists = true;
+					$("#email_status_button").attr("class", "btn btn-warning");
+					$("#email_status_icon").removeClass("glyphicon glyphicon-ok");
+					$("#email_status_icon").addClass("glyphicon glyphicon-ban-circle");
+				} else { //user email does not exist.
+					is_user_email_exists = false;
+					$("#email_status_button").attr("class", "btn btn-success");
+					$("#email_status_icon").removeClass("glyphicon glyphicon-ban-circle");
+					$("#email_status_icon").addClass("glyphicon glyphicon-ok");
+				}
+
+			} else {
+				is_user_email_exists = true;
 				//BootstrapDialog.alert('Could not check user name from server.');
 			}
 		});

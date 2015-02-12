@@ -8,6 +8,8 @@ var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
 //var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
 
 var get_token = 'services/api/rest/json/?method=auth.gettoken2';
+var signout = 'services/api/rest/json/?method=user.logout';
+
 
 var reset_password = 'services/api/rest/json/?method=user.request_lost_password';
 var product_post = 'services/api/rest/json/?method=product.post';
@@ -32,6 +34,7 @@ var user_get_profile = 'services/api/rest/json?method=user.get_profile';
 var user_edit_profile = 'services/api/rest/json/?method=user.edit_profile';
 var user_register = 'services/api/rest/json/?method=user.register';
 var check_user_availability = 'services/api/rest/json/?method=user.check_username_availability';
+var check_user_email_availability = 'services/api/rest/json/?method=user.check_email_availability';
 
 var statistics = 'services/api/rest/json/?method=payment.analyze.seller_order';
 
