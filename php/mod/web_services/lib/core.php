@@ -172,7 +172,8 @@ expose_function('site.search',
  * @throws SecurityException
  * @access private
  */
-function auth_gettoken2($username, $password, $expire=527040) {
+/*
+function auth_gettoken2_old($username, $password, $expire=527040) {
         // check if username is an email address
         if (is_email_address($username)) {
                 $users = get_user_by_email($username);
@@ -192,6 +193,70 @@ function auth_gettoken2($username, $password, $expire=527040) {
         }
 
         throw new SecurityException(elgg_echo('SecurityException:authenticationfailed'));
+}
+expose_function(
+    "auth.gettoken2_old",
+    "auth_gettoken2_old",
+    array(
+        'username' => array ('type' => 'string'),
+        'password' => array ('type' => 'string'),
+        'expire' => array ('type' => 'int', 'default' => 527040),
+    ),
+    elgg_echo('auth.gettoken'),
+    'POST',
+    true,
+    false
+);
+*/
+/**
+ * The auth.gettoken API.
+ * This API call lets a user log in, returning an authentication token which can be used
+ * to authenticate a user for a period of time. It is passed in future calls as the parameter
+ * auth_token.
+ *
+ * @param string $username Username
+ * @param string $password Clear text password
+ *
+ * @return string Token string or exception
+ * @throws SecurityException
+ * @access private
+ */
+function auth_gettoken2($username, $password, $expire=527040) {
+        // check if username is an email address
+        if (is_email_address($username)) {
+                $users = get_user_by_email($username);
+                        
+                // check if we have a unique user
+                if (is_array($users) && (count($users) == 1)) {
+                        $username = $users[0]->username;
+                }
+        }
+        
+        // validate username and password
+        if (true === elgg_authenticate($username, $password)) {
+                $token = create_user_token($username, $expire);
+                if ($token) {
+                    $return['token'] = $token;
+                } else {
+                    throw new SecurityException(elgg_echo('SecurityException:authenticationfailed'));
+                }
+                $user = get_user_by_username($username);
+                if (!$user) {
+                    throw new InvalidParameterException('registration:usernamenotvalid');
+                }
+                if ($user->is_seller) {
+		    if ($user->is_seller == true) {
+                        $return['is_seller'] = true;
+                    } else {
+                        $return['is_seller'] = false;
+                    }
+		} else {
+                    $return['is_seller'] = false;
+		}
+        } else {
+            throw new SecurityException(elgg_echo('SecurityException:authenticationfailed'));
+        }
+        return $return;
 }
 expose_function(
     "auth.gettoken2",
