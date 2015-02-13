@@ -231,7 +231,6 @@ expose_function('messages.sent',
         throw new InvalidParameterException($msg);
     }
     $result = messages_send($subject, $body, $recipient_guid, 0, $reply);
-
     return $result;
 }
 

@@ -372,6 +372,11 @@ function user_check_email_availability($email) {
     if (!$user) {
         return 1;
     } else {
+        if ($user->email_subscriber) {
+            if ($user->email_subscriber == true) {
+                return 1;
+            }
+        }
         return 0;
     }
 }

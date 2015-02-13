@@ -11,12 +11,12 @@ $(function() {
 		//console.log(get_url);
 
 		$.getJSON(get_url, function(data) {
-			//console.log(JSON.stringify(data));
+			console.log(JSON.stringify(data));
 			if (data.status == 0) { //read prodcut detail successfully.
 				original_username = data.result.username;
 				$('#username').val(original_username);
 				$('#nick_name').val(data.result.name);
-
+				$('#email').val(data.result.email);
 
 			}
 		});

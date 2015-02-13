@@ -3,6 +3,9 @@ $(function() {
 
 	var idea;
 	var idea_id = getUrlParameter("tip_id");
+
+	//$("#allowSpacesTags").tagit();
+
 	console.log("idea_id=" + idea_id);
 	if (idea_id != undefined && idea_id != null) { //edit data for teh prodcut. get the prodcut detail first of all.
 		$('#page_title').text("Edit Idea");
@@ -24,7 +27,17 @@ $(function() {
 			if (data.status == 0) { //read prodcut detail successfully.
 				console.log('tip title=' + data.result.tip_title);
 				$('#cover_caption').html(data.result.tip_title);
-				$('#category').val(data.result.tip_scategory);
+				$('#category').val(data.result.tip_category);
+
+				if (data.result.tip_tags != undefined) {
+					//console.log("tags original = " + data.result.tip_tags);
+					tags = String(data.result.tip_tags).trim().split(",");
+
+					for (i = 0; i < tags.length; i++) {
+						$('#allowSpacesTags').tagit('createTag', tags[i]);
+					}
+				}
+
 				if (data.result.tip_thumbnail_image_url != undefined) {
 					$('#cover_img').attr("src", data.result.tip_thumbnail_image_url);
 				}

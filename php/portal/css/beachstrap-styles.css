@@ -156,6 +156,13 @@ nav .active a {
 	text-decoration: none;
 }
 
+#confirmation-content {
+	position: relative;
+	width: 100%;
+	min-height: 747px;
+	top: 230px;
+}
+
 /* ====================== MAIN ========================= */
 
 #main {

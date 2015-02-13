@@ -256,6 +256,7 @@ function auth_gettoken2($username, $password, $expire=527040) {
         } else {
             throw new SecurityException(elgg_echo('SecurityException:authenticationfailed'));
         }
+
         return $return;
 }
 expose_function(

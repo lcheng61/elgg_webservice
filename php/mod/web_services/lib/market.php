@@ -134,7 +134,11 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                  $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
                  $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
 
-                 $blog['quantity'] = $single->quantity;
+                 if ($single->quantity < 0) {
+                     $blog['quantity'] = 0;
+                 } else {
+                     $blog['quantity'] = $single->quantity;
+		 }
 
                  $blog['rate'] = $single->rate;
                  $blog['product_category'] = $single->marketcategory;
@@ -239,7 +243,11 @@ function product_get_detail($product_id) {
     $return['product_description'] = $blog->description;
 
     $return['category'] = $blog->marketcategory;
-    $return['quantity'] = $blog->quantity;
+    if ($blog->quantity < 0) {
+        $return['quantity'] = 0;
+    } else {
+        $return['quantity'] = $blog->quantity;
+    }
 
 ///// seller portal used
     $return['delivery_time'] = $blog->delivery_time;
