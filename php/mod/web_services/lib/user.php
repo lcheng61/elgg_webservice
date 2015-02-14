@@ -372,10 +372,9 @@ function user_check_email_availability($email) {
     if (!$user) {
         return 1;
     } else {
-        if ($user->email_subscriber) {
-            if ($user->email_subscriber == true) {
-                return 1;
-            }
+        $user = $user[0];
+        if ($user->email_subscriber == true) {
+            return 1;
         }
         return 0;
     }
@@ -564,8 +563,32 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
         }
         $return['email_sent'] = true;
     } else {
-        $result = send_new_password_request2($user->guid);
-        throw new RegistrationException("Note: Email exists. This was reported to $user->email ");
+        // must be user from email
+        if ($user->email_subscriber == true) {
+
+            $return['success'] = true;
+//            $return['guid'] = register_user($username, $password, $name, $email);
+
+            if ($is_seller == 0) {
+                user_send_register_mail($email, $name, $username, $password);
+            } else if ($is_seller == 1) {
+                user_send_seller_register_mail($email, $name, $username, $password);
+            }
+            $return['email_sent'] = true;
+            
+            login($user);
+            if (!force_user_password_reset($user->guid, $password)) {
+                throw new RegistrationException("Password changing failed");
+            }
+            $user->username = $username;
+            $user->name = $name;
+            $user->email_subscriber = 0;  // convert from an email subscriber to a common user
+            $user->save();
+            logout();
+        } else { // for common users, we don't user provided password. We send password reset
+            $result = send_new_password_request2($user->guid);
+            throw new RegistrationException("Note: Email exists. This was reported to $user->email ");
+        }
     }
 
     $return['username'] = $username;
