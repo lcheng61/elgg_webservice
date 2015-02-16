@@ -432,6 +432,7 @@ function user_register_email($email, $msg="", $name="") {
         if(!user_guid) {
             throw new RegistrationException(elgg_echo('registration:usercannotregister'));
         }
+        user_send_subscriber_register_mail($email);
     } else {
         $user = $user_array[0];
         $name = $user->name;
@@ -1276,8 +1277,8 @@ $body = "
             array(),
             'email'
         );
-
-        return "Your password was reset. Check your email $user->email";
+        forward(elgg_get_site_url()."/reset_pass_success.html");
+//        return "Your password was reset. Check your email $user->email";
     }
 
     return false;
@@ -1440,6 +1441,33 @@ Lovebeauty Team
         elgg_send_email($from, $from, $subject, $message);
         return 1;
 }
+
+function user_send_subscriber_register_mail($email) {
+    $site = elgg_get_site_entity();
+    $email = trim($email);
+
+    // send out other email addresses
+    if (!is_email_address($email)) {
+        register_error(elgg_echo('user:email:wrong'));
+        return false;
+    }
+
+    $message = "
+Hi,
+
+Thank you for your interest in Lovebeauty. We will contact you shortly.
+
+Regards,
+Lovebeauty Team
+               ";
+
+        $subject = "Thank you for your interest";
+
+        $from = "team@lovebeauty.me";
+        elgg_send_email($from, $email, $subject, $message);
+        return 1;
+}
+
 
 /**
  * Used to Pull in the latest avatar from facebook.
