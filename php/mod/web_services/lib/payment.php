@@ -289,6 +289,13 @@ function pay_checkout_direct($msg)
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
 
+    $points = $json['points'];
+    if ($user->points < $points) {
+        throw new InvalidParameterException('User points not sufficient');
+    }
+    $user->points -= $points;
+    $user->save();
+
     // saving shipping address to user profile
     $my_address = $json['order_info']['shipping_address'];
     $user->shipping_address = $my_address;
@@ -473,13 +480,18 @@ function pay_checkout_direct($msg)
                     $thinker_order->product_quantity = $product_value['item_number'];
 
                     $thinker = get_user($product_value['thinker_id']);
+
+                    $points_earned = ($product_value['product_price'] * 10); // 10% of the product price
+                    $dollar_earned = $points_earned / 100;
+                    $thinker->points += $points_earned;
+                    $thinker->save();
                 
                     $thinker_item = "";
                     if ($thinker_order->save()) {
        	                $thinker_item['order_id'] = $thinker_order->guid;
 
                         // send email, format it later
-                        $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you");
+                        $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you. You have earned $dollar_earned dollars.");
       	                $thinker_item['email_sent'] = $thinker->email;
                         $thinker_item['time_friendly'] = $time_friendly;
                         $thinker_item['timestamp'] = $timestamp;
@@ -490,6 +502,7 @@ function pay_checkout_direct($msg)
                         $thinker_item['product_quantity'] = $product_value['item_number'];
                         $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
                         $thinker_item['thinker_idea_id'] = $product_value['thinker_idea_id'];
+                        $thinker_item['points'] = $thinker->points;
                     }
                     $person_info['thinker_info'][] = $thinker_item;
                 }

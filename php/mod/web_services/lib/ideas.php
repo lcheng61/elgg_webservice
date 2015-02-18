@@ -275,6 +275,7 @@ expose_function('ideas.get_detail',
 
 function ideas_post_tip($message, $idea_id)
 {
+
     $user = elgg_get_logged_in_user_entity();
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
@@ -301,6 +302,7 @@ function ideas_post_tip($message, $idea_id)
 
     // save all info of this tip
     $json = json_decode($message, true);
+
     $post->tip_pages = json_encode($json['tip_pages']);
 
 //    $return['tip_pages'] = $post->tip_pages;
@@ -402,23 +404,6 @@ function ideas_post_tip($message, $idea_id)
 
             $post->addRelationship($id, "sponsor");
 
-/*
-            // get number of products linked to this idea
-            $return['product']['number_products'] = $post->countEntitiesFromRelationship("sponsor");
-
-            // get ideas linked to this product
-            $items = $product_post->getEntitiesFromRelationship("sponsor", true, 0, 0);
-
-	    foreach ($items as $item) {
-	        $return['idea'][] = $item->guid;
-                // get products linked to this idea
-		$reverse_items = $item->getEntitiesFromRelationship("sponsor", false, 0, 0);
-		foreach ($reverse_items as $reverse_item) {
-     	            $return['product_verify'][$item->guid] = $reverse_item->guid;
-                }
-	    }
-*/
-
             $return['products_id'][] = $id;
             $return['products_name'][] = $product_post->title;
         } else {
@@ -428,6 +413,10 @@ function ideas_post_tip($message, $idea_id)
 
     if ($post->save()) {
         if ($new_post) {
+            if (!$user->points) {
+                $user->points = 50; // signup points
+            }
+            $user->points += 10;
             add_to_river('river/object/market/create','create', $user->guid, $post->guid);
         }
     } else {

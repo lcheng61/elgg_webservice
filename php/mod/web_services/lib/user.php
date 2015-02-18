@@ -76,6 +76,12 @@ function user_get_profile($username) {
     $ideas_num = count(elgg_get_entities($params));
     $profile_info['ideas_num'] = $ideas_num;
 
+    if (!$user->points) {
+        $user->points = 50; // initial signup points
+        $user->save();
+    }
+    $profile_info['points'] = $user->points;
+
 ////////Add message number
    $total_params = array(
             'type' => 'object',
@@ -568,7 +574,6 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
         if ($user->email_subscriber == true) {
 
             $return['success'] = true;
-//            $return['guid'] = register_user($username, $password, $name, $email);
 
             if ($is_seller == 0) {
                 user_send_register_mail($email, $name, $username, $password);
@@ -591,6 +596,11 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
             throw new RegistrationException("Note: Email exists. This was reported to $user->email ");
         }
     }
+// add sign up points
+    login($user);
+    $user->points = 50;
+    $user->save();
+// 
 
     $return['username'] = $username;
     $return['email'] = $email;
@@ -1680,6 +1690,53 @@ expose_function('user.list.signup',
                 array('signup_only' => array ('type' => 'string', 'required' => false, 'default' => "true"),
                     ),
                 "Get email signup or all users",
+                'GET',
+                true,
+                false);
+
+function user_redeem_points($user_guid, $name, $address, $dollars) {
+    $user = get_entity($user_guid);
+    if (!$user) {
+        throw new RegistrationException(elgg_echo('Cannot find user'));
+    }
+
+    $subject = "LB Reward Check Redeem";
+    $body = "
+Hi $user->name ($user->username),
+
+We have received your request to redeem LB checks at amount of $dollars dollars.
+We will send the check to your address as below within the next 5-8 business days.
+
+Your name to display on check: $name
+Your address: $address
+
+Yours truly,
+Lovebeauty Team
+";
+    $from = "team@lovebeauty.me";
+    elgg_send_email($from, $from, $subject, $body);
+
+    notify_user($user->guid,
+        elgg_get_site_entity()->guid,
+        $subject, $body, $user->language,
+        array(),
+        'email'
+    );
+
+    $user->points -= ($dollars * 100);
+    $user->save();
+    return "Points are redeemed.";
+}
+
+expose_function('user.redeem_points',
+                "user_redeem_points",
+                array(
+                    'user_guid' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                    'name' =>      array ('type' => 'string', 'required' => true, 'default' => ""),
+                    'address' =>   array ('type' => 'string', 'required' => true, 'default' => ""),
+                    'dollars' =>   array ('type' => 'string', 'required' => true, 'default' => "")
+                    ),
+                "Uer redeem points",
                 'GET',
                 true,
                 false);
