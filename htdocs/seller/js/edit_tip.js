@@ -146,8 +146,8 @@ $(function() {
 			"tip_thumbnail_image_url": $('#cover_img').attr("src"),
 			"tip_pages": pages,
 			"tip_tags": $('#allowSpacesTagsResult').val().split(','),
-			"products_id": product_ids,
-			"tip_notes": $('#info_content').html().trim()
+			"products_id": product_ids
+//			"tip_notes": $('#info_content').html().trim()
 		}
 
 		//console.log(message);
