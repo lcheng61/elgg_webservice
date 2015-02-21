@@ -275,7 +275,6 @@ expose_function('ideas.get_detail',
 
 function ideas_post_tip($message, $idea_id)
 {
-
     $user = elgg_get_logged_in_user_entity();
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
@@ -304,8 +303,6 @@ function ideas_post_tip($message, $idea_id)
     $json = json_decode($message, true);
 
     $post->tip_pages = json_encode($json['tip_pages']);
-
-//    $return['tip_pages'] = $post->tip_pages;
 
     $post->title = $json['tip_title'];
     $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];

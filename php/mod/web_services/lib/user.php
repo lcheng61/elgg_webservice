@@ -1694,7 +1694,7 @@ expose_function('user.list.signup',
                 true,
                 false);
 
-function user_redeem_points($user_guid, $name, $address, $dollars) {
+function user_redeem_points($user_guid, $name, $address, $points) {
     $user = get_entity($user_guid);
     if (!$user) {
         throw new RegistrationException(elgg_echo('Cannot find user'));
@@ -1704,7 +1704,7 @@ function user_redeem_points($user_guid, $name, $address, $dollars) {
     $body = "
 Hi $user->name ($user->username),
 
-We have received your request to redeem LB checks at amount of $dollars dollars.
+We have received your request to redeem LB checks at amount of $points points/cents.
 We will send the check to your address as below within the next 5-8 business days.
 
 Your name to display on check: $name
@@ -1723,7 +1723,10 @@ Lovebeauty Team
         'email'
     );
 
-    $user->points -= ($dollars * 100);
+    $user->points -= $points;
+    if ($user->points < 0) {
+        throw new RegistrationException(elgg_echo('points not insufficient'));    
+    }
     $user->save();
     return "Points are redeemed.";
 }
@@ -1734,9 +1737,41 @@ expose_function('user.redeem_points',
                     'user_guid' => array ('type' => 'string', 'required' => true, 'default' => ""),
                     'name' =>      array ('type' => 'string', 'required' => true, 'default' => ""),
                     'address' =>   array ('type' => 'string', 'required' => true, 'default' => ""),
-                    'dollars' =>   array ('type' => 'string', 'required' => true, 'default' => "")
+                    'points' =>   array ('type' => 'string', 'required' => true, 'default' => "")
                     ),
                 "Uer redeem points",
                 'GET',
                 true,
                 false);
+
+function user_delete($username) {
+   $user = get_user_by_username($username);
+ 
+   if ($guid == elgg_get_logged_in_user_guid()) {
+       throw new RegistrationException(elgg_echo('admin:user:self:delete:no'));
+   }
+    
+   $name = $user->name;
+   $username = $user->username;
+   
+   if (($user instanceof ElggUser) && ($user->canEdit())) {
+       if ($user->delete()) {
+           return "delete success";
+       } else {
+           throw new RegistrationException(elgg_echo('admin:user:delete:no'));
+       }
+   } else {
+       throw new RegistrationException(elgg_echo('admin:user:delete:no'));
+   }
+   return "delete success";
+}   
+
+expose_function('user.delete',
+                "user_delete",
+                array(
+                    'username' =>   array ('type' => 'string', 'required' => true, 'default' => "")
+                    ),
+                "Uer delete",
+                'POST',
+                true,
+                true);

@@ -1041,7 +1041,7 @@ function pay_analyze_seller_order($time_start, $time_end)
 {
     $user = get_loggedin_user();
     
-    $lb_commission_rate = 0.1;
+    $lb_commission_rate = 0.01;
     if ($user->lb_commission_rate) {
         $lb_commission_rate = $user->lb_commission_rate;
     }

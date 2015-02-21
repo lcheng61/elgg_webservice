@@ -134,6 +134,14 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                  $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
                  $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
 
+// affiliate attributes
+                 $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
+                 $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
+                 $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
+                 $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
+                 $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+//~
+
                  if ($single->quantity < 0) {
                      $blog['quantity'] = 0;
                  } else {
@@ -255,6 +263,14 @@ function product_get_detail($product_id) {
     $return['free_shipping_quantity_limit'] = $blog->free_shipping_quantity_limit;
     $return['free_shipping_cost_limit'] = $blog->free_shipping_cost_limit;
 /////~
+
+// affiliated product used
+    $return['affiliate']['is_affiliate'] = ($blog->is_affiliate ? $blog->is_affiliate : 0);
+    $return['affiliate']['affiliate_product_id'] = ($blog->affiliate_product_id ? $blog->affiliate_product_id : 0);
+    $return['affiliate']['affiliate_product_url'] = ($blog->affiliate_product_url ? $blog->affiliate_product_url : "");
+    $return['affiliate']['is_archived'] = ($blog->is_archived ? $blog->is_archived : 0);
+    $return['affiliate']['affiliate_syncon'] = ($blog->affiliate_syncon ? $blog->affiliate_syncon : 0);
+//~
 
     $return['sold_count'] = $blog->sold_count;
     $return['rate'] = $blog->rate;
@@ -574,7 +590,13 @@ function product_search($query, $category, $offset, $limit,
                  $blog['product_seller']['user_name'] = $owner->username;
                  $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['product_seller']['is_seller'] = $owner->is_seller;
-            
+ 
+                 $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
+                 $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
+                 $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
+                 $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
+                 $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+           
                  $return['products'][] = $blog;
             }
         }
@@ -603,7 +625,9 @@ expose_function('product.search',
 
 function product_post($product_id, $title, $category, $description,
     $price, $tags, $quantity, $delivery_time, $shipping_fee,
-    $free_shipping_quantity_limit, $free_shipping_cost_limit)
+    $free_shipping_quantity_limit, $free_shipping_cost_limit,
+    $is_affiliate, $affiliate_product_id, $affiliate_product_url,
+    $is_archived, $affiliate_syncon)
 {
     $user = elgg_get_logged_in_user_entity();
 
@@ -639,6 +663,11 @@ function product_post($product_id, $title, $category, $description,
         'free_shipping_quantity_limit' => $free_shipping_quantity_limit,
         'free_shipping_cost_limit' => $free_shipping_cost_limit,
         'rate' => 0,
+        'is_affiliate' => $is_affiliate,
+        'affiliate_product_id' => $affiliate_product_id,
+        'affiliate_product_url' => $affiliate_product_url,
+        'is_archived' => $is_archived,
+        'affiliate_syncon' => $affiliate_syncon,
     );
 
     // fail if a required entity isn't set
@@ -722,6 +751,12 @@ expose_function('product.post',
                        'shipping_fee' => array('type' => 'float', 'required' => false, 'default' => 0),
                        'free_shipping_quantity_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'free_shipping_cost_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
+
+                       'is_affiliate' => array('type' => 'int', 'required' => false, 'default' => 0),
+                       'affiliate_product_id' => array('type' => 'int', 'required' => false, 'default' => 0),
+                       'affiliate_product_url' => array('type' => 'string', 'required' => false, 'default' => ""),
+                       'is_archived' => array('type' => 'int', 'required' => false, 'default' => 0),
+                       'affiliate_syncon' => array('type' => 'int', 'required' => false, 'default' => 0),
                      ),
                 "Post a product by seller",
                 "POST",
@@ -908,5 +943,27 @@ expose_function('product.tip.delete',
                      ),
                 "Delete a tip linked to a product",
                 "POST",
+                true,
+                true);
+
+function get_affiliate_sync_time($product_id) {
+    $post = get_entity($product_id);
+    $return['affiliate_syncon'] = 0;
+
+    if (!elgg_instanceof($post, 'object', 'market')) {
+        throw new InvalidParameterException('blog:error:post_not_found');
+    }
+    if ($post->affiliate_syncon) {
+        $return['affiliate_syncon'] = $post->affiliate_syncon;
+    }
+    return $return;
+}
+
+expose_function('product.get_affiliate_sync_time',
+                "get_affiliate_sync_time",
+                array( 'product_id' => array('type' => 'int', 'required' => true, 'default' => 0),
+                     ),
+                "Get affiliate product's last sync time",
+                "GET",
                 true,
                 true);
