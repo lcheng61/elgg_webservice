@@ -253,6 +253,11 @@ function auth_gettoken2($username, $password, $expire=527040) {
 		} else {
                     $return['is_seller'] = false;
 		}
+   	        if ($user && $user->isAdmin()) {
+                    $return['is_admin'] = true;
+                } else {
+                    $return['is_admin'] = false;
+                }
         } else {
             throw new SecurityException(elgg_echo('SecurityException:authenticationfailed'));
         }
