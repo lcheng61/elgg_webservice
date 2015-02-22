@@ -569,6 +569,9 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
             user_send_seller_register_mail($email, $name, $username, $password);
         }
         $return['email_sent'] = true;
+
+        $user = get_user($return['guid']);
+
     } else {
         // must be user from email
         if ($user->email_subscriber == true) {
@@ -596,17 +599,19 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
             throw new RegistrationException("Note: Email exists. This was reported to $user->email ");
         }
     }
-// add sign up points
-    login($user);
-    $user->points = 50;
-    $user->save();
-// 
 
     $return['username'] = $username;
     $return['email'] = $email;
     $return['name'] = $name;
     $return['profile_fields'] = user_get_profile_fields();
     $return['token'] = create_user_token($username, 527040);
+
+// add sign up points
+    login($user);
+    $user->points = 0;
+    if (!$user->save()) {
+        throw new InvalidParameterException('registration:cannotaddpoints');
+    }
 
     return $return;
 }
@@ -1771,7 +1776,51 @@ expose_function('user.delete',
                 array(
                     'username' =>   array ('type' => 'string', 'required' => true, 'default' => "")
                     ),
-                "Uer delete",
+                "Delete user",
+                'POST',
+                true,
+                true);
+
+function user_set_admin($username) {
+   $user = get_user_by_username($username);
+ 
+   if (!$user) {
+       throw new RegistrationException(elgg_echo('username:not:found'));
+   }
+   $user->is_admin = true;
+   $user->save();
+
+   return "admin is set.";
+}   
+
+expose_function('user.set_admin',
+                "user_set_admin",
+                array(
+                    'username' =>   array ('type' => 'string', 'required' => true, 'default' => "")
+                    ),
+                "Set admin",
+                'POST',
+                true,
+                true);
+
+function user_set_seller($username) {
+   $user = get_user_by_username($username);
+ 
+   if (!$user) {
+       throw new RegistrationException(elgg_echo('username:not:found'));
+   }
+   $user->is_seller = true;
+   $user->save();
+
+   return "seller is set.";
+}   
+
+expose_function('user.set_seller',
+                "user_set_seller",
+                array(
+                    'username' =>   array ('type' => 'string', 'required' => true, 'default' => "")
+                    ),
+                "Set seller",
                 'POST',
                 true,
                 true);
