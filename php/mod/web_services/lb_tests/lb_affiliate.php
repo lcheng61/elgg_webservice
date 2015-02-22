@@ -91,6 +91,13 @@ function test_title($title)
    echo lb_assert($result->products[0]->affiliate->is_archived == 0, "is_archived");
    echo lb_assert($result->products[0]->affiliate->affiliate_syncon == 999998, "affiliate_syncon");
 
+  // Set archive flag
+   test_title("Set archive flag");
+   $params = array('product_id' => $product_id);
+   $result = $client->post('product.affiliate_archive', $params);
+
+   echo lb_assert($result->is_archived == 1, "is_archived");
+
    // search product
    test_title("Search product");
    $params = array('limit' => 0, 'query' => 'affiliate');
@@ -103,7 +110,7 @@ function test_title($title)
    echo lb_assert($result->products[0]->affiliate->is_affiliate == 1, "is_affiliate");
    echo lb_assert($result->products[0]->affiliate->affiliate_product_id == 101, "affiliate_product_id");
    echo lb_assert($result->products[0]->affiliate->affiliate_product_url == 'http://www.google.com/product_1', "affiliate_product_url");
-   echo lb_assert($result->products[0]->affiliate->is_archived == 0, "is_archived");
+   echo lb_assert($result->products[0]->affiliate->is_archived == 1, "is_archived");
    echo lb_assert($result->products[0]->affiliate->affiliate_syncon == 999998, "affiliate_syncon");
 
    // get affiliate sync time

@@ -967,3 +967,30 @@ expose_function('product.get_affiliate_sync_time',
                 "GET",
                 true,
                 true);
+
+function affiliate_archive($product_id) {
+    $post = get_entity($product_id);
+
+    if (!elgg_instanceof($post, 'object', 'market')) {
+        throw new InvalidParameterException('blog:error:product_not_found');
+    }
+    if(!$post->canEdit()) {
+        throw new InvalidParameterException('blog:error:cannot_edit');
+    }
+    $post->is_archived = 1;
+    if (!$post->save()) {
+        throw new InvalidParameterException("blog:error:cannot_save");
+    }
+    $return['product_id'] = $product_id;
+    $return['is_archived'] = $post->is_archived;
+    return $return;
+}
+
+expose_function('product.affiliate_archive',
+                "affiliate_archive",
+                array( 'product_id' => array('type' => 'int', 'required' => true, 'default' => 0),
+                     ),
+                "Archive the affiliate product.",
+                "POST",
+                true,
+                true);
