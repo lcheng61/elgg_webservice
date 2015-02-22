@@ -33,8 +33,18 @@ function test_title($title)
                    'name' => $name,
                    'is_seller' => false,
                   );
-   $result = $client->post('user.register', $params);
-   echo $result;   
+   try {
+       $result = $client->post('user.register', $params);
+   } catch (Exception $e) {
+       echo 'Error: Caught exception: ', $e->getMessage(), "\n";
+       exit(-1);
+   }
+   if ($result && ($result->success == 1)) {
+       echo "PASS: user register. Success = ".$result->success."\n";
+   } else {
+       echo "Failed: user register. Exit"."\n";
+       exit(-1);
+   }
 
    $result = $client->obtainAuthToken($username, $password);
    if (!$result) {
