@@ -481,9 +481,11 @@ function pay_checkout_direct($msg)
 
                     $thinker = get_user($product_value['thinker_id']);
 
-                    $points_earned = ($product_value['product_price'] * 10); // 10% of the product price
+                    $points_earned = ($product_value['product_price'] * $product_value['item_number'] * 1); // 1% of the product price
                     $dollar_earned = $points_earned / 100;
                     $thinker->points += $points_earned;
+                    $thinker_order->points = $points_earned;
+
                     $thinker->save();
                 
                     $thinker_item = "";
@@ -1285,6 +1287,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             $item['product']['quantity'] = $single->product_quantity;
 
             $item['thinker_order_guid'] = $single->guid;
+            $item['points'] = $single->points;
             $display_number ++;
             $return['thinker'][] = $item;
 
