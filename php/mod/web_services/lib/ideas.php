@@ -411,9 +411,9 @@ function ideas_post_tip($message, $idea_id)
     if ($post->save()) {
         if ($new_post) {
             if (!$user->points) {
-                $user->points = 50; // signup points
+                $user->points = 0; // signup points
             }
-            $user->points += 10;
+            $user->points += 0;
             add_to_river('river/object/market/create','create', $user->guid, $post->guid);
         }
     } else {

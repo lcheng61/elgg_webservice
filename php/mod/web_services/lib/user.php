@@ -3,7 +3,6 @@
  * Elgg Webservices plugin 
  * 
  * @package Webservice
- * @author Saket Saurabh
  *
  */
 
@@ -77,7 +76,7 @@ function user_get_profile($username) {
     $profile_info['ideas_num'] = $ideas_num;
 
     if (!$user->points) {
-        $user->points = 50; // initial signup points
+        $user->points = 0; // initial signup points
         $user->save();
     }
     $profile_info['points'] = $user->points;
@@ -569,7 +568,6 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
             user_send_seller_register_mail($email, $name, $username, $password);
         }
         $return['email_sent'] = true;
-
         $user = get_user($return['guid']);
 
     } else {
@@ -1407,7 +1405,7 @@ function user_send_register_mail($email, $name, $username, $password) {
 
     $message = "
                    Dear $name, \n\n
-                   Thank you for regisering Lovebeauty! \n
+                   Thank you for registering Lovebeauty! \n
                    We will contact you shortly. \n\n
                    Your username/password is: \n
                    username: $username \n
@@ -1437,7 +1435,7 @@ function user_send_seller_register_mail($email, $name, $username, $password) {
     $message = "
 Dear $name,
 
-Thank you for regisering Lovebeauty as a seller! We will contact you shortly.
+Thank you for registering Lovebeauty as a seller! We will contact you shortly.
 
 Once your request is approved, you'll be able to use Lovebeauty's seller portal. Now feel free to download an APP and have fun.
 
@@ -1699,8 +1697,9 @@ expose_function('user.list.signup',
                 true,
                 false);
 
-function user_redeem_points($user_guid, $name, $address, $points) {
-    $user = get_entity($user_guid);
+function user_redeem_points($name, $address, $points) {
+    $user = get_loggedin_user();
+
     if (!$user) {
         throw new RegistrationException(elgg_echo('Cannot find user'));
     }
@@ -1739,15 +1738,14 @@ Lovebeauty Team
 expose_function('user.redeem_points',
                 "user_redeem_points",
                 array(
-                    'user_guid' => array ('type' => 'string', 'required' => true, 'default' => ""),
                     'name' =>      array ('type' => 'string', 'required' => true, 'default' => ""),
                     'address' =>   array ('type' => 'string', 'required' => true, 'default' => ""),
                     'points' =>   array ('type' => 'string', 'required' => true, 'default' => "")
                     ),
-                "Uer redeem points",
-                'GET',
+                "User redeem points",
+                'POST',
                 true,
-                false);
+                true);
 
 function user_delete($username) {
    $user = get_user_by_username($username);
@@ -1804,15 +1802,40 @@ expose_function('user.set_admin',
                 true);
 
 function user_set_seller($username) {
-   $user = get_user_by_username($username);
+    $user = get_user_by_username($username);
  
-   if (!$user) {
-       throw new RegistrationException(elgg_echo('username:not:found'));
-   }
-   $user->is_seller = true;
-   $user->save();
+    if (!$user) {
+        throw new RegistrationException(elgg_echo('username:not:found'));
+    }
+    $user->is_seller = true;
+    if (!$user->save()) {
+       throw new RegistrationException('User cannot be saved');
+    }
+    $return['is_seller'] = true;
 
-   return "seller is set.";
+    $subject = "Your Lovebeauty seller application is approved";
+    $body = "
+Dear $user->name ($user->username),
+
+Congratulations! Your seller application is approved. You can login your seller portal at www.lovebeauty.me/seller and start listing your product immediately.
+
+Yours truly,
+Lovebeauty Team
+";
+    $from = "team@lovebeauty.me";
+    elgg_send_email($from, $from, $subject, $body);
+
+    $return['cc_me'] = true;
+
+    notify_user($user->guid,
+        elgg_get_site_entity()->guid,
+        $subject, $body, $user->language,
+        array(),
+        'email'
+    );
+
+    $return['seller_email_sent'] = true;
+    return $return;
 }   
 
 expose_function('user.set_seller',
@@ -1824,3 +1847,4 @@ expose_function('user.set_seller',
                 'POST',
                 true,
                 true);
+
