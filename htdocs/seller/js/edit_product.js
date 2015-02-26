@@ -36,7 +36,24 @@ $(function() {
 				$('#description').val(data.result.product_description);
 				$('#price').val(data.result.product_price);
 				$('#quantity').val(data.result.quantity);
-
+				if (data.result.tags != undefined) {
+					$('#tags').val(data.result.tags);
+				}
+				$('#delivery').val(data.result.delivery_time);
+				$('#affiliate_product_url').val(data.result.affiliate.affiliate_product_url);
+				
+				if (data.result.affiliate.is_affiliate == 1) {
+					$('#is_affiliate').prop('checked', true);
+				} else {
+					$('#is_affiliate').prop('checked', false);
+				}
+				
+				if (data.result.affiliate.is_archived == 1) {
+					$('#is_archived').prop('checked', true);
+				} else {
+					$('#is_archived').prop('checked', false);
+				}
+				
 				if (data.result.images != undefined) {
 					$.each(data.result.images, function(n, url) {
 						$('#img' + (n + 1)).attr("src", url + "?" + 100000 * Math.random());
