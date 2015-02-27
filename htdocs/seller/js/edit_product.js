@@ -10,6 +10,7 @@ $(function() {
 	} //otehrwise, create a new prodcut.
 
 
+	console.log("height=" + $(".panel").height());
 
 	function getUrlParameter(sParam) {
 		var sPageURL = window.location.search.substring(1);
@@ -168,7 +169,7 @@ $(function() {
 	function delete_image(id) {
 		var src = $('#img' + id).attr("src");
 		console.log("image src=" + src);
-		if (src.indexOf("http%3A//localhost") >= 0) {
+		if (src.indexOf("http%3A//localhost") >= 0 || src.indexOf("blob") == 0) {
 			$('#img' + id).attr("src", "");
 		} else {
 

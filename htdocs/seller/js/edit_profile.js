@@ -92,14 +92,14 @@ $(function() {
 	}
 
 
-	$("#name").blur(function() {
-		if (original_username != $('#name').val()) {
+	$("#username").blur(function() {
+		if (original_username != $('#username').val()) {
 			checkUserAvailability();
 		}
 	});
 
 	function checkUserAvailability() {
-		var user_availability_url = server + check_user_availability + "&username=" + $("#name").val();
+		var user_availability_url = server + check_user_availability + "&username=" + $("#username").val();
 		console.log(user_availability_url);
 
 		$.getJSON(user_availability_url, function(data) {

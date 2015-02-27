@@ -47,6 +47,8 @@ $(function() {
 				calculate_data(data.result.cost, cost_data);
 
 				drawChart(revenue_data, "Revenue");
+			} else {
+				console.log(JSON.stringify(data));
 			}
 		});
 	}

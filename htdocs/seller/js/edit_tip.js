@@ -142,8 +142,8 @@ $(function() {
 
 		var message = {
 			"category": $('#category option:selected').text(),
-			"tip_title": $('#cover_caption').html().trim(),
-			"tip_thumbnail_image_url": $('#cover_img').attr("src"),
+//			"tip_title": $('#cover_caption').html().trim(),
+//			"tip_thumbnail_image_url": $('#cover_img').attr("src"),
 			"tip_pages": pages,
 			"tip_tags": $('#allowSpacesTagsResult').val().split(','),
 			"products_id": product_ids
@@ -371,9 +371,10 @@ $(function() {
 			console.log(search_producturl);
 
 			$.getJSON(search_producturl, function(data) {
-				//console.log(JSON.stringify(data));
+				console.log(JSON.stringify(data));
 				if (data.status == 0 && data.result.products != undefined) { //read prodcut detail successfully.
 
+					$('#divselktr').empty();
 					$.each(data.result.products, function(index, product) {
 						console.log('product name=' + product.product_name);
 						appendProductToDropDownList(product.product_id, product.product_name,
@@ -395,12 +396,13 @@ $(function() {
 			'" class="multSelktrImg">' + product_name + '</option>');
 		optionObj.data("product_id", product_id);
 		optionObj.data("product_image", product_image);
+		
 		$('#divselktr').append(optionObj);
 	}
 
 
 	$('#select_products').click(function() {
-		//console.log($('#divselktr option:selected').text());
+		console.log($('#divselktr option:selected').text());
 
 		//Read the selected options.
 		$('#divselktr option:selected').map(function(index, value) {
