@@ -132,9 +132,12 @@
                         </li>
                         -->
 
-							<li class="divider"></li>
-							<li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
-							</li>
+	                        <li class="divider"></li>
+	                        <li><a href="#" id="signout"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+	                        </li>
+	                        <li class="divider"></li>
+	                        <li><a href="signup.html" id="signup"><i class="fa fa-sign-out fa-fw"></i> Signup</a>
+	                        </li>
 						</ul>
 						<!-- /.dropdown-user -->
 					</li>
@@ -192,28 +195,73 @@
 				</div>
 
 
+				<!-- /.row 0 for category and tags-->
+				<input name="tags" id="allowSpacesTagsResult" value="" type="hidden">
+				<div class="row">
+					<div class="col-lg-6">
+						<label>Category</label>
+						<select class="form-control" id="category" name="category" value="fashion">
+							<option>fashion</option>
+							<option>makeup</option>
+							<option>nails</option>
+							<option>skincare</option>
+							<option>hair</option>
+							<option>body</option>
+							<option>tools</option>
+							<option>clothes</option>
+							<option>shoes</option>
+							<option>bags</option>
+							<option>accessories</option>
+						</select>
+					</div>
 
+					<div class="col-lg-6">
+						<label>Tags (space is allowed)</label>
+						<ul id="allowSpacesTags"></ul>
+					</div>
+				</div>
 
 
 				<!-- /.row first-->
 				<div class="row">
+					<!--<div class="col-lg-4">
+						<div class="panel panel-primary tile" style="height: 400px;">
+							<div class="tile__name">
+								<div>Cover</div>
+							</div>
+							<div class="panel-body">
+								<img class="image_page_img" src="" id="cover_img" />
+								<br/>
+								<pre class="richeditor" style="height: 50px;" id="cover_caption">
+									<p>Click to change caption.</p>
+								</pre>
+								<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change Image</button>
+								<br/><input type="file" onchange='fileUploadOnChange(this)'>
+							</div>
+						</div>
+					
+					</div>-->
+					
 					<div class="col-lg-4">
-					<div class="panel panel-primary tile" style="height: 400px;">
-						<div class="tile__name">
-							<div>Cover</div>
+						<div class="panel panel-primary tile" style="height: 400px;">
+						<div class="tile__name" id="editable">
+							<div>Products</div>
 						</div>
 						<div class="panel-body">
-							<img class="image_page_img" src="" id="cover_img" />
-							<br/>
-							<pre class="richeditor" style="height: 50px;" id="cover_caption">
-								<p>Click to change caption.</p>
-							</pre>
-							<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change Image</button>
-							<br/><input type="file" onchange='fileUploadOnChange(this)'>
+							<div class="form-group input-group" style="border: 0px;">
+								<input type="text" class="form-control" id="input-search" placeholder="search prodcuts">
+								<span class="input-group-btn">
+                          				<button class="btn btn-default" type="button" id="search"><i class="fa fa-search"></i></button>
+                    			</span>
+							</div>
+
+							<!--the sortable product list-->
+							<ul id="editableProductList" class="sortable">
+							</ul>
+
 						</div>
 					</div>
-					
-					</div>
+				</div>
 				</div>
 				<!-- /#row first -->
 
@@ -246,7 +294,7 @@
 
 
 				<!-- /.row Info and produc page line-->
-				<div class="row">
+				<!--<div class="row">
 					<div class="panel panel-primary tile" style="height: 400px;">
 						<div class="tile__name" id="editable">
 							<div>Info</div>
@@ -269,42 +317,18 @@
                     			</span>
 							</div>
 
-							<!--the sortable product list-->
+							
 							<ul id="editableProductList" class="sortable">
 							</ul>
 
 						</div>
 					</div>
-				</div>
+				</div>-->
 				<!-- /#row Info and product page line -->
 				
 				
-				<!-- /.row 0 for category and tags-->
-				<input name="tags" id="allowSpacesTagsResult" value="" type="hidden">
-				<div class="row">
-					<div class="col-lg-6">
-						<label>Category</label>
-						<select class="form-control" id="category" name="category" value="fashion">
-							<option>fashion</option>
-							<option>makeup</option>
-							<option>nails</option>
-							<option>skincare</option>
-							<option>hair</option>
-							<option>body</option>
-							<option>tools</option>
-							<option>clothes</option>
-							<option>shoes</option>
-							<option>bags</option>
-							<option>accessories</option>
-						</select>
-					</div>
 
-					<div class="col-lg-6">
-						<label>Tags (space is allowed)</label>
-						<ul id="allowSpacesTags"></ul>
-					</div>
-				</div>
-				
+				<br /><br /><br /><br /><br />
 				<!-- /.row submit button line-->
 				<div class="row">
 					<!-- /.col-lg-2 -->

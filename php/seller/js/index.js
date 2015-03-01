@@ -47,6 +47,8 @@ $(function() {
 				calculate_data(data.result.cost, cost_data);
 
 				drawChart(revenue_data, "Revenue");
+			} else {
+				console.log(JSON.stringify(data));
 			}
 		});
 	}
@@ -85,33 +87,5 @@ $(function() {
 	}
 	
 	
-	$('#signout').click(function() { //delete the uploaded4 image
-		
-		var formUrl = server + signout + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
-		//console.log(get_url);
 
-
-		$.ajax({
-			url: formUrl,
-			type: "POST",
-			//data: 'username=robin123&password=robin123',
-			//data: $('#login_form').serialize(),
-			crossDomain: true,
-			success: function(data, textStatus, jqXHR) {
-				//data: return data from server
-				console.log(JSON.stringify(data));
-				//alert(data.result);
-				if (data.status == 0) {
-					setCookie('username', "", 1000);
-					setCookie('token', '', 1000);
-					window.location.href = 'login.html';
-				} 
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus);
-				console.log(jqXHR);
-			}
-		});
-
-	});
 })

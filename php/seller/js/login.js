@@ -22,6 +22,21 @@ $(function() {
 
 	$('#login').click(function() {
 
+		submitForm();
+	});
+
+	$('#password').on("keypress", function(e) {
+
+		if (e.keyCode == 13) {
+
+			// Cancel the default action on keypress event
+			e.preventDefault();
+
+			submitForm();
+		}
+	});
+
+	function submitForm() {
 		var formUrl = server + get_token + "&api_key=" + api_key;
 
 		var username = $('#username').val();
@@ -56,7 +71,6 @@ $(function() {
 				console.log(jqXHR);
 			}
 		});
-	});
-
+	}
 
 })

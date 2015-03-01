@@ -63,22 +63,10 @@ $(function() {
 			console.log('read result from server: ' + JSON.stringify(data.result));
 			console.log("token = " + data.result.token);
 
-                        BootstrapDialog.show({
-                            message: 'Congratulations, seller! Your signup is done. We will contact you shortly!',
-                            buttons: [
-                                {
-                                    label: 'Back to homepage',
-                                    cssClass: 'btn-primary',
-                                    action: function(){
-                                        window.location.href = '../index.html';
-                                    }
-                            }]
-                        });
-
-//			BootstrapDialog.alert('Congratulations! Your signup is done. We will contact you shortly.');
+			BootstrapDialog.info('Congratulations! Your signup is done. We will contact you shortly.');
 			//setCookie('username', $('#name').val(), 1000);
 			//setCookie('token', data.result.token, 1000);
-//			window.location.href = 'index.html';
+			//window.location.href = 'index.html';
 
 		} else {
 			BootstrapDialog.alert('There is some error during save profile, error message =' +

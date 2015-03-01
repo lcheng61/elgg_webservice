@@ -134,14 +134,6 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                  $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
                  $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
 
-// affiliate attributes
-                 $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
-                 $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
-                 $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
-                 $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
-                 $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
-//~
-
                  if ($single->quantity < 0) {
                      $blog['quantity'] = 0;
                  } else {
@@ -158,6 +150,15 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                          $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
                      }
                  }
+
+// affiliate attributes
+                 $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
+                 $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
+                 $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
+                 $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
+                 $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+                 $blog['images'][0] = ($single->is_affiliate ? $single->affiliate_image : "");
+//~
 
                  $blog['likes_number'] = intval(likes_count(get_entity($single->guid)));
                  $blog['reviews_number'] = $num_comments;
@@ -258,6 +259,7 @@ function product_get_detail($product_id) {
     }
 
 ///// seller portal used
+    $return['tags'] = $blog->tags;
     $return['delivery_time'] = $blog->delivery_time;
     $return['shipping_fee'] = floatval($blog->shipping_fee);
     $return['free_shipping_quantity_limit'] = $blog->free_shipping_quantity_limit;
@@ -265,6 +267,7 @@ function product_get_detail($product_id) {
 /////~
 
 // affiliated product used
+    $return['images'][] = ($blog->is_affiliate ? $blog->affiliate_image : "");
     $return['affiliate']['is_affiliate'] = ($blog->is_affiliate ? $blog->is_affiliate : 0);
     $return['affiliate']['affiliate_product_id'] = ($blog->affiliate_product_id ? $blog->affiliate_product_id : 0);
     $return['affiliate']['affiliate_product_url'] = ($blog->affiliate_product_url ? $blog->affiliate_product_url : "");
@@ -596,6 +599,7 @@ function product_search($query, $category, $offset, $limit,
                  $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
                  $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
            
                  $return['products'][] = $blog;
             }
@@ -627,7 +631,7 @@ function product_post($product_id, $title, $category, $description,
     $price, $tags, $quantity, $delivery_time, $shipping_fee,
     $free_shipping_quantity_limit, $free_shipping_cost_limit,
     $is_affiliate, $affiliate_product_id, $affiliate_product_url,
-    $is_archived, $affiliate_syncon)
+    $is_archived, $affiliate_syncon, $affiliate_image)
 {
     $user = elgg_get_logged_in_user_entity();
 
@@ -668,6 +672,7 @@ function product_post($product_id, $title, $category, $description,
         'affiliate_product_url' => $affiliate_product_url,
         'is_archived' => $is_archived,
         'affiliate_syncon' => $affiliate_syncon,
+        'affiliate_image' => $affiliate_image,
     );
 
     // fail if a required entity isn't set
@@ -731,6 +736,12 @@ function product_post($product_id, $title, $category, $description,
         } else {
             $values['images'][] = "";
 	}        
+
+        //  affliate image upload
+        if(is_affiliate) {
+	    $values['images'][] = $affiliate_image;
+        }
+
     } else {
             register_error(elgg_echo('market:error:cannot_save'));
             throw new InvalidParameterException("cannot_save");
@@ -757,6 +768,7 @@ expose_function('product.post',
                        'affiliate_product_url' => array('type' => 'string', 'required' => false, 'default' => ""),
                        'is_archived' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'affiliate_syncon' => array('type' => 'int', 'required' => false, 'default' => 0),
+                       'affiliate_image' => array('type' => 'string', 'required' => false, 'default' => ""),
                      ),
                 "Post a product by seller",
                 "POST",
