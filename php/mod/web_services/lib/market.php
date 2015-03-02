@@ -170,6 +170,8 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                  $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['product_seller']['is_seller'] = ($owner->is_seller == "true");
                  $blog['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
+               
+                 $blog['is_recommend'] = $single->is_recommend;
  
 //                $blog['container_guid'] = $single->container_guid;
 //                $blog['access_id'] = $single->access_id;
@@ -1006,3 +1008,140 @@ expose_function('product.affiliate_archive',
                 "POST",
                 true,
                 true);
+
+function recommend_set($product_id, $is_recommend) {
+    $post = get_entity($product_id);
+
+    if (!elgg_instanceof($post, 'object', 'market')) {
+        throw new InvalidParameterException('blog:error:product_not_found');
+    }
+    $user = elgg_get_logged_in_user_entity();
+    if (!($user && $user->is_admin)) {
+       throw new RegistrationException(elgg_echo('Only logged-in admin can recommend products'));
+    }
+    if(!$post->canEdit()) {
+        throw new InvalidParameterException('blog:error:cannot_edit');
+    }
+    $post->is_recommend = $is_recommend;
+    if (!$post->save()) {
+        throw new InvalidParameterException("blog:error:cannot_save");
+    }
+    $return['product_id'] = $product_id;
+    $return['is_recommend'] = $post->is_recommend;
+
+    return $return;
+}
+
+expose_function('product.recommend_set',
+                "recommend_set",
+                array( 'product_id' => array('type' => 'int', 'required' => true, 'default' => 0),
+                       'is_recommend' => array('type' => 'int', 'required' => false, 'default' => 1),
+                     ),
+                "Recommend/unrecommend a product.",
+                "POST",
+                true,
+                true);
+
+function recommend_list($category, $offset, $limit) {
+
+/*
+    $recommended_products = elgg_get_entities_from_metadata(array(
+                    'offset' => $offset,
+                    'limit' => 0,
+                    'types' => 'object',
+                    'subtypes' => 'market',
+                    'metadata_name_value_pairs' => array(
+                        'name' => 'is_recommend',
+                        'value' => 1,
+                     )
+                ));
+*/
+
+    if ($category == "all") {
+        $options = array(
+                    'offset' => $offset,
+                    'limit' => 0,
+                    'types' => 'object',
+                    'subtypes' => 'market',
+                    'metadata_name_value_pairs' => array(
+                        array(
+                            'name' => 'is_recommend',
+                            'value' => 1,
+                        ),
+                     )
+                );
+    } else {
+        $options = array(
+                    'offset' => $offset,
+                    'limit' => 0,
+                    'types' => 'object',
+                    'subtypes' => 'market',
+                    'metadata_name_value_pairs' => array(
+                        array(
+                            'name' => 'is_recommend',
+                            'value' => 1,
+                        ),
+                        array(
+                            'name' => 'marketcategory',
+                            'value' => $category,
+                        ),
+                     )
+                );
+    }
+    $recommended_products = elgg_get_entities_from_metadata($options);
+
+    $return['total_number'] = count($recommended_products);
+
+        foreach($recommended_products as $single){
+                $blog['product_id'] = $single->guid;
+                $options = array(
+                        'annotations_name' => 'product_comment',
+                        'guid' => $single->guid,
+                        'limit' => 0,
+                        'pagination' => false,
+                        'reverse_order_by' => true,
+                        );
+
+                 $comments = elgg_get_annotations($options);
+                 $num_comments = count($comments);
+
+                 $blog['product_name'] = $single->title;
+                 $blog['product_price'] = floatval($single->price);
+                 $blog['tips_number'] = $single->tips_number;
+                 $blog['sold_count'] = $single->sold_count;
+                 $blog['product_category'] = $single->marketcategory;
+                 $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
+
+                 $blog['likes_number'] = likes_count(get_entity($single->guid));
+                 $blog['reviews_number'] = $num_comments;
+
+                 $owner = get_entity($single->owner_guid);
+                 $blog['product_seller']['user_id'] = $owner->guid;
+                 $blog['product_seller']['user_name'] = $owner->username;
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['product_seller']['is_seller'] = $owner->is_seller;
+ 
+                 $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
+                 $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
+                 $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
+                 $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
+                 $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
+                 $blog['is_recommend'] = $single->is_recommend;
+           
+                 $return['products'][] = $blog;
+        }
+    return $return;
+}
+
+expose_function('product.recommend_list',
+                "recommend_list",
+                array( 
+                        'category' => array('type' => 'string', 'required'=>false, 'default' => 'all'),
+                        'offset' =>array('type' => 'int', 'required'=>false, 'default' => 0),
+                        'limit' =>array('type' => 'int', 'required'=>false, 'default' => 10),
+                     ),
+                "List recommended products.",
+                "GET",
+                false,
+                false);
