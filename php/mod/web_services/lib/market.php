@@ -84,9 +84,6 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
         $display_product_number = 0;
         foreach($latest_blogs as $single ) {
 
-            if ($single->quantity && $single->quantity <= 0) {
-                continue;
-            )
             if (($single->marketcategory == $category) || 
                     ($category == "all")) {
                 $blog['product_id'] = $single->guid;
@@ -577,10 +574,6 @@ function product_search($query, $category, $offset, $limit,
     }
     if($results['count']){
         foreach($results['entities'] as $single){
-
-            if ($single->quantity && $single->quantity <= 0) {
-                continue;
-            )
 
             if (($single->marketcategory == $category) || 
                     ($category == "all")) {
