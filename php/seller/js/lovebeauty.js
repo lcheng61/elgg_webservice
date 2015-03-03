@@ -1,11 +1,10 @@
 //var server = 'http://social.routzi.com/'
-var server = 'http://www.lovebeauty.me/'
-var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
-
+//var server = 'http://www.lovebeauty.me/'
+//var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
 
 //dev server
-//var server = 'http://dev-lovebeauty.rhcloud.com/';
-//var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
+var server = 'http://m.lovebeauty.me/';
+var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
 
 var get_token = 'services/api/rest/json/?method=auth.gettoken2';
 var signout = 'services/api/rest/json/?method=user.logout';
