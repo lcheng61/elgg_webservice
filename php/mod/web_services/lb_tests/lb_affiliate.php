@@ -7,8 +7,8 @@ function lb_assert($condition, $message)
     if ($condition == true) {
         return "Success: ".$message."\n";
     } else {
-        return "Failed: ".$message."\n";
-        exit -1;
+        return "Failed: ".$message." condition = $condition"."\n";
+        exit(-1);
     }
 }
 function test_title($title)
@@ -63,6 +63,7 @@ function test_title($title)
                    'affiliate_product_url' => 'http://www.google.com/product_1',
                    'is_archived' => 0,
                    'affiliate_syncon' => 999998,
+                   'affiliate_image' => "http://aaa.bbb.ccc",
                   );
    $result = $client->post('product.post', $params);
    $product_id = $result->product_id;
@@ -84,6 +85,7 @@ function test_title($title)
    echo lb_assert($result->affiliate->affiliate_product_url == 'http://www.google.com/product_1', "affiliate_product_url");
    echo lb_assert($result->affiliate->is_archived == 0, "is_archived");
    echo lb_assert($result->affiliate->affiliate_syncon == 999998, "affiliate_syncon");
+   echo lb_assert($result->images[0] == "http://aaa.bbb.ccc", "affiliate_image");
 
    // list products
    test_title("List product");
@@ -100,6 +102,7 @@ function test_title($title)
    echo lb_assert($result->products[0]->affiliate->affiliate_product_url == 'http://www.google.com/product_1', "affiliate_product_url");
    echo lb_assert($result->products[0]->affiliate->is_archived == 0, "is_archived");
    echo lb_assert($result->products[0]->affiliate->affiliate_syncon == 999998, "affiliate_syncon");
+   echo lb_assert($result->products[0]->images[0] == "http://aaa.bbb.ccc", "affiliate_image");
 
   // Set archive flag
    test_title("Set archive flag");
@@ -122,6 +125,7 @@ function test_title($title)
    echo lb_assert($result->products[0]->affiliate->affiliate_product_url == 'http://www.google.com/product_1', "affiliate_product_url");
    echo lb_assert($result->products[0]->affiliate->is_archived == 1, "is_archived");
    echo lb_assert($result->products[0]->affiliate->affiliate_syncon == 999998, "affiliate_syncon");
+   echo lb_assert($result->products[0]->product_image == "http://aaa.bbb.ccc", "affiliate_image");
 
    // get affiliate sync time
    test_title("Get affiliate sync time");
