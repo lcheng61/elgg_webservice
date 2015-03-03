@@ -18,7 +18,8 @@ function test_title($title)
     echo "***********************************************************\n";
 }
 
-    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+//    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
 
     $username = "lbtest2";
     $password = "lbtest2";
@@ -146,6 +147,7 @@ function test_title($title)
     echo "====================================";
     echo "Email subscription and then register";
 
+/*
     // email sign up using the same email address
     test_title("Email sign up using the registered email address");
     $params = array('email' => $email);
@@ -161,9 +163,9 @@ function test_title($title)
     echo lb_assert($result->success == true, "contact-us message");
 
     // register a new user
-/*
+
     test_title("Register a new user");
-    $params = array('username' => $username."abc123",
+    $params = array('username' => $username."abc",
                    'password' => $password,
                    'email' => $email,
                    'name' => $name,
@@ -171,13 +173,16 @@ function test_title($title)
                   );
     $result = $client->post('user.register', $params);
     echo lb_assert(($result == false), "Seller new register, Check Email");
-*/
+
+    test_title("IOS sign in");
+    $result = $client->obtainAuthToken($username."abc", $password);
+    echo lb_assert($result != false, "Get auth token (Login)");
 
     // delete user
     test_title("Delete user");
-    $params = array('username' => $username);
+    $params = array('username' => $email);
     $result = $client->post('user.delete', $params);
     echo $result."\n";
-
+*/
     echo "============ALL PASS==============\n\n";
 ?>

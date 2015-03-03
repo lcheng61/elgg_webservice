@@ -157,7 +157,9 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                  $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
                  $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
-                 $blog['images'][0] = ($single->is_affiliate ? $single->affiliate_image : "");
+                 if ($blog['affiliate']['is_affiliate'] == 1) {
+                     $blog['images'][] = $single->affiliate_image;
+                 }
 //~
 
                  $blog['likes_number'] = intval(likes_count(get_entity($single->guid)));
@@ -269,12 +271,17 @@ function product_get_detail($product_id) {
 /////~
 
 // affiliated product used
-    $return['images'][] = ($blog->is_affiliate ? $blog->affiliate_image : "");
+//    $return['images'][] = ($blog->is_affiliate ? $blog->affiliate_image : "");
     $return['affiliate']['is_affiliate'] = ($blog->is_affiliate ? $blog->is_affiliate : 0);
     $return['affiliate']['affiliate_product_id'] = ($blog->affiliate_product_id ? $blog->affiliate_product_id : 0);
     $return['affiliate']['affiliate_product_url'] = ($blog->affiliate_product_url ? $blog->affiliate_product_url : "");
     $return['affiliate']['is_archived'] = ($blog->is_archived ? $blog->is_archived : 0);
     $return['affiliate']['affiliate_syncon'] = ($blog->affiliate_syncon ? $blog->affiliate_syncon : 0);
+
+    if ($return['affiliate']['is_affiliate'] == 1) {
+        $return['images'][] = $blog->affiliate_image;
+    }
+
 //~
 
     $return['sold_count'] = $blog->sold_count;
@@ -601,7 +608,11 @@ function product_search($query, $category, $offset, $limit,
                  $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
                  $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
-                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
+//                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
+
+                 if ($blog['affiliate']['is_affiliate'] == 1) {
+                     $blog['product_image'] = $single->affiliate_image;
+                 }
            
                  $return['products'][] = $blog;
             }
