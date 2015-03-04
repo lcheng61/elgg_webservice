@@ -187,10 +187,8 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
         $return['total_number'] = $display_product_number;
     }
     else {
-        $msg = elgg_echo('market_post:none');
-        throw new InvalidParameterException($msg);
-
-//        $return['total_number'] = 0;
+        $return['total_number'] = 0;
+        $return['products'] = "";
     }
 
     return $return;

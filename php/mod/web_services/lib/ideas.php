@@ -122,8 +122,8 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
         $return['total_number'] = $display_ideas_number;
     }
     else {
-        $msg = elgg_echo('ideas_post:none');
-        throw new InvalidParameterException($msg);
+        $return['total_number'] = 0;
+        $return['tips'] = "";
     }
 
     return $return;
