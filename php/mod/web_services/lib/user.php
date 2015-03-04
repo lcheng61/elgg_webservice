@@ -79,7 +79,7 @@ function user_get_profile($username) {
         $user->points = 0; // initial signup points
         $user->save();
     }
-    $profile_info['points'] = $user->points;
+    $profile_info['points'] = intval($user->points);
 
 ////////Add message number
    $total_params = array(

@@ -289,7 +289,7 @@ function pay_checkout_direct($msg)
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
 
-    $points = $json['points'];
+    $points = intval($json['points']);
     if ($user->points < $points) {
         throw new InvalidParameterException('User points not sufficient');
     }
@@ -482,9 +482,9 @@ function pay_checkout_direct($msg)
                     $thinker = get_user($product_value['thinker_id']);
 
                     $points_earned = ($product_value['product_price'] * $product_value['item_number'] * 1); // 1% of the product price
-                    $dollar_earned = $points_earned / 100;
-                    $thinker->points += $points_earned;
-                    $thinker_order->points = $points_earned;
+                    $dollar_earned = intval($points_earned) / 100;
+                    $thinker->points += intval($points_earned);
+                    $thinker_order->points = intval($points_earned);
 
                     $thinker->save();
                 
@@ -504,7 +504,7 @@ function pay_checkout_direct($msg)
                         $thinker_item['product_quantity'] = $product_value['item_number'];
                         $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
                         $thinker_item['thinker_idea_id'] = $product_value['thinker_idea_id'];
-                        $thinker_item['points'] = $thinker->points;
+                        $thinker_item['points'] = intval($thinker->points);
                     }
                     $person_info['thinker_info'][] = $thinker_item;
                 }
@@ -1287,7 +1287,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             $item['product']['quantity'] = $single->product_quantity;
 
             $item['thinker_order_guid'] = $single->guid;
-            $item['points'] = $single->points;
+            $item['points'] = intval($single->points);
             $display_number ++;
             $return['thinker'][] = $item;
 
