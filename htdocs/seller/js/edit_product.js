@@ -169,6 +169,12 @@ $(function() {
 	function delete_image(id) {
 		var src = $('#img' + id).attr("src");
 		console.log("image src=" + src);
+		
+		$("#upload"+id).val("");
+		if (src == undefined || src.length<1) {
+			return;
+		}
+		
 		if (src.indexOf("http%3A//localhost") >= 0 || src.indexOf("blob") == 0) {
 			$('#img' + id).attr("src", "");
 		} else {
