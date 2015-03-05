@@ -1029,9 +1029,12 @@ function recommend_set($product_id, $is_recommend) {
         throw new InvalidParameterException('blog:error:product_not_found');
     }
     $user = elgg_get_logged_in_user_entity();
-    if (!($user && $user->is_admin)) {
+
+/*
+    if (!($user &&  $user->is_admin)) {
        throw new RegistrationException(elgg_echo('Only logged-in admin can recommend products'));
     }
+*/
     if(!$post->canEdit()) {
         throw new InvalidParameterException('blog:error:cannot_edit');
     }
