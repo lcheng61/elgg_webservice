@@ -1848,7 +1848,7 @@ expose_function('user.set_seller',
                 true,
                 true);
 
-
+/*
 function user_set_points($username, $points) {
     $user = get_user_by_username($username);
  
@@ -1873,3 +1873,4 @@ expose_function('user.set_points',
                 'POST',
                 true,
                 true);
+*/
