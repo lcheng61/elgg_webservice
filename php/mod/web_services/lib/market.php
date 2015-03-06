@@ -612,7 +612,7 @@ function product_search($query, $category, $offset, $limit,
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
 //                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
 
-                 if ($blog['affiliate']['is_affiliate'] == 1) {
+                 if (($blog['affiliate']['is_affiliate'] == 1) && ($single->affiliate_image != "")) {
                      $blog['product_image'] = $single->affiliate_image;
                  }
            
