@@ -1016,8 +1016,8 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
         $return['total_number'] = $display_number;
     }
     else {
-        $msg = elgg_echo('payment_seller_order:none');
-        throw new InvalidParameterException($msg);
+        $return['total_number'] = 0;
+        $return['product'] = "";
     }
 
     return $return;
