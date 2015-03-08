@@ -1142,9 +1142,15 @@ function recommend_list($category, $offset, $limit) {
                  $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
                  $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+
+                 if (($blog['affiliate']['is_affiliate'] == 1) && ($single->affiliate_image != "")) {
+                     $blog['product_image'] = $single->affiliate_image;
+                 }
+/*
                  if ($single->is_affiliate) {
                      $blog['product_image'] = $single->affiliate_image;
                  }
+*/
                  $blog['is_recommend'] = $single->is_recommend;
            
                  $return['products'][] = $blog;
