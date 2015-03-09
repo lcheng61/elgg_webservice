@@ -18,8 +18,8 @@ function test_title($title)
     echo "***********************************************************\n";
 }
 
-    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
-//    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
+//    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
 
     $username1 = "lbtest1";
     $password1 = "lbtest1";
@@ -161,6 +161,9 @@ echo "seller_id = ".$seller_id."\n";
     $result = $client->post('payment.checkout_direct', $params);
     lb_assert($result->charged_user == $username3, "buyer direct checkout, check email");
             
+    // thinker order detail
+    $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
+
     // login as a thinker
     test_title("login as a thinker");
     $result = $client->obtainAuthToken($username2, $password2);
@@ -179,6 +182,13 @@ echo "seller_id = ".$seller_id."\n";
     echo json_encode($result);
 //    echo "thinker points: ".$result['thinker'][0]->points."\n";
 
+echo "\n====thinker_order_id=========\n";
+echo $thinker_order_id."\n";
+echo "===============================\n";
+    $params = array('id' => $thinker_order_id);
+    $result = $client->get('payment.detail.thinker_order', $params);
+    echo json_encode($result)."\n";
+    echo "\n";
 
 // Delete 3 users
 
