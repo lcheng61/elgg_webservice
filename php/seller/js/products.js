@@ -30,7 +30,8 @@ $(function() {
 				"data": "sold_count"
 			}, {
 				"data" : "quantity"
-			}]
+			}],
+		"lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]]
 	});
 	$('#products tbody').on('click', 'tr', function() {
 		if ($(this).hasClass('selected')) {
@@ -55,17 +56,28 @@ $(function() {
 	});
 
 
+	$(document).keyup(function(e){
+	    if(e.keyCode == 46) {
+	    	var row = tableProducts.row('.selected');
+			if (row != undefined && row.data() != undefined) {
+				deleteProduct();
+			}
+	    }
+	});
+
 	$(document).keypress(function(e) {
+		console.log("key pressed=" + e.which);
+		console.log("keycode pressed=" + e.keyCode);
 		if (e.which == 13) {
 			var row = tableProducts.row('.selected');
 			if (row.data() != undefined) {
 				var pid = row.data().product_id;
 				//console.log("selected prodcut_id=" + row.data().product_id);
 				if (pid != undefined) {
-					openProduct();
+					//openProduct();
 				}
 			}
-		}
+		} 
 	});
 
 	$('#delete').click(function() {
@@ -109,6 +121,9 @@ $(function() {
 					row.remove().draw(false);
 					$('#delete').hide();
 					$('#view').hide();
+				} else if (data.status == -20) {//pam_auth_userpass:failed
+					
+					BootstrapDialog.alert('Could not delete the product. You have signed out. Please sign in first and try again.');
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {

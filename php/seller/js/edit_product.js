@@ -40,7 +40,7 @@ $(function() {
 				if (data.result.tags != undefined) {
 					$('#tags').val(data.result.tags);
 				}
-				$('#delivery_time').val(data.result.delivery_time);
+				$('#delivery').val(data.result.delivery_time);
 				$('#affiliate_product_url').val(data.result.affiliate.affiliate_product_url);
 				
 				if (data.result.affiliate.is_affiliate == 1) {
@@ -169,6 +169,12 @@ $(function() {
 	function delete_image(id) {
 		var src = $('#img' + id).attr("src");
 		console.log("image src=" + src);
+		
+		$("#upload"+id).val("");
+		if (src == undefined || src.length<1) {
+			return;
+		}
+		
 		if (src.indexOf("http%3A//localhost") >= 0 || src.indexOf("blob") == 0) {
 			$('#img' + id).attr("src", "");
 		} else {

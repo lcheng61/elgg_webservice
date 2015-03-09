@@ -77,12 +77,14 @@ $(function() {
 		console.log("cover caption =" + $('#cover_caption').html());
 
 
-		if ($('#cover_img').attr("src") == undefined || $('#cover_img').attr("src").trim().length <= 0 ||
-			$('#cover_caption').html().trim().length <= 0) {
-			BootstrapDialog.alert('You have to set the cover image and caption before submit.');
-		} else {
-			submit_idea();
-		}
+//cover page is removed. Remove the error check. Submit the idea directly.
+//		if ($('#cover_img').attr("src") == undefined || $('#cover_img').attr("src").trim().length <= 0 ||
+//			$('#cover_caption').html().trim().length <= 0) {
+//			BootstrapDialog.alert('You have to set the cover image and caption before submit.');
+//		} else {
+//			submit_idea();
+//		}
+		submit_idea();
 	});
 
 	function submit_idea() {
@@ -393,7 +395,7 @@ $(function() {
 
 	function appendProductToDropDownList(product_id, product_name, product_image) {
 		var optionObj = $('<option image="' + product_image +
-			'" class="multSelktrImg">' + product_name + '</option>');
+			'" class="multSelktrImg">' + product_name + ' (product id ' + product_id + ')</option>');
 		optionObj.data("product_id", product_id);
 		optionObj.data("product_image", product_image);
 		
