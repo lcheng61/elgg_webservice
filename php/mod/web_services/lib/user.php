@@ -1709,7 +1709,9 @@ function user_redeem_points($name, $address, $points) {
 Hi $user->name ($user->username),
 
 We have received your request to redeem LB checks at amount of $points points/cents.
-We will send the check to your address as below within the next 5-8 business days.
+
+Payments are distributed within two (2) weeks of request but may take up to sixty (60) days.
+Checks will not be sent to P.O. Boxes. LoveBeauty is not responsible for replacing lost or stolen checks.
 
 Your name to display on check: $name
 Your address: $address

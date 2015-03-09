@@ -5,9 +5,9 @@ include 'ElggApiClient.php';
 function lb_assert($condition, $message)
 {
     if ($condition == true) {
-        return "Success: ".$message."\n";
+        echo "Success: ".$message."\n";
     } else {
-        return "Failed: ".$message."\n";
+        echo "Failed: ".$message."\n";
         exit -1;
     }
 }
@@ -18,8 +18,8 @@ function test_title($title)
     echo "***********************************************************\n";
 }
 
-//    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
-    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
+    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+//    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
 
     $username1 = "lbtest1";
     $password1 = "lbtest1";
@@ -164,7 +164,7 @@ echo "seller_id = ".$seller_id."\n";
     // login as a thinker
     test_title("login as a thinker");
     $result = $client->obtainAuthToken($username2, $password2);
-    lb_assert($result, "login as a seller");
+    lb_assert($result, "login as a thinker");
 
     // get profile of thinker and check points
     $params = array();
@@ -175,7 +175,9 @@ echo "seller_id = ".$seller_id."\n";
     // check thinker order
     $params = array();
     $result = $client->get('payment.list.thinker_order', $params);
-    echo "thinker points: ".$result['thinker'][0]->points."\n";
+
+    echo json_encode($result);
+//    echo "thinker points: ".$result['thinker'][0]->points."\n";
 
 
 // Delete 3 users

@@ -401,6 +401,7 @@ function pay_checkout_direct($msg)
 		$seller_order = new ElggObject();
                 $seller_order->type = 'object';
                 $seller_order->subtype = "seller_order";
+                $seller_order->access_id = ACCESS_LOGGED_IN;
                 $seller_order->seller_guid = $value['seller_id'];
                 $seller_order->product_guid = $product_value['product_id'];
 		$seller_order->coupon = $order_info['coupon'];
@@ -459,9 +460,11 @@ function pay_checkout_direct($msg)
                 $person_info['seller_orders'][] = $seller_item;
 
                 // find the tip owner (if exist) and create the tip owner's credit object, XXX
+
                 if ($product_value['thinker_id'] && $product_value['thinker_idea_id']) {
 
 		    $thinker_order = new ElggObject();
+                    $thinker_order->access_id = ACCESS_LOGGED_IN;
                     $thinker_order->type = 'object';
                     $thinker_order->subtype = "thinker_order";
 		    $thinker_order->seller_guid = $seller_order->seller_guid;
@@ -505,6 +508,8 @@ function pay_checkout_direct($msg)
                         $thinker_item['avatar_url'] = get_entity_icon_url($thinker, 'small');
                         $thinker_item['thinker_idea_id'] = $product_value['thinker_idea_id'];
                         $thinker_item['points'] = intval($thinker->points);
+                    } else {
+                        throw new InvalidParameterException(elgg_echo("pay:thinker_order:save"));
                     }
                     $person_info['thinker_info'][] = $thinker_item;
                 }
@@ -1188,7 +1193,6 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             throw new InvalidParameterException('pay_list_thinker_order:usernamenotvalid');
         }
     }
-
     if($context == "all"){
         $params = array(
             'types' => 'object',
@@ -1207,7 +1211,8 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             'metadata_name_value_pairs'=>array(
                 array('name' => 'thinker_guid', 
                       'value' => $user->guid, 
-                      'operand' => '=' )));
+                      'operand' => '=' ))
+            );
         $latest_blogs = elgg_get_entities_from_metadata($params);
     } else {
         throw new InvalidParameterException('pay_list_thinker_order:contextnotvalid');
@@ -1217,7 +1222,6 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
         $display_number = 0;
 
         foreach($latest_blogs as $single ) {
-
 /* for debugging, delete all the thinker order
   	    $return['guid'][] = $single->guid;
             // Delete the market post
@@ -1321,6 +1325,10 @@ expose_function('payment.list.thinker_order',
 function pay_detail_thinker_order($id)
 {
     $single = get_entity($id);
+
+    if (!$single) {
+        throw new InvalidParameterException("pay:thinker_order:detail:nonexist");
+    }
 
     $seller = get_user($single->seller_guid);
     $buyer = get_user($single->buyer_guid);

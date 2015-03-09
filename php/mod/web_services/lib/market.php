@@ -1060,23 +1060,10 @@ expose_function('product.recommend_set',
 
 function recommend_list($category, $offset, $limit) {
 
-/*
-    $recommended_products = elgg_get_entities_from_metadata(array(
-                    'offset' => $offset,
-                    'limit' => 0,
-                    'types' => 'object',
-                    'subtypes' => 'market',
-                    'metadata_name_value_pairs' => array(
-                        'name' => 'is_recommend',
-                        'value' => 1,
-                     )
-                ));
-*/
-
     if ($category == "all") {
         $options = array(
                     'offset' => $offset,
-                    'limit' => 0,
+                    'limit' => $limit,
                     'types' => 'object',
                     'subtypes' => 'market',
                     'metadata_name_value_pairs' => array(
@@ -1089,7 +1076,7 @@ function recommend_list($category, $offset, $limit) {
     } else {
         $options = array(
                     'offset' => $offset,
-                    'limit' => 0,
+                    'limit' => $limit,
                     'types' => 'object',
                     'subtypes' => 'market',
                     'metadata_name_value_pairs' => array(
