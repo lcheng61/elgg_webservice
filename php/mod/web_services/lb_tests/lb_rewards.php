@@ -18,8 +18,8 @@ function test_title($title)
     echo "***********************************************************\n";
 }
 
-//    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
-    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
+    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+//    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
 
     $username1 = "lbtest1";
     $password1 = "lbtest1";
@@ -107,15 +107,19 @@ function test_title($title)
    $message = '{   "tip_title": "Dermablend Professional- Tattoo Cover Up Makeup: Go Beyond The Cover",   "tip_thumbnail_image_url": "http://www.woman.at/_storage/asset/4150236/storage/womanat:key-visual/file/52817065/31266684.jpg",   "tip_pages": [     {       "tip_image_url": "http://cdn.maedchen.de/bilder/make-up-und-beauty-produkte-zum-schminken-fuer-maedchen-557x313-151005.jpg",       "tip_image_caption": "Step 1"     },     {       "tip_video_url": " http://youtu.be/Jwngbzv0gbY"     },     {       "tip_text": "wertyuiopxcvbnm, sdfghjkldfghjk"     },     {       "tip_image_local": "true" }   ],   "tip_notes": "Excepteur adipisicing tempor cupidatat exercitation nostrud aliquip enim cupidatat Lorem aute elit laboris enim magna. Ut incididunt ad anim aute ad officia deserunt sunt esse tempor ea qui magna quis. Duis aliqua duis incididunt voluptate incididunt esse consequat consectetur sit tempor. Nisi quis velit minim quis.\r\n",   "tip_tags": [     "makeup",     "eye",     "fashion"   ],   "category": "fashion",   "products_id": [    "$product_id"   ] }';
 
     $json = json_decode($message, true);
-    $json['products_id'] = $product_id;
+    $json['products_id'][0] = $product_id;
     $message = json_encode($json);
-
+//echo "\n= idea message =\n";
+//echo $message;
+//echo "\n===\n";
     $params = array('message' => $message,
                   );
     $result = $client->post('ideas.post_tip', $params);
     $thinker_idea_id = $result->idea_id;
     lb_assert($result->tip_title, "thinker post an idea, Check idea_id");
-    echo "idea_id = ".$thinker_idea_id."\n";
+//    echo "idea_id = ".$thinker_idea_id."\n";
+//    echo json_encode($result);
+//    echo "\n----\n";
 
     // register a new buyer
     test_title("register a new buyer");
@@ -134,20 +138,38 @@ function test_title($title)
     $result = $client->obtainAuthToken($username3, $password3);
     lb_assert($result, "login as a buyer");
 
+    // Check products by idea - product.get_tips_by_product&product_id=xx
+//    echo "product_id = ".$product_id."\n";
+    $params = array('product_id' => $product_id);
+    $result = $client->get('product.get_tips_by_product', $params);
+//    echo "total_tips = ".$result->total_number."\n";
+//    echo json_encode($result);
+    lb_assert($result->total_number == 1, "check number of tips linked to the product");
+    lb_assert($result->tips[0]->tip_id == $thinker_idea_id, "check tip id");
+
+    // Check product detail which includes the number of tips    
+    $params = array('product_id' => $product_id);
+    $result = $client->get('product.get_detail', $params);
+    lb_assert($result->tips_number == 1, "check number of tips linked to the product");
+    lb_assert($result->ideas[0]->id == $thinker_idea_id, "check tip id");
+
+//    echo "total_tips = ".$result->tips_number."\n";
+//    echo json_encode($result);
+
     // add a new card
     test_title("Add a new card");
     $msg = '{"number":"4012888888881881","exp_month":"06","exp_year":"2016","cvc":"123","name":"test_2015","brand":"visa"}';
     $params = array('msg' => $msg);
     $result = $client->post('payment.stripe.card_add', $params);
     $card_id = $result->cards[0]->id;
-    echo "card id: ".$card_id."\n";
+//    echo "card id: ".$card_id."\n";
     lb_assert($result->name == "test_2015", "buyer register, Check card_id");
 
 
     // buy a product
     $msg = '{"amount":10000,"currency":"usd","card":"card_1594RmDzelfnJcBJZG2JOtAM","description":"this is a test","coupon":"abcd","order_info":{"total_price":100,"total_shipping_cost":0,"total_tax":0,"coupon":"abcdefg","shipping_address":{"address_id":"7363","name":"My Home","addressline1":"736 S Mary AVE","addressline2":"","city ":"Sunnyvale","state":"CA","zipcode ":"94087","phone_number ":"4082188791","is_default":true},"sellers":[{"seller_id":234,"seller_name":"leo123","seller_avatar":"http://social.routzi.com/mod/profile/icondirect.php?lastcache=1416849407&joindate=1400171622&guid=42&size=small","product_cost":100,"shipping_cost":0,"tax":0,"subtotal":100,"products":[{"product_id":1445,"thinker_id":42,"thinker_idea_id":1514,"product_name":"Nail polishing","product_image_url":"http://www.woman.at/_storage/asset/4150236/storage/womanat:key-visual/file/52817065/31266684.jpg","product_price":50,"item_number":2,"shipping_code":"70","shipping_cost":10}]}]}}';
 
-echo "seller_id = ".$seller_id."\n";
+//echo "seller_id = ".$seller_id."\n";
     $json = json_decode($msg, true);
     $json['card'] = $card_id;
     $json['order_info']['sellers'][0]['seller_id'] = $seller_id;
@@ -155,7 +177,7 @@ echo "seller_id = ".$seller_id."\n";
     $json['order_info']['sellers'][0]['products'][0]['thinker_id'] = $thinker_id;
     $json['order_info']['sellers'][0]['products'][0]['thinker_idea_id'] = $thinker_idea_id;
     $msg = json_encode($json);
-    echo $msg."\n";
+//    echo $msg."\n";
     
     $params = array('msg' => $msg);
     $result = $client->post('payment.checkout_direct', $params);
@@ -172,23 +194,23 @@ echo "seller_id = ".$seller_id."\n";
     // get profile of thinker and check points
     $params = array();
     $result = $client->get('user.get_profile', $params);
-    echo "thinker points: ".$result->points."\n";
+//    echo "thinker points: ".$result->points."\n";
     lb_assert(($result->points == 100), "check thinker's 1% commission points");
 
     // check thinker order
     $params = array();
     $result = $client->get('payment.list.thinker_order', $params);
 
-    echo json_encode($result);
+//    echo json_encode($result);
 //    echo "thinker points: ".$result['thinker'][0]->points."\n";
 
-echo "\n====thinker_order_id=========\n";
-echo $thinker_order_id."\n";
-echo "===============================\n";
+//echo "\n====thinker_order_id=========\n";
+//echo $thinker_order_id."\n";
+//echo "===============================\n";
     $params = array('id' => $thinker_order_id);
     $result = $client->get('payment.detail.thinker_order', $params);
-    echo json_encode($result)."\n";
-    echo "\n";
+//    echo json_encode($result)."\n";
+//    echo "\n";
 
 // Delete 3 users
 
