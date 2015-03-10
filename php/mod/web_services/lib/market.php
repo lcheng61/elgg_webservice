@@ -70,13 +70,40 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                         'offset' => $offset,
         );
     }
-//   $latest_blogs = elgg_list_entities_from_metadata($params);
-    $latest_blogs = elgg_get_entities($params);
-        
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'market', $limit, $offset);
     }
-    
+   
+    if (!$from_seller_portal) {
+        $latest_blogs = elgg_get_entities($params);
+    } else { // hackhack, server loop to avoid database memory leak. This should be replaced by client pagination
+        $tmp = array();
+        $latest_blogs = array();
+        $step = 50;
+        $limit = $step;
+        $offset_tmp = 0;
+        $iter_count = 0;
+        $total_steps = 100;
+
+        do {
+            $params = array(
+                'types' => 'object',
+                'subtypes' => 'market',
+                'owner_guid' => $user->guid,
+                'limit' => $limit,
+                'full_view' => FALSE,
+                'offset' => $offset_tmp,
+            );
+            $tmp = elgg_get_entities($params);
+            $offset_tmp += $step;
+            $latest_blogs = array_merge($tmp, $latest_blogs);
+            $iter_count ++;
+            if ($iter_count >= $total_steps) {
+                break;
+            }
+        } while($tmp);
+    }
+
     if($latest_blogs) {
         $return['category'] = $category;
         $return['offset'] = $offset;
@@ -315,7 +342,10 @@ function product_get_detail($product_id) {
 
 
     $return['likes_number'] = intval(likes_count(get_entity($product_id)));
-    $return['tips_number'] = $blog->tips_number;
+
+    // get ideas linked to this product
+    $items = $blog->getEntitiesFromRelationship("sponsor", true, 0, 0);
+    $return['tips_number'] = count($items); //$blog->tips_number;
 
 /*
     $options = array(
