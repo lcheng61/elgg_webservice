@@ -80,7 +80,7 @@ expose_function('messages.count',
 function messages_inbox($limit = 10, $offset = 0) {    
 
     $user = get_loggedin_user();
-
+/*
     $total_params = array(
             'type' => 'object',
             'subtype' => 'messages',
@@ -93,7 +93,7 @@ function messages_inbox($limit = 10, $offset = 0) {
                         );
     $total_list = elgg_get_entities_from_metadata($total_params);
     $message['total_number'] = count($total_list);
-
+*/
     $params = array(
             'type' => 'object',
             'subtype' => 'messages',
@@ -105,8 +105,10 @@ function messages_inbox($limit = 10, $offset = 0) {
             'full_view' => false,
                         );
     $list = elgg_get_entities_from_metadata($params);
+    $message_count = 0;
     if($list) {
         foreach($list as $single ) {
+            $message_count ++;
             $message['guid'] = $single->guid;
             $message['subject'] = $single->title;
             
@@ -132,6 +134,7 @@ function messages_inbox($limit = 10, $offset = 0) {
          $msg = elgg_echo('messages:nomessages');
         throw new InvalidParameterException($msg);
     }
+    $return['total_number'] = $message_count;
     return $return;
 }
     
