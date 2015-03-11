@@ -167,6 +167,7 @@ function test_title($title)
 
 
     // buy a product
+    test_title("Buy a product");
     $msg = '{"amount":10000,"currency":"usd","card":"card_1594RmDzelfnJcBJZG2JOtAM","description":"this is a test","coupon":"abcd","order_info":{"total_price":100,"total_shipping_cost":0,"total_tax":0,"coupon":"abcdefg","shipping_address":{"address_id":"7363","name":"My Home","addressline1":"736 S Mary AVE","addressline2":"","city ":"Sunnyvale","state":"CA","zipcode ":"94087","phone_number ":"4082188791","is_default":true},"sellers":[{"seller_id":234,"seller_name":"leo123","seller_avatar":"http://social.routzi.com/mod/profile/icondirect.php?lastcache=1416849407&joindate=1400171622&guid=42&size=small","product_cost":100,"shipping_cost":0,"tax":0,"subtotal":100,"products":[{"product_id":1445,"thinker_id":42,"thinker_idea_id":1514,"product_name":"Nail polishing","product_image_url":"http://www.woman.at/_storage/asset/4150236/storage/womanat:key-visual/file/52817065/31266684.jpg","product_price":50,"item_number":2,"shipping_code":"70","shipping_cost":10}]}]}}';
 
 //echo "seller_id = ".$seller_id."\n";
@@ -182,10 +183,17 @@ function test_title($title)
     $params = array('msg' => $msg);
     $result = $client->post('payment.checkout_direct', $params);
     lb_assert($result->charged_user == $username3, "buyer direct checkout, check email");
-            
     // thinker order detail
     $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
 
+    // check buyer's get_shipping address
+    test_title("Check buyer's shipping address");
+    $params = array();
+    $result = $client->get('payment.get_shipping_address', $params);
+    echo "\n====\n";
+    echo json_encode($result);
+    echo "\n====\n";
+            
     // login as a thinker
     test_title("login as a thinker");
     $result = $client->obtainAuthToken($username2, $password2);

@@ -245,7 +245,17 @@ function pay_get_shipping_address()
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
-    return $user->shipping_address;
+    $return['address_id'] = $user->shipping_address[0];
+    $return['name'] = $user->shipping_address[1];
+    $return['addressline1'] = $user->shipping_address[2];
+    $return['addressline2'] = $user->shipping_address[3];
+    $return['city'] = $user->shipping_address[4];
+    $return['state'] = $user->shipping_address[5];
+    $return['zipcode'] = $user->shipping_address[6];
+    $return['phone_number'] = $user->shipping_address[7];
+    $return['is_default'] = $user->shipping_address[8];
+
+    return $return;
 }
 expose_function('payment.get_shipping_address',
                 "pay_get_shipping_address",
@@ -369,7 +379,7 @@ function pay_checkout_direct($msg)
 
     if($item->save()){
         $return['card_name'] = $item->charge_card_name;
-	$return['order_id'] = $item->guid;
+	$return['order_id'] = $charge['id']; //$item->guid;
         $return['content'] = elgg_echo("pay:charge:order:saved");
 	$return['buyer_email'] = $user->email;
         // send email, format it later
