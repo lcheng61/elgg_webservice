@@ -97,8 +97,8 @@ function test_title($title)
                    'offset' => $offset,
                   );
     $result = $client->get('messages.inbox', $params);
-//    echo json_encode($result);
-    lb_assert($result->total_number == $limit, "user_b read $limit messages");
+    echo json_encode($result);
+    lb_assert($result[0]->total_number == $limit, "user_b read $limit messages");
 
     $offset += $limit;
     test_title("user_b reads leftover messages");
@@ -106,8 +106,8 @@ function test_title($title)
                    'offset' => $offset,
                   );
     $result = $client->get('messages.inbox', $params);
-//    echo json_encode($result);
-    lb_assert($result->total_number == 1, "user_b read leftover 1 messages");
+    echo json_encode($result);
+    lb_assert($result[0]->total_number == 1, "user_b read leftover 1 messages");
 
 // Delete two users
 
