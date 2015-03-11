@@ -245,16 +245,8 @@ function pay_get_shipping_address()
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
-    $return['address_id'] = $user->shipping_address[0];
-    $return['name'] = $user->shipping_address[1];
-    $return['addressline1'] = $user->shipping_address[2];
-    $return['addressline2'] = $user->shipping_address[3];
-    $return['city'] = $user->shipping_address[4];
-    $return['state'] = $user->shipping_address[5];
-    $return['zipcode'] = $user->shipping_address[6];
-    $return['phone_number'] = $user->shipping_address[7];
-    $return['is_default'] = $user->shipping_address[8];
 
+    $return = json_decode($user->shipping_address, true);
     return $return;
 }
 expose_function('payment.get_shipping_address',
@@ -307,7 +299,7 @@ function pay_checkout_direct($msg)
     $user->save();
 
     // saving shipping address to user profile
-    $my_address = $json['order_info']['shipping_address'];
+    $my_address = json_encode($json['order_info']['shipping_address']);
     $user->shipping_address = $my_address;
     if (!$user->save()) {
         $return['address_copied'] = false;
@@ -380,6 +372,7 @@ function pay_checkout_direct($msg)
     if($item->save()){
         $return['card_name'] = $item->charge_card_name;
 	$return['order_id'] = $charge['id']; //$item->guid;
+	$return['order_id_lb'] = $item->guid;
         $return['content'] = elgg_echo("pay:charge:order:saved");
 	$return['buyer_email'] = $user->email;
         // send email, format it later
@@ -852,22 +845,6 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
         throw new InvalidParameterException('pay_list_buyer_order:contextnotvalid');
     }
     $latest_blogs = elgg_get_entities($params);
-
-/*
-    $user = elgg_get_logged_in_user_entity();
-    if (!$user) {
-        throw new InvalidParameterException('registration:usernamenotvalid');
-    }
-    $params = array(
-        'type' => 'object',
-        'subtypes' => 'buyer_order',
-        'owner_guid' => $user->guid,
-        'limit' => $limit,
-        'full_view' => FALSE,
-        'offset' => $offset,
-    );
-    $latest_blogs = elgg_get_entities($params);
-*/
 
 
     if($latest_blogs) {

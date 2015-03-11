@@ -183,6 +183,12 @@ function test_title($title)
     $params = array('msg' => $msg);
     $result = $client->post('payment.checkout_direct', $params);
     lb_assert($result->charged_user == $username3, "buyer direct checkout, check email");
+
+    $order_id = $result->order_id;
+//echo json_encode($result);
+//echo "\n";
+//echo $result->order_id;
+//echo "\n";
     // thinker order detail
     $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
 
@@ -190,9 +196,18 @@ function test_title($title)
     test_title("Check buyer's shipping address");
     $params = array();
     $result = $client->get('payment.get_shipping_address', $params);
-    echo "\n====\n";
-    echo json_encode($result);
-    echo "\n====\n";
+//    echo "\n====\n";
+//    echo json_encode($result);
+//    echo "\n====\n";
+
+    // check buyer order history
+    test_title("Check buyer's order history");
+    $params = array();
+    $result = $client->get('payment.list.buyer_order', $params);
+    lb_assert($result->msg[0]->order_info->order_guid == $order_id, "transaction id matches order id");
+//    echo "\n====\n";
+//    echo json_encode($result);
+//    echo "\n====\n";
             
     // login as a thinker
     test_title("login as a thinker");
