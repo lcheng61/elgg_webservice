@@ -83,7 +83,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
         $limit = $step;
         $offset_tmp = 0;
         $iter_count = 0;
-        $total_steps = 100;
+        $total_steps = 20;
 
         do {
             $params = array(
