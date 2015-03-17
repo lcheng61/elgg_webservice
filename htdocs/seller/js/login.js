@@ -58,6 +58,7 @@ $(function() {
 						//setCookie('username', 'test123', 1000);
 						token = data.result.token;
 						setCookie('token', data.result.token, 1000);
+						setCookie('is_admin', data.result.is_admin, 1000);
 						window.location.href = 'index.html';
 					} else {
 						alert('Unfortunately you are not a seller. Please contact business developement department.');
