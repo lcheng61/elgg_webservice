@@ -376,10 +376,6 @@ function pay_checkout_direct($msg)
         $return['content'] = elgg_echo("pay:charge:order:saved");
 	$return['buyer_email'] = $user->email;
         // send email, format it later
-        $email_sent = elgg_send_email ("team@lovebeauty.com", $user->email, "Shopper order $item->guid is made", "Thank you");
-	$return['email_sent'] = $user->email;
-        $return['time_friendly'] = $time_friendly;
-        $return['timestamp'] = $timestamp;
 
 	foreach ($sellers as $key => $value) {
             $products = $value['products'];
@@ -441,8 +437,19 @@ function pay_checkout_direct($msg)
                 if ($seller_order->save()) {
        	            $seller_item['order_id'] = $seller_order->guid;
 
-                    // send email, format it later
-                    $email_sent = elgg_send_email ("team@lovebeauty.com", $seller->email, "Seller order $seller_order->guid is made", "Thank you");
+                    // send seller email
+
+                    $body = "
+Hello $seller->username,
+
+You have a new order  order (#$seller_order->guid). Please check your seller portal.
+
+Please contact us (team@lovebeauty.me) should you have any questions.
+
+Yours truly,
+Lovebeauty Team
+";
+                    $email_sent = elgg_send_email ("team@lovebeauty.com", $seller->email, "[Lovebeauty] New order $seller_order->guid was made", $body);
       	            $seller_item['email_sent'] = $email_sent;
                     $seller_item['time_friendly'] = $time_friendly;
                     $seller_item['timestamp'] = $timestamp;
@@ -499,7 +506,18 @@ function pay_checkout_direct($msg)
        	                $thinker_item['order_id'] = $thinker_order->guid;
 
                         // send email, format it later
-                        $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "Thinker order $thinker_order->guid is made", "Thank you. You have earned $dollar_earned dollars.");
+                    $body = "
+Hello $thinker->username,
+
+Thank you for your great idea. You just received a commission (\$$dollar_earned) for your great work. Please check  \"idea contribution\" in your APP.
+
+Please contact us (team@lovebeauty.me) should you have any questions.
+
+Yours truly,
+Lovebeauty Team
+";
+
+                        $email_sent = elgg_send_email ("team@lovebeauty.com", $thinker->email, "[Lovebeauty] Thinker contribution ($thinker_order->guid) was  made", $body);
       	                $thinker_item['email_sent'] = $thinker->email;
                         $thinker_item['time_friendly'] = $time_friendly;
                         $thinker_item['timestamp'] = $timestamp;
@@ -526,6 +544,47 @@ function pay_checkout_direct($msg)
         register_error(elgg_echo("pay:charge:order:error"));
         throw new InvalidParameterException(elgg_echo("pay:charge:order:error"));
     }
+
+    // send email to buyer
+
+    $product_msg = "";
+    foreach ($sellers as $key => $value) {
+        $products = $value['products'];
+        $product_msg = $product_msg."Seller name: ".$value['seller_name']."\n";
+        foreach ($products as $product_key => $product_value) {
+            $product_price = $product_value['product_price'];
+            $shipping_cost = $product_value['shipping_cost'];
+        
+            $product_msg = $product_msg."    name: ".$product_value['product_name']."\n";
+            $product_msg = $product_msg."    price: ".'$'.$product_price." x ".$product_value['item_number']."\n";
+        }
+        $product_msg = $product_msg."Shipping cost: ".$product_value['shipping_cost']."\n";
+        $product_msg = $product_msg."\n";
+    }
+    $product_msg = $product_msg."--- --- ---\n";
+    $total_amount = $order_info['amount'] / 100;
+    $product_msg = $product_msg."Total cost: ".'$'.$total_amount."\n";
+    $product_msg = $product_msg."Currency: ".$order_info['currency']."\n";
+    $product_msg = $product_msg."Card last 4 digit: ".$card['last4']."\n";
+    $product_msg = $product_msg."Shipping address: ".$order_info['shipping_address']."\n";
+    $product_msg = $product_msg."Delivery method: ".$order_info['shipping_method']."\n";
+    $body = "
+Hello $user->username,
+
+Thank you for shopping with us. Your order (#$item->guid) is listed here:
+
+$product_msg
+
+Please contact us (team@lovebeauty.me) should you have any questions.
+
+Yours truly,
+Lovebeauty Team
+";
+    $email_sent = elgg_send_email ("team@lovebeauty.com", $user->email, "[Lovebeauty] Thank you for your shopping.", $body);
+    $return['email_sent'] = $user->email;
+    $return['time_friendly'] = $time_friendly;
+    $return['timestamp'] = $timestamp;
+
 
 //$item->seller_info = $return['seller_info'];
 //$item->thinker_info = $return['thinker_info'];

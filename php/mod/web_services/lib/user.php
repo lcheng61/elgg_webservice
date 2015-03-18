@@ -1403,17 +1403,19 @@ function user_send_register_mail($email, $name, $username, $password) {
         return false;
     }
 
+    $display_name = $name ? $name : $username;
     $message = "
-                   Dear $name, \n\n
-                   Thank you for registering Lovebeauty! \n
-                   We will contact you shortly. \n\n
-                   Your username/password is: \n
-                   username: $username \n
-                   password: $password \n
-                   \n\n\n
-                   Regards,
-                   Lovebeauty Team
-               ";
+Dear $display_name,
+
+Thank you for registering Lovebeauty! We will contact you shortly.
+
+Your username/password is:
+    username: $username
+    password: $password
+
+Regards,
+Lovebeauty Team
+";
 
         $subject = "Thank you for your register";
 
@@ -1705,16 +1707,22 @@ function user_redeem_points($name, $address, $points) {
     }
 
     $subject = "LB Reward Check Redeem";
+    $display_name = $user->name;
+    if (!$display_name) {
+        $display_name = $user->username;
+    }
     $body = "
-Hi $user->name ($user->username),
+Dear $display_name,
 
-We have received your request to redeem LB checks at amount of $points points/cents.
+We have received your request to redeem a Lovebeauty check at amount of $points points/cents.
 
 Payments are distributed within two (2) weeks of request but may take up to sixty (60) days.
 Checks will not be sent to P.O. Boxes. LoveBeauty is not responsible for replacing lost or stolen checks.
 
 Your name to display on check: $name
 Your address: $address
+
+Please let us know if there's anything wrong.
 
 Yours truly,
 Lovebeauty Team
@@ -1816,8 +1824,12 @@ function user_set_seller($username) {
     $return['is_seller'] = true;
 
     $subject = "Your Lovebeauty seller application is approved";
+    $display_name = $user->name;
+    if (!$display_name) {
+        $display_name = $user->username;
+    }
     $body = "
-Dear $user->name ($user->username),
+Dear $display_name,
 
 Congratulations! Your seller application is approved. You can login your seller portal at www.lovebeauty.me/seller and start listing your product immediately.
 
