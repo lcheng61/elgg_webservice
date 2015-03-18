@@ -46,7 +46,7 @@ $(function() {
 				if (data.result.tags != undefined) {
 					$('#tags').val(data.result.tags);
 				}
-				$('#delivery').val(data.result.delivery_time);
+				$('#delivery_time').val(data.result.delivery_time);
 				$('#affiliate_product_url').val(data.result.affiliate.affiliate_product_url);
 				
 				if (data.result.affiliate.is_affiliate == 1) {
