@@ -7,7 +7,52 @@
  * @author Liang Cheng
  *
  */
- 
+//////////////
+function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
+    $group_guid, $category, $username) {
+
+    if (!$from_seller_portal) {
+
+        $recommend_list = recommend_list($category, $offset, $limit);
+
+        if ($recommend_list['total_number'] != 0) {
+            if ($recommend_list->total_number < $limit) {
+                $product_limit = $limit - $recommend_list->total_number;
+                $product_return = product_get_posts_old($context, $product_limit, $offset, $from_seller_portal,
+                        $group_guid, $category, $username);
+            }
+            $recommend_list['products'] += $product_return['products'];
+            $recommend_list['total_number'] = $limit;
+            return $recommend_list;
+        }
+
+        $recommend_list = recommend_list($category, 0, 0);
+        $total_number_recommend = count($recommend_list['products']);
+        if ($offset >= $total_number_recommend) {
+            $offset -= $total_number_recommend;
+        }
+
+        return product_get_posts_old($context, $limit, $offset, $from_seller_portal,
+                $group_guid, $category, $username);
+    }
+}
+
+expose_function('product.get_posts',
+                "product_get_posts",
+                array(
+                      'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
+                      'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
+                      'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
+                      'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
+                      'username' => array ('type' => 'string', 'required' => false),
+                    ),
+                "Get list of market posts",
+                'GET',
+                false,
+                false);
+
  /**
  * Web service to get market product list by all users
  *
@@ -21,7 +66,7 @@
  * @return array $file Array of files uploaded
  */
 
-function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
+function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
     if($context == "mine" && !get_loggedin_user()){
@@ -83,7 +128,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
         $limit = $step;
         $offset_tmp = 0;
         $iter_count = 0;
-        $total_steps = 20;
+        $total_steps = 10;
 
         do {
             $params = array(
@@ -222,8 +267,8 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
 }
 
 
-expose_function('product.get_posts',
-                "product_get_posts",
+expose_function('product.get_posts_old',
+                "product_get_posts_old",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
