@@ -11,8 +11,7 @@
 function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
-    if (!$from_seller_portal) {
-
+    if (($from_seller_portal != 1) && ($limit != 0)) {
         $recommend_list = recommend_list($category, $offset, $limit);
 
         if ($recommend_list['total_number'] != 0) {
@@ -31,10 +30,9 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
         if ($offset >= $total_number_recommend) {
             $offset -= $total_number_recommend;
         }
-
-        return product_get_posts_old($context, $limit, $offset, $from_seller_portal,
-                $group_guid, $category, $username);
     }
+    return product_get_posts_old($context, $limit, $offset, $from_seller_portal,
+            $group_guid, $category, $username);
 }
 
 expose_function('product.get_posts',
