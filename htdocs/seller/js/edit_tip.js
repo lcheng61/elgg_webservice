@@ -26,7 +26,8 @@ $(function() {
 			console.log(JSON.stringify(data));
 			if (data.status == 0) { //read prodcut detail successfully.
 				console.log('tip title=' + data.result.tip_title);
-				$('#cover_caption').html(data.result.tip_title);
+				$('#title').val(data.result.tip_title);
+				//$('#cover_caption').html(data.result.tip_title);
 				$('#category').val(data.result.tip_category);
 
 				if (data.result.tip_tags != undefined) {
@@ -73,8 +74,8 @@ $(function() {
 
 	$('#submit_idea').on('click', function(e) {
 		//check if the cover image and caption is not null.
-		console.log("cover image src=" + $('#cover_img').attr("src"));
-		console.log("cover caption =" + $('#cover_caption').html());
+		//console.log("cover image src=" + $('#cover_img').attr("src"));
+		//console.log("cover caption =" + $('#cover_caption').html());
 
 
 //cover page is removed. Remove the error check. Submit the idea directly.
@@ -145,6 +146,7 @@ $(function() {
 		var message = {
 			"category": $('#category option:selected').text(),
 //			"tip_title": $('#cover_caption').html().trim(),
+			"tip_title": $('#title').html().trim(),
 //			"tip_thumbnail_image_url": $('#cover_img').attr("src"),
 			"tip_pages": pages,
 			"tip_tags": $('#allowSpacesTagsResult').val().split(','),
