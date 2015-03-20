@@ -11,7 +11,7 @@ $(function() {
 
 
 	console.log("is admin user: " + getCookie('is_admin'));
-	if (getCookie('is_admin')==='false') {
+	if (getCookie('is_admin')==='false' || getCookie('is_admin') == undefined) {
 		$("#is_affiliate_div").hide();
 		$("#affiliate_url_div").hide();
 	} 

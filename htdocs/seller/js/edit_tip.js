@@ -68,7 +68,9 @@ $(function() {
 						}
 					});
 				}
-			}
+			} else if (data.status == -20) {
+					window.location.href = "login.html";
+				}
 		});
 	}
 
