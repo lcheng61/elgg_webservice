@@ -15,13 +15,14 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
         $recommend_list = recommend_list($category, $offset, $limit);
 
         if ($recommend_list['total_number'] != 0) {
-            if ($recommend_list->total_number < $limit) {
-                $product_limit = $limit - $recommend_list->total_number;
-                $product_return = product_get_posts_old($context, $product_limit, $offset, $from_seller_portal,
+            if ($recommend_list['total_number'] < $limit) {
+                $product_limit = $limit - $recommend_list['total_number'];
+                $product_offset = $recommend_list['total_number'];
+                $product_return = product_get_posts_old($context, $product_limit, 0, $from_seller_portal,
                         $group_guid, $category, $username);
             }
-            $recommend_list['products'] += $product_return['products'];
-            $recommend_list['total_number'] = $limit;
+            $recommend_list['products'] = array_merge($recommend_list['products'], $product_return['products']);
+            $recommend_list['total_number'] = count($recommend_list['products']);
             return $recommend_list;
         }
 
@@ -66,6 +67,8 @@ expose_function('product.get_posts',
 
 function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
+
+return array($context, $limit, $offset, $from_seller_portal, $group_guid, $category, $username);
 
     if($context == "mine" && !get_loggedin_user()){
         throw new InvalidParameterException('registration:minenotvalid');
