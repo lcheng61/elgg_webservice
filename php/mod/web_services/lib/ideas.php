@@ -214,7 +214,7 @@ function tip_get_detail($tip_id) {
         foreach ($images as $key => $value) {
             if ($value == 1) {
 //              $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
-                $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
+                $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."master/";
             } else {
 	        $product_info['images'][] = "";
       	    }

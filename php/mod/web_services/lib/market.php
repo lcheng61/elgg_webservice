@@ -308,7 +308,7 @@ function product_get_detail($product_id) {
     foreach ($images as $key => $value) {
         if ($value == 1) {
 //            $return['images'][] = elgg_normalize_url("market/image/".$blog->guid."/$key/"."large/");
-            $return['images'][] = elgg_get_config('cdn_link').'/market/image/'.$blog->guid.'/'.$key.'/'.'large/';
+            $return['images'][] = elgg_get_config('cdn_link').'/market/image/'.$blog->guid.'/'.$key.'/'.'master/';
         } else {
 	    $return['images'][] = "";
 	}
