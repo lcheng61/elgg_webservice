@@ -218,7 +218,8 @@ function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_
 		 $blog['images'] = null;
                  foreach ($post_images as $key => $value) {
                      if ($value == 1) {
-                         $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
+//                         $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
+                         $blog['images'][] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/'.$key.'/'.'large/';
                      }
                  }
 
@@ -306,7 +307,8 @@ function product_get_detail($product_id) {
 
     foreach ($images as $key => $value) {
         if ($value == 1) {
-            $return['images'][] = elgg_normalize_url("market/image/".$blog->guid."/$key/"."large/");
+//            $return['images'][] = elgg_normalize_url("market/image/".$blog->guid."/$key/"."large/");
+            $return['images'][] = elgg_get_config('cdn_link').'/market/image/'.$blog->guid.'/'.$key.'/'.'large/';
         } else {
 	    $return['images'][] = "";
 	}
@@ -667,7 +669,8 @@ function product_search($query, $category, $offset, $limit,
                  $blog['tips_number'] = $single->tips_number;
                  $blog['sold_count'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
-                 $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
+//               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
+                 $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'large/';
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['reviews_number'] = $num_comments;
@@ -796,7 +799,8 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload1']['name'])) && (substr_count($_FILES['upload1']['type'],'image/'))) {
             $imgdata1 = get_uploaded_file('upload1');
             market_add_image($post, $imgdata1, 1);
-	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/1/"."large/");
+//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/1/"."large/");
+            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/1/'.'large/';
         } else {
             $values['images'][] = "";
 	}
@@ -804,7 +808,8 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload2']['name'])) && (substr_count($_FILES['upload2']['type'],'image/'))) {
             $imgdata2 = get_uploaded_file('upload2');
             market_add_image($post, $imgdata2, 2);
-	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/2/"."large/");
+//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/2/"."large/");
+            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/2/'.'large/';
         } else {
             $values['images'][] = "";
 	}        
@@ -812,7 +817,8 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload3']['name'])) && (substr_count($_FILES['upload3']['type'],'image/'))) {
             $imgdata3 = get_uploaded_file('upload3');
             market_add_image($post, $imgdata3, 3);
-	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/3/"."large/");
+//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/3/"."large/");
+            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/3/'.'large/';
         } else {
             $values['images'][] = "";
 	}        
@@ -820,7 +826,8 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload4']['name'])) && (substr_count($_FILES['upload4']['type'],'image/'))) {
             $imgdata4 = get_uploaded_file('upload4');
             market_add_image($post, $imgdata4, 4);
-	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/4/"."large/");
+//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/4/"."large/");
+            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/4/'.'large/';
         } else {
             $values['images'][] = "";
 	}        
@@ -1186,7 +1193,8 @@ function recommend_list($category, $offset, $limit) {
                  $blog['tips_number'] = $single->tips_number;
                  $blog['sold_count'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
-                 $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
+//               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
+                 $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'large/';
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['reviews_number'] = $num_comments;

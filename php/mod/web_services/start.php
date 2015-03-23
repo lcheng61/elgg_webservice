@@ -16,6 +16,11 @@ function web_services_init() {
 	// register with a low priority so that we can replace all unit tests
 	elgg_register_plugin_hook_handler('unit_test', 'system', 'web_services_test');
 	elgg_register_admin_menu_item('administer', 'web_services', 'utilities');
+
+        // set cdn images for develop site
+//        elgg_set_config('cdn_link', 'http://social.routzi.com');
+        // set cdn images for product site
+        elgg_set_config('cdn_link', 'http://cdn.lovebeauty.me');
 }
 
 $enabled = unserialize(elgg_get_plugin_setting('enabled_webservices', 'web_services'));

@@ -100,7 +100,13 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $display_ideas_number++;
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
-                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+//                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+                 if ($single->tip_thumbnail_image_url) {
+                     $blog['tip_thumbnail_image_url'] = elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."large/";
+                 } else {
+                     $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+                 }
+
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
 
@@ -207,7 +213,8 @@ function tip_get_detail($tip_id) {
         $product_info['images'] = "";
         foreach ($images as $key => $value) {
             if ($value == 1) {
-                $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
+//              $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
+                $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
             } else {
 	        $product_info['images'][] = "";
       	    }
@@ -350,9 +357,12 @@ function ideas_post_tip($message, $idea_id)
             $imgdata = get_uploaded_file($file_name);
 	    ideas_add_image($post, $imgdata, "0");
 
-            $json['tip_thumbnail_image_url'] =
-                elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
-            $return['tip_thumbnail_image_url'] = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
+                $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/0/"."large/";
+//                $image_link = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
+
+            $json['tip_thumbnail_image_url'] = $image_link;
+            $return['tip_thumbnail_image_url'] = $image_link;
+
             $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
         }
         
@@ -371,10 +381,11 @@ function ideas_post_tip($message, $idea_id)
 	            $imgdata = get_uploaded_file($file_name);
 		    ideas_add_image($post, $imgdata, $image_num);
 
-                    $json['tip_pages'][$page_num]['tip_image_url'] =
-                            elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
+//                  $image_link = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
+                    $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."large/";
 
-                    $img_item[] = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
+                    $json['tip_pages'][$page_num]['tip_image_url'] = $image_link;
+                    $img_item[] = $image_link;
 	        }
 	    } else {
                 $img_item[] = "";
@@ -690,7 +701,10 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
         $product_info['images'] = "";
         foreach ($images as $key => $value) {
             if ($value == 1) {
-                $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
+//              $product_info['images'][] =
+                     // elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
+                $product_info['images'][] =
+                        elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
             } else {
 	        $product_info['images'][] = "";
       	    }
@@ -774,8 +788,14 @@ function ideas_search($query, $category, $offset, $limit,
 
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
-                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-//                         elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
+//               $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+                 if ($single->tip_thumbnail_image_url) {
+                     $blog['tip_thumbnail_image_url'] = 
+                             elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."large/";
+                 } else {
+                     $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+      		 }
+
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
 
