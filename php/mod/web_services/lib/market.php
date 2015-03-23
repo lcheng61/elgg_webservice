@@ -68,8 +68,6 @@ expose_function('product.get_posts',
 function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
-return array($context, $limit, $offset, $from_seller_portal, $group_guid, $category, $username);
-
     if($context == "mine" && !get_loggedin_user()){
         throw new InvalidParameterException('registration:minenotvalid');
     }
