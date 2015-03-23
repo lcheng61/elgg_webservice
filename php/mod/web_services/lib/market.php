@@ -21,7 +21,9 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
                 $product_return = product_get_posts_old($context, $product_limit, 0, $from_seller_portal,
                         $group_guid, $category, $username);
             }
-            $recommend_list['products'] = array_merge($recommend_list['products'], $product_return['products']);
+            if (is_array($product_return['products'])) {
+                $recommend_list['products'] = array_merge($recommend_list['products'], $product_return['products']);
+            }
             $recommend_list['total_number'] = count($recommend_list['products']);
             return $recommend_list;
         }
@@ -45,7 +47,7 @@ expose_function('product.get_posts',
                       'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
                       'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'username' => array ('type' => 'string', 'required' => false),
+                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
                     ),
                 "Get list of market posts",
                 'GET',
