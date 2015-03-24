@@ -18,7 +18,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
             if ($recommend_list['total_number'] < $limit) {
                 $product_limit = $limit - $recommend_list['total_number'];
                 $product_offset = $recommend_list['total_number'];
-                $product_return = product_get_posts_old($context, $product_limit, 0, $from_seller_portal,
+                $product_return = product_get_posts_common($context, $product_limit, 0, $from_seller_portal,
                         $group_guid, $category, $username);
             }
             if (is_array($product_return['products'])) {
@@ -34,7 +34,7 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
             $offset -= $total_number_recommend;
         }
     }
-    return product_get_posts_old($context, $limit, $offset, $from_seller_portal,
+    return product_get_posts_common($context, $limit, $offset, $from_seller_portal,
             $group_guid, $category, $username);
 }
 
@@ -67,7 +67,7 @@ expose_function('product.get_posts',
  * @return array $file Array of files uploaded
  */
 
-function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_portal,
+function product_get_posts_common($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
     if($context == "mine" && !get_loggedin_user()){
@@ -173,7 +173,10 @@ function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_
                  $display_product_number++;
                  $blog['product_name'] = $single->title;
                  $blog['product_price'] = floatval($single->price);
-                 $blog['tips_number'] = $single->tips_number;
+
+                 $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
+                 $blog['tips_number'] = count($items);
+
 		 //XXX: hard-code sold_count;		 		 
                  $single->sold_count = 0;
                  $blog['sold_count'] = $single->sold_count;
@@ -191,7 +194,10 @@ function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_
                      }
                      $blog['liked'] = ($like && $like->canEdit());
                      $blog['likes_number'] = intval(likes_count(get_entity($product_id)));
-                     $blog['tips_number'] = $single->tips_number;
+
+                     $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
+                     $blog['tips_number'] = count($items);
+
                      $blog['delivery_time'] = $single->delivery_time;
 
                      $comments = $single->getAnnotations(
@@ -269,8 +275,8 @@ function product_get_posts_old($context, $limit = 10, $offset = 0, $from_seller_
 }
 
 
-expose_function('product.get_posts_old',
-                "product_get_posts_old",
+expose_function('product.get_posts_common',
+                "product_get_posts_common",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
@@ -669,7 +675,10 @@ function product_search($query, $category, $offset, $limit,
 
                  $blog['product_name'] = $single->title;
                  $blog['product_price'] = floatval($single->price);
-                 $blog['tips_number'] = $single->tips_number;
+
+                 $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
+                 $blog['tips_number'] = count($items);
+
                  $blog['sold_count'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
 //               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
@@ -1193,9 +1202,22 @@ function recommend_list($category, $offset, $limit) {
 
                  $blog['product_name'] = $single->title;
                  $blog['product_price'] = floatval($single->price);
-                 $blog['tips_number'] = $single->tips_number;
+
+                 $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
+                 $blog['tips_number'] = count($items);
+
                  $blog['sold_count'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
+                 $blog['shipping_fee'] = $single->shipping_fee;
+                 $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
+                 $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
+                 if ($single->quantity < 0) {
+                     $blog['quantity'] = 0;
+                 } else {
+                     $blog['quantity'] = $single->quantity;
+		 }
+                 $blog['rate'] = $single->rate;
+
 //               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
                  $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'large/';
 
