@@ -339,11 +339,11 @@ function blog_get_comments($guid, $limit = 10, $offset, $type, $context, $userna
             } else {
 
                 $comment_rate = unserialize(strip_tags($single->value));
-                if ($comment_rate['text']) {
-                    $comment['description'] = $comment_rate['text'];
-                } else {
+//                if ($comment_rate['text']) {
+//                    $comment['description'] = $comment_rate['text'];
+//                } else {
                     $comment['description'] = $comment_rate;
-                }
+//                }
                 $comment['rate'] = "0";
             }
 
