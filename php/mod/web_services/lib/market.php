@@ -322,7 +322,6 @@ function product_get_detail($product_id) {
 	    $return['images'][] = "";
 	}
     }
-
     // get ideas linked to this product
     $items = $blog->getEntitiesFromRelationship("sponsor", true, 0, 0);
 

@@ -101,7 +101,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
 //                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-                 if ($single->tip_thumbnail_image_url) {
+                 if (!$single->tip_thumbnail_image_url) {
                      $blog['tip_thumbnail_image_url'] = elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."large/";
                  } else {
                      $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
@@ -205,10 +205,10 @@ function tip_get_detail($tip_id) {
 ////// get products
     $return['products_number'] = $blog->countEntitiesFromRelationship("sponsor", false);
     $items = $blog->getEntitiesFromRelationship("sponsor", /*reverse_relation*/false, /*limit*/0, /*offset*/0);
+
     foreach ($items as $item) {
         $product_info['id'] = $item->guid;
         $product_info['name'] = $item->title;
-
         $images = unserialize($item->images);
         $product_info['images'] = "";
         foreach ($images as $key => $value) {
@@ -219,8 +219,12 @@ function tip_get_detail($tip_id) {
 	        $product_info['images'][] = "";
       	    }
         }
+        if ($item->is_affiliate) {
+            $product_info['images'][] = $item->affiliate_image;
+        }
         $return['products'][] = $product_info;
     } 
+
 //////~
 
     $owner = get_entity($blog->owner_guid);
