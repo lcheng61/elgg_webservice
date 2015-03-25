@@ -204,8 +204,8 @@ function tip_get_detail($tip_id) {
 
 ////// get products
     $return['products_number'] = $blog->countEntitiesFromRelationship("sponsor", false);
-    $items = $blog->getEntitiesFromRelationship("sponsor", /*reverse_relation*/false, /*limit*/0, /*offset*/0);
-
+/*
+    $items = $blog->getEntitiesFromRelationship("sponsor", false, 0, 0);
     foreach ($items as $item) {
         $product_info['id'] = $item->guid;
         $product_info['name'] = $item->title;
@@ -222,9 +222,9 @@ function tip_get_detail($tip_id) {
         if ($item->is_affiliate) {
             $product_info['images'][] = $item->affiliate_image;
         }
-        $return['products'][] = $product_info;
+//        $return['products'][] = $product_info;
     } 
-
+*/
 //////~
 
     $owner = get_entity($blog->owner_guid);
@@ -712,6 +712,9 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
             } else {
 	        $product_info['images'][] = "";
       	    }
+        }
+        if ($item->is_affiliate) {
+            $product_info['images'][] = $item->affiliate_image;
         }
         $return['products'][] = $product_info;
     } 
