@@ -7,6 +7,13 @@ var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
 //var server = 'http://dev-lovebeauty.rhcloud.com/';
 //var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
 
+
+//product server
+//var server = 'http://m.lovebeauty.me/';
+//var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
+
+
+
 var get_token = 'services/api/rest/json/?method=auth.gettoken2';
 var signout = 'services/api/rest/json/?method=user.logout';
 
