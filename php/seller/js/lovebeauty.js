@@ -1,14 +1,18 @@
 //var server = 'http://social.routzi.com/'
-//var server = 'http://www.lovebeauty.me/'
-//var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
-
-var server = 'http://m.lovebeauty.me/'
-var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
+var server = 'http://www.lovebeauty.me/'
+var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
 
 
 //dev server
 //var server = 'http://dev-lovebeauty.rhcloud.com/';
 //var api_key = '902a5f73385c0310936358c4d7d58b403fe2ce93';
+
+
+//product server
+//var server = 'http://m.lovebeauty.me/';
+//var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
+
+
 
 var get_token = 'services/api/rest/json/?method=auth.gettoken2';
 var signout = 'services/api/rest/json/?method=user.logout';
@@ -54,36 +58,11 @@ $(function() {
 
 
 	$('#signout').click(function() { //delete the uploaded4 image
-		setCookie('username', "", 1000);
-		setCookie('token', '', 1000);
-		
-		var formUrl = server + signout + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
-		//console.log(get_url);
-
-
-		$.ajax({
-			url: formUrl,
-			type: "POST",
-			//data: 'username=robin123&password=robin123',
-			//data: $('#login_form').serialize(),
-			crossDomain: true,
-			success: function(data, textStatus, jqXHR) {
-				//data: return data from server
-				console.log(JSON.stringify(data));
-				//alert(data.result);
-				if (data.status == 0) {
-					setCookie('username', "", 1000);
-					setCookie('token', '', 1000);
-				} 
-				window.location.href = 'login.html';
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus);
-				console.log(jqXHR);
-			}
-		});
+		logout();
 
 	});
+
+
 });
 
 //Loads the correct sidebar on window load,
@@ -111,12 +90,44 @@ $(function() {
 
 	username = getCookie("username");
 	console.log("username=" + username);
-	if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0
-		&& window.location.href.indexOf("reset_password.html") < 0 && (username == undefined || username == "")) {
+	if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0 && window.location.href.indexOf("reset_password.html") < 0 && (username == undefined || username == "")) {
 		window.location.href = "login.html"
 	}
 
 })
+
+
+function logout() {
+	setCookie('username', "", 1000);
+	setCookie('token', '', 1000);
+
+	var formUrl = server + signout + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
+	//console.log(get_url);
+
+
+	$.ajax({
+		url: formUrl,
+		type: "POST",
+		//data: 'username=robin123&password=robin123',
+		//data: $('#login_form').serialize(),
+		crossDomain: true,
+		success: function(data, textStatus, jqXHR) {
+			//data: return data from server
+			console.log(JSON.stringify(data));
+			//alert(data.result);
+			if (data.status == 0) {
+				setCookie('username', "", 1000);
+				setCookie('token', '', 1000);
+			}
+			window.location.href = 'login.html';
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log(textStatus);
+			console.log(jqXHR);
+		}
+	});
+}
+
 
 function setCookie(c_name, value, expiredays) {　　　　
 	var exdate = new Date();　　　　
@@ -149,5 +160,3 @@ function getUrlParameter(sParam) {
 		}
 	}
 }
-
-

@@ -10,6 +10,12 @@ $(function() {
 	} //otehrwise, create a new prodcut.
 
 
+	console.log("is admin user: " + getCookie('is_admin'));
+	if (getCookie('is_admin')!=='true') {
+		$("#is_affiliate_div").hide();
+		$("#affiliate_url_div").hide();
+	} 
+
 	console.log("height=" + $(".panel").height());
 
 	function getUrlParameter(sParam) {
@@ -94,14 +100,14 @@ $(function() {
 			error: onError,
 
 			// other available options: 
-			url: formUrl
+			url: formUrl,
 				//type:      type        // 'get' or 'post', override for form's 'method' attribute 
 				//dataType:  null        // 'xml', 'script', or 'json' (expected server response type) 
 				//clearForm: true        // clear all form fields after successful submit 
 				//resetForm: true        // reset the form after successful submit 
 
 			// $.ajax options can be used here too, for example: 
-			//timeout:   3000 
+			timeout:   10000 
 		};
 
 		$('#edit_form').ajaxSubmit(options);
@@ -114,7 +120,7 @@ $(function() {
 			console.log('read result from server: ' + data.result);
 			BootstrapDialog.alert('The prodcut is added/updated.');
 		} else {
-			BootstrapDialog.alert('There is some error during submit the product, error message =' +
+			BootstrapDialog.alert('Submit is not successful with message =' +
 				data.message);
 		}
 	}

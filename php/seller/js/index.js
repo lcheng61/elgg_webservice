@@ -49,6 +49,9 @@ $(function() {
 				drawChart(revenue_data, "Revenue");
 			} else {
 				console.log(JSON.stringify(data));
+				if (data.status == -20) {
+					logout();
+				}
 			}
 		});
 	}

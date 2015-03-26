@@ -717,7 +717,10 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
             $product_info['images'][] = $item->affiliate_image;
         }
         $return['products'][] = $product_info;
-    } 
+    }
+    if ($products_number == 0) {
+        $return['products'] = array();
+    }
     return $return;
 }
     

@@ -31,6 +31,10 @@ $(function() {
 		}, {
 			"data": "status"
 		}]
+//		,"fnServerData": function ( sSource, aoData, fnCallback ) {
+//			console.log("sSource=" + sSource);
+//			console.log("aoData=" + aoData);
+//		}
 	});
 	$('#orders tbody').on('click', 'tr', function() {
 		if ($(this).hasClass('selected')) {

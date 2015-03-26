@@ -37,8 +37,6 @@
 
 		<link rel="stylesheet" href="css/lovebeauty.css" />
 
-
-
 		<!--<link rel="stylesheet" href="css/plugins/dataTables.bootstrap.css">-->
 		<!--<link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">-->
 		<link rel="stylesheet" href="css/plugins/jquery.dataTables.min.css">
@@ -51,7 +49,6 @@
 		<!-- The base CSS and tagit.ui-zendesk.css theme are scoped to the Tag-it widget, so they shouldn't affect anything else in your site, unlike with jQuery UI themes. -->
 		<link href="css/plugins/tagit/jquery.tagit.css" rel="stylesheet" type="text/css">
 		<link href="css/plugins/tagit/tagit.ui-zendesk.css" rel="stylesheet" type="text/css">
-
 
 		<style>
 			.richeditor {
@@ -132,12 +129,12 @@
                         </li>
                         -->
 
-	                        <li class="divider"></li>
-	                        <li><a href="#" id="signout"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
-	                        </li>
-	                        <li class="divider"></li>
-	                        <li><a href="signup.html" id="signup"><i class="fa fa-sign-out fa-fw"></i> Signup</a>
-	                        </li>
+							<li class="divider"></li>
+							<li><a href="#" id="signout"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+							</li>
+							<li class="divider"></li>
+							<li><a href="signup.html" id="signup"><i class="fa fa-sign-out fa-fw"></i> Signup</a>
+							</li>
 						</ul>
 						<!-- /.dropdown-user -->
 					</li>
@@ -191,12 +188,27 @@
 					<div class="col-lg-12">
 						<h1 class="page-header" id="page_title">Add idea</h1>
 					</div>
-					<!-- /.col-lg-12 -->
+					<!-- /.col-lg-12-->
 				</div>
 
+				<div class="row">
+					<div class="col-lg-1 col-lg-offset-11">
+						<a href="help_idea.html">Help</a>
+					</div>
+					<!-- /.col-lg-1 -->
+				</div>
 
 				<!-- /.row 0 for category and tags-->
 				<input name="tags" id="allowSpacesTagsResult" value="" type="hidden">
+				<div class="row">
+					<div class="col-lg-12">
+						<label>Title</label>
+						<input class="form-control" name="title" placeholder="Idea title" id="title" data-validation="required" data-validation-error-msg="You have to give the product name.">
+
+					</div>
+				</div>
+
+				<br />
 				<div class="row">
 					<div class="col-lg-6">
 						<label>Category</label>
@@ -221,7 +233,6 @@
 					</div>
 				</div>
 
-
 				<!-- /.row first-->
 				<div class="row">
 					<!--<div class="col-lg-4">
@@ -241,30 +252,29 @@
 						</div>
 					
 					</div>-->
-					
+
 					<div class="col-lg-4">
 						<div class="panel panel-primary tile" style="height: 400px;">
-						<div class="tile__name" id="editable">
-							<div>Products</div>
-						</div>
-						<div class="panel-body">
-							<div class="form-group input-group" style="border: 0px;">
-								<input type="text" class="form-control" id="input-search" placeholder="search prodcuts">
-								<span class="input-group-btn">
+							<div class="tile__name" id="editable">
+								<div>Products</div>
+							</div>
+							<div class="panel-body">
+								<div class="form-group input-group" style="border: 0px;">
+									<input type="text" class="form-control" id="input-search" placeholder="search prodcuts">
+									<span class="input-group-btn">
                           				<button class="btn btn-default" type="button" id="search"><i class="fa fa-search"></i></button>
                     			</span>
+								</div>
+
+								<!--the sortable product list-->
+								<ul id="editableProductList" class="sortable">
+								</ul>
+
 							</div>
-
-							<!--the sortable product list-->
-							<ul id="editableProductList" class="sortable">
-							</ul>
-
 						</div>
 					</div>
 				</div>
-				</div>
 				<!-- /#row first -->
-
 
 				<!-- /.row add buttons-->
 				<div class="row">
@@ -291,7 +301,6 @@
 				<div class="row" id="multi2">
 				</div>
 				<!-- /#row second -->
-
 
 				<!-- /.row Info and produc page line-->
 				<!--<div class="row">
@@ -325,10 +334,9 @@
 					</div>
 				</div>-->
 				<!-- /#row Info and product page line -->
-				
-				
 
-				<br /><br /><br /><br /><br />
+				<br />
+				<br />
 				<!-- /.row submit button line-->
 				<div class="row">
 					<!-- /.col-lg-2 -->
@@ -385,8 +393,8 @@
 					</div>
 				</div>
 
-
-
+				<br />
+				<br />
 
 			</div>
 			<!-- /#page-wrapper -->
@@ -394,12 +402,9 @@
 		</div>
 		<!-- /#wrapper -->
 
-
 		<!--//the form used to submit locale files to server.-->
 		<form name="files" id="submit_files" method="post" enctype="multipart/form-data"></form>
-		
-		
-		
+
 		<!-- jQuery Version 1.11.0 -->
 		<script src="js/jquery-1.11.1.min.js"></script>
 
@@ -408,9 +413,6 @@
 
 		<!-- Metis Menu Plugin JavaScript -->
 		<script src="js/plugins/metisMenu/metisMenu.min.js"></script>
-
-
-
 
 		<!-- JQuery UI -->
 		<script src="js/plugins/jquery-ui/jquery-ui.min.js"></script>
@@ -423,7 +425,6 @@
 
 		<script src="js/plugins/sortable/Sortable.min.js"></script>
 
-
 		<script type="text/javascript" src="js/plugins/jquery-multiselect/jquery.multiselect.filter.js"></script>
 		<script type="text/javascript" src="js/plugins/jquery-multiselect/jquery.multiselect.js"></script>
 		<script type="text/javascript">
@@ -432,7 +433,6 @@
 				$('#divselktr').multiselect();
 			});
 		</script>
-
 
 		<script src="ckeditor/ckeditor.js"></script>
 		<script src="ckeditor/adapters/jquery.js"></script>

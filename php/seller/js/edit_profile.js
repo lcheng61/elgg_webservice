@@ -18,6 +18,8 @@ $(function() {
 				$('#nick_name').val(data.result.name);
 				$('#email').val(data.result.email);
 
+			} else if (data.status == -20) {
+					logout();
 			}
 		});
 	}
@@ -104,7 +106,9 @@ $(function() {
 
 		$.getJSON(user_availability_url, function(data) {
 			console.log(JSON.stringify(data));
-			if (data.status == 0 && data.result != undefined) {
+			if (data.status == -20) {
+					logout();
+			} else if (data.status == 0 && data.result != undefined) {
 				//get return for the user availability successfully.
 				if (data.result == 0) { //user exists.
 					is_user_exists = true;
