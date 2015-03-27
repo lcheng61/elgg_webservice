@@ -442,7 +442,7 @@ function pay_checkout_direct($msg)
                     $body = "
 Hello $seller->username,
 
-You have a new order  order (#$seller_order->guid). Please check your seller portal.
+You have a new order (#$seller_order->guid). Please check your seller portal.
 
 Please contact us (team@lovebeauty.me) should you have any questions.
 
