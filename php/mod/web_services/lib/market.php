@@ -612,13 +612,13 @@ expose_function('product.get_seller_other_posts',
 function product_search($query, $category, $offset, $limit, 
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
-    
+
     $return = "";
 // get total number
     $params = array(
                     'query' => $query,
                     'offset' => $offset,
-                    'limit' => 0,
+                    'limit' => $limit,
                     'sort' => $sort,
                     'order' => $order,
                     'search_type' => $search_type,
