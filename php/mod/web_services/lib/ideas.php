@@ -765,13 +765,11 @@ function ideas_search($query, $category, $offset, $limit,
     $results = elgg_trigger_plugin_hook('search', $type, $params, array());
     if ($results === FALSE) {
         throw new InvalidParameterException("search engine returns error");
-        // search plugin returns error.
-        // continue;
     }
     if($results['count']){
         foreach($results['entities'] as $single){
-            if (($single->ideascategory == $category) || 
-                    ($category == "all")) {
+            if (($single->ideascategory == strtolower($category)) || 
+                    (strtolower($category) == "all")) {
                 $blog['tip_id'] = $single->guid;
 /*
                 $options = array(
