@@ -146,7 +146,7 @@ $(function() {
 
 
 		var message = {
-			"tip_id" : idea_id,
+			"idea_id" : idea_id,
 			"category": $('#category option:selected').text(),
 			"tip_title": $('#title').val(),
 			//"tip_thumbnail_image_url": $('#cover_img').attr("src"),
@@ -158,10 +158,11 @@ $(function() {
 
 		//console.log(message);
 		var messageStr = JSON.stringify(message);
-		//console.log(messageStr);
+		console.log(messageStr);
 
 		var formData = new FormData();
 		formData.append("message", messageStr);
+		formData.append("idea_id", idea_id);
 		for (var i = 0; i < local_files.length; i++) {
 			formData.append("tip_image_local_" + (i + 1), local_files[i]);
 		}

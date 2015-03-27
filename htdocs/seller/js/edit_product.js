@@ -14,6 +14,7 @@ $(function() {
 	if (getCookie('is_admin')!=='true') {
 		$("#is_affiliate_div").hide();
 		$("#affiliate_url_div").hide();
+		$("#affiliate_image_url_div").hide();
 	} 
 
 	console.log("height=" + $(".panel").height());
@@ -48,6 +49,7 @@ $(function() {
 				}
 				$('#delivery_time').val(data.result.delivery_time);
 				$('#affiliate_product_url').val(data.result.affiliate.affiliate_product_url);
+				$('#affiliate_image_url').val(data.result.affiliate.affiliate_image);
 				
 				if (data.result.affiliate.is_affiliate == 1) {
 					$('#is_affiliate').prop('checked', true);

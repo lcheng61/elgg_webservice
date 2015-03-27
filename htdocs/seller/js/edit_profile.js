@@ -19,7 +19,7 @@ $(function() {
 				$('#email').val(data.result.email);
 
 			} else if (data.status == -20) {
-					logout();
+				logout();
 			}
 		});
 	}
@@ -97,6 +97,8 @@ $(function() {
 	$("#username").blur(function() {
 		if (original_username != $('#username').val()) {
 			checkUserAvailability();
+		} else {
+			setIconStatus(false);
 		}
 	});
 
@@ -107,19 +109,13 @@ $(function() {
 		$.getJSON(user_availability_url, function(data) {
 			console.log(JSON.stringify(data));
 			if (data.status == -20) {
-					logout();
+				logout();
 			} else if (data.status == 0 && data.result != undefined) {
 				//get return for the user availability successfully.
 				if (data.result == 0) { //user exists.
-					is_user_exists = true;
-					$("#name_status_button").attr("class", "btn btn-warning");
-					$("#name_status_icon").removeClass("glyphicon glyphicon-ok");
-					$("#name_status_icon").addClass("glyphicon glyphicon-ban-circle");
+					setIconStatus(true);
 				} else { //user does not exist.
-					is_user_exists = false;
-					$("#name_status_button").attr("class", "btn btn-success");
-					$("#name_status_icon").removeClass("glyphicon glyphicon-ban-circle");
-					$("#name_status_icon").addClass("glyphicon glyphicon-ok");
+
 				}
 
 			} else {
@@ -127,6 +123,20 @@ $(function() {
 				//BootstrapDialog.alert('Could not check user name from server.');
 			}
 		});
+	}
+
+	function setIconStatus(user_exists) {
+		if (user_exists) {
+			is_user_exists = true;
+			$("#name_status_button").attr("class", "btn btn-warning");
+			$("#name_status_icon").removeClass("glyphicon glyphicon-ok");
+			$("#name_status_icon").addClass("glyphicon glyphicon-ban-circle");
+		} else {
+			is_user_exists = false;
+			$("#name_status_button").attr("class", "btn btn-success");
+			$("#name_status_icon").removeClass("glyphicon glyphicon-ban-circle");
+			$("#name_status_icon").addClass("glyphicon glyphicon-ok");
+		}
 	}
 
 })
