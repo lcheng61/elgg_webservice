@@ -295,12 +295,14 @@ function pay_checkout_direct($msg)
     if ($user->points < $points) {
         throw new InvalidParameterException('User points not sufficient');
     }
+/* We don't support using points to buy
     if ($points > 0) {
         $user->points = $user->points - $points;
         if ($user->points < 0) {
             $user->points = 0;
         }
     }
+*/
     $user->save();
 
     // saving shipping address to user profile
