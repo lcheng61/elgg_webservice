@@ -42,7 +42,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                 array(
                     'name' => 'ideascategory',
                     'value' => $category,
-                    'case_sensitive' => true
+                    'case_sensitive' => false
                 ),
             )
         );
@@ -60,7 +60,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                 array(
                     'name' => 'ideascategory',
                     'value' => $category,
-		    'case_sensitive' => true
+		    'case_sensitive' => false
                 ),
             )
         );
@@ -77,7 +77,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                 array(
                     'name' => 'ideascategory',
                     'value' => $category,
-		    'case_sensitive' => true
+		    'case_sensitive' => false
                 ),
             )
         );
