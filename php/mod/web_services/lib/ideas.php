@@ -22,7 +22,7 @@
  */
 
 function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
-    $category = strtolower($category);
+//    $category = strtolower($category);
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -769,7 +769,7 @@ function ideas_search($query, $category, $offset, $limit,
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
     
-    $category = strtolower($category);
+//    $category = strtolower($category);
     $return = "";
     $params = array(
                     'query' => $query,
