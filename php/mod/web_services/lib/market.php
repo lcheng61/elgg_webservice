@@ -77,7 +77,6 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
     if($context == "user" && $username == ""){
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
-
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -86,7 +85,6 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
             throw new InvalidParameterException('registration:usernamenotvalid');
 	}
     }
-
     if($context == "all"){
         $params = array(
             'types' => 'object',
@@ -94,7 +92,13 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
-            );
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'marketcategory',
+                    'value' => $category,
+                ),
+            )
+        );
     }
     if($context == "mine" || $context ==  "user"){
         $params = array(
@@ -104,6 +108,12 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'marketcategory',
+                    'value' => $category,
+                ),
+            )
         );
     }
     if($context == "group"){
@@ -113,15 +123,24 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
             'container_guid'=> $group_guid,
             'limit' => $limit,
             'full_view' => FALSE,
-                        'offset' => $offset,
+            'offset' => $offset,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'marketcategory',
+                    'value' => $category,
+                ),
+            )
         );
     }
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'market', $limit, $offset);
     }
-   
     if (!$from_seller_portal) {
-        $latest_blogs = elgg_get_entities($params);
+        if ($category == "all") {
+	    $latest_blogs = elgg_get_entities($params);
+ 	} else {
+	    $latest_blogs = elgg_get_entities_from_metadata($params);
+        }
     } else { // hackhack, server loop to avoid database memory leak. This should be replaced by client pagination
         $tmp = array();
         $latest_blogs = array();
@@ -157,8 +176,9 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
         $display_product_number = 0;
         foreach($latest_blogs as $single ) {
 
-            if (($single->marketcategory == $category) || 
-                    ($category == "all")) {
+//            if (($single->marketcategory == $category) || 
+//                    ($category == "all")) {
+            if (1) {
                 $blog['product_id'] = $single->guid;
 
                 $comments = $single->getAnnotations(
@@ -361,6 +381,7 @@ function product_get_detail($product_id) {
 
     if ($return['affiliate']['is_affiliate'] == 1) {
         $return['images'][] = $blog->affiliate_image;
+        $return['affiliate']['affiliate_image'] = $blog->affiliate_image;
     }
 
 //~

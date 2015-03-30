@@ -22,6 +22,7 @@
  */
 
 function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
+    $category = strtolower($category);
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -37,7 +38,13 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
-            );
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'ideascategory',
+                    'value' => $category,
+                ),
+            )
+        );
     }
 
     if($context == "mine" || $context ==  "user"){
@@ -48,6 +55,12 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'ideascategory',
+                    'value' => $category,
+                ),
+            )
         );
     }
     if($context == "group"){
@@ -58,10 +71,19 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'ideascategory',
+                    'value' => $category,
+                ),
+            )
         );
     }
-    $latest_blogs = elgg_get_entities($params);
-        
+    if ($category == "all") {
+        $latest_blogs = elgg_get_entities($params);
+    } else {
+        $latest_blogs = elgg_get_entities_from_metadata($params);
+    }    
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'ideas', $limit, $offset);
     }
@@ -747,6 +769,7 @@ function ideas_search($query, $category, $offset, $limit,
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
     
+    $category = strtolower($category);
     $return = "";
     $params = array(
                     'query' => $query,
