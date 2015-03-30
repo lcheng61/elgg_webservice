@@ -79,7 +79,7 @@ function ideas_get_posts2($context,  $limit = 10, $offset = 0, $group_guid, $cat
         $return['offset'] = $offset;
         $display_ideas_number = 0;
 
-        $return['total_number2'] = $count($latest_blogs);
+        $return['total_number2'] = count($latest_blogs);
     
         foreach($latest_blogs as $single ) {
 /*
