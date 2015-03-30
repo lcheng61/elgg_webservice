@@ -21,10 +21,7 @@
  * @return array $file Array of files uploaded
  */
 
-
-
 function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
-//    $category = strtolower($category);
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -84,11 +81,11 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             )
         );
     }
-    if ($category == "all") {
+//    if ($category == "all") {
         $latest_blogs = elgg_get_entities($params);
-    } else {
-        $latest_blogs = elgg_get_entities_from_metadata($params);
-    }    
+//    } else {
+//        $latest_blogs = elgg_get_entities_from_metadata($params);
+//    }    
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'ideas', $limit, $offset);
     }
