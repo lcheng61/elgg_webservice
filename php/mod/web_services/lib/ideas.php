@@ -97,8 +97,11 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
         $display_ideas_number = 0;
     
         foreach($latest_blogs as $single ) {
+/*
             if (($single->ideascategory == $category) || 
                     ($category == "all")) {
+*/
+            if (1) {
                 $blog['tip_id'] = $single->guid;
 /*
                 $options = array(
@@ -772,7 +775,6 @@ function ideas_search($query, $category, $offset, $limit,
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
     
-//    $category = strtolower($category);
     $return = "";
     $params = array(
                     'query' => $query,
@@ -794,8 +796,11 @@ function ideas_search($query, $category, $offset, $limit,
     }
     if($results['count']){
         foreach($results['entities'] as $single){
+/*
             if (($single->ideascategory == strtolower($category)) || 
                     (strtolower($category) == "all")) {
+*/
+            if (1) {
                 $blog['tip_id'] = $single->guid;
 /*
                 $options = array(
@@ -809,7 +814,7 @@ function ideas_search($query, $category, $offset, $limit,
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
 */
-//                 $num_comments = $single->getAnnotationsSum('ideas_comment');
+//               $num_comments = $single->getAnnotationsSum('ideas_comment');
 
                  $comments = $single->getAnnotations(
                      'ideas_comment',    // The type of annotation

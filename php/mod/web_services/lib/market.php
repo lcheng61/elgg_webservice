@@ -10,7 +10,7 @@
 //////////////
 function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
-//    $category = strtolower($category);
+
     if (($from_seller_portal != 1) && ($limit != 0)) {
         $recommend_list = recommend_list($category, $offset, $limit);
 
@@ -69,7 +69,7 @@ expose_function('product.get_posts',
 
 function product_get_posts_common($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
-//    $category = strtolower($category);
+
     if($context == "mine" && !get_loggedin_user()){
         throw new InvalidParameterException('registration:minenotvalid');
     }
@@ -96,6 +96,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                 array(
                     'name' => 'marketcategory',
                     'value' => $category,
+                    'case_sensitive' => false
                 ),
             )
         );
@@ -112,6 +113,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                 array(
                     'name' => 'marketcategory',
                     'value' => $category,
+                    'case_sensitive' => false
                 ),
             )
         );
@@ -128,6 +130,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                 array(
                     'name' => 'marketcategory',
                     'value' => $category,
+                    'case_sensitive' => false
                 ),
             )
         );
@@ -596,7 +599,6 @@ expose_function('product.get_tips_by_product',
 function product_get_seller_other_posts($limit = 10, 
         $offset = 0, $category, $product_id) {
 
-//    $category = strtolower($category);
     $context = "user";
     $product_post = get_entity($product_id);
     if (!elgg_instanceof($product_post, 'object', 'market')) {
@@ -635,7 +637,6 @@ function product_search($query, $category, $offset, $limit,
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
 
-//    $category = strtolower($category);
     $return = "";
 // get total number
     $params = array(
@@ -680,9 +681,11 @@ function product_search($query, $category, $offset, $limit,
     }
     if($results['count']){
         foreach($results['entities'] as $single){
-
+/*
             if (($single->marketcategory == $category) || 
                     ($category == "all")) {
+*/
+            if (1) {
                 $blog['product_id'] = $single->guid;
                 $options = array(
                         'annotations_name' => 'product_comment',
@@ -758,7 +761,7 @@ function product_post($product_id, $title, $category, $description,
     $is_affiliate, $affiliate_product_id, $affiliate_product_url,
     $is_archived, $affiliate_syncon, $affiliate_image)
 {
-//    $category = strtolower($category);
+
     $user = elgg_get_logged_in_user_entity();
 
     // edit or create a new entity
@@ -1175,7 +1178,7 @@ expose_function('product.recommend_set',
 
 function recommend_list($category, $offset, $limit) {
 
-//    $category = strtolower($category);
+
     if ($category == "all") {
         $options = array(
                     'offset' => $offset,
@@ -1203,6 +1206,7 @@ function recommend_list($category, $offset, $limit) {
                         array(
                             'name' => 'marketcategory',
                             'value' => $category,
+                            'case_sensitive' => false
                         ),
                      )
                 );
