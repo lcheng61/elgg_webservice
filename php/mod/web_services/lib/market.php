@@ -538,7 +538,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
 
 ////////////
     // get ideas linked to this product
-    $items = $product->getEntitiesFromRelationship("sponsor", true, 0, 0);
+    $items = $product->getEntitiesFromRelationship("sponsor", true, $limit, $offset);
 
     $total_number = 0;
     foreach ($items as $item) {
