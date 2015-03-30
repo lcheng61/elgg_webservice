@@ -23,7 +23,7 @@
 
 
 
-function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username = "") {
+function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
 //    $category = strtolower($category);
     if(!$username) {
         $user = get_loggedin_user();
@@ -174,7 +174,7 @@ expose_function('ideas.get_posts',
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
                       'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
+                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
                     ),
                 "Get list of idea posts",
                 'GET',
