@@ -21,7 +21,9 @@
  * @return array $file Array of files uploaded
  */
 
-function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
+
+
+function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username = "") {
 //    $category = strtolower($category);
     if(!$username) {
         $user = get_loggedin_user();
