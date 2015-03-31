@@ -537,16 +537,11 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
 //    echo("product->tips is $product->tips <br>");
 
 ////////////
-    // get all ideas count
-    $total_items = $product->getEntitiesFromRelationship("sponsor", true, 0, 0);
-    $return['total_number'] = count($total_items);
-
     // get ideas linked to this product
     $items = $product->getEntitiesFromRelationship("sponsor", true, $limit, $offset);
+    $return['total_number'] = count($items);
 
-    $total_number = 0;
     foreach ($items as $item) {
-        $total_number ++;
         $tip['tip_id'] = $item->guid;
         $tip['tip_title'] = $item->title;
         $tip['tip_thumbnail_image_url'] = $item->tip_thumbnail_image_url;
@@ -574,8 +569,6 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
         $tip['time_created'] = (int)$item->time_created;
         $return['tips'][] = $tip;
     }
-
-//  $return['total_number'] = $total_number;
 
     return $return;
 }
@@ -644,7 +637,7 @@ function product_search($query, $category, $offset, $limit,
         $entity_subtype, $owner_guid, $container_guid){
 
     $return = "";
-// get total number
+
     $params = array(
                     'query' => $query,
                     'offset' => $offset,
@@ -663,34 +656,8 @@ function product_search($query, $category, $offset, $limit,
         throw new InvalidParameterException("search engine returns error");
     }
     $return['total_number'] = $results['count'];
-
-// ~
-
-    $params = array(
-                    'query' => $query,
-                    'offset' => $offset,
-                    'limit' => $limit,
-                    'sort' => $sort,
-                    'order' => $order,
-                    'search_type' => $search_type,
-                    'type' => $entity_type,
-                    'subtype' => $entity_subtype,
-                    'owner_guid' => $owner_guid,
-                    'container_guid' => $container_guid,
-                    );
-    $type = $entity_type;
-    $results = elgg_trigger_plugin_hook('search', $type, $params, array());
-    if ($results === FALSE) {
-        throw new InvalidParameterException("search engine returns error");
-        // search plugin returns error.
-        // continue;
-    }
     if($results['count']){
         foreach($results['entities'] as $single){
-/*
-            if (($single->marketcategory == $category) || 
-                    ($category == "all")) {
-*/
             if (1) {
                 $blog['product_id'] = $single->guid;
                 $options = array(
