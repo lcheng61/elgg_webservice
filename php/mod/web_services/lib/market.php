@@ -818,7 +818,9 @@ function product_post($product_id, $title, $category, $description,
     foreach ($values as $name => $value) {
         if (in_array($name, $required) && empty($value)) {
             $error = elgg_echo("market:error:missing:$name");
-            throw new InvalidParameterException("missing:$name");
+            // Because seller portal check this already. This usually means uploading timeout or image files too large
+            throw new InvalidParameterException("Total size of images exceeds limit. Please try to reduce the number of images posted at the same time. Then use view/edit to add more images. Thank you. ");
+//            throw new InvalidParameterException("missing:$name");
         }
        $post->$name = $value;
     }
