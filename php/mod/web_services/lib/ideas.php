@@ -30,6 +30,66 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             throw new InvalidParameterException('registration:usernamenotvalid');
 	}
     }
+// get total_number
+    if($context == "all"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'ideas',
+            'limit' => 0,
+            'full_view' => FALSE,
+            'offset' => 0,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'ideascategory',
+                    'value' => $category,
+                    'case_sensitive' => false
+                ),
+            )
+        );
+    }
+
+    if($context == "mine" || $context ==  "user"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'ideas',
+            'owner_guid' => $user->guid,
+            'limit' => 0,
+            'full_view' => FALSE,
+            'offset' => $offset,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'ideascategory',
+                    'value' => $category,
+		    'case_sensitive' => false
+                ),
+            )
+        );
+    }
+    if($context == "group"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'ideas',
+            'container_guid'=> $group_guid,
+            'limit' => 0,
+            'full_view' => FALSE,
+            'offset' => 0,
+            'metadata_name_value_pairs' => array(
+                array(
+                    'name' => 'ideascategory',
+                    'value' => $category,
+		    'case_sensitive' => false
+                ),
+            )
+        );
+    }
+    if ($category == "all") {
+        $latest_blogs = elgg_get_entities($params);
+    } else {
+        $latest_blogs = elgg_get_entities_from_metadata($params);
+    }    
+    $return['total_number'] = count($latest_blogs);
+//~
+
     if($context == "all"){
         $params = array(
             'types' => 'object',
@@ -152,7 +212,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $return['tips'][] = $blog;
             }
         }
-        $return['total_number'] = $display_ideas_number;
+//        $return['total_number'] = $display_ideas_number;
     }
     else {
         $return['total_number'] = 0;
