@@ -540,7 +540,6 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
     // get ideas linked to this product
     $items = $product->getEntitiesFromRelationship("sponsor", true, $limit, $offset);
 
-$return['total_number2'] = count($items);
     $total_number = 0;
     foreach ($items as $item) {
         $total_number ++;
@@ -571,7 +570,9 @@ $return['total_number2'] = count($items);
         $tip['time_created'] = (int)$item->time_created;
         $return['tips'][] = $tip;
     }
-    $return['total_number'] = $total_number;
+    $return['total_number'] = count($items);
+
+//  $return['total_number'] = $total_number;
 
     return $return;
 }
