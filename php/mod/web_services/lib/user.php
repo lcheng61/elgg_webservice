@@ -218,7 +218,7 @@ function user_get_profile($username) {
 
 expose_function('user.get_profile',
                 "user_get_profile",
-                array('username' => array ('type' => 'string', 'required' => false)
+                array('username' => array ('type' => 'string', 'required' => false, 'default' => '')
                     ),
                 "Get user profile information",
                 'GET',
@@ -308,7 +308,7 @@ function user_save_profile($username, $profile) {
 expose_function('user.save_profile',
                 "user_save_profile",
                 array('username' => array ('type' => 'string'),
-                     'profile' => array ('type' => 'array', 'required' => false),
+                     'profile' => array ('type' => 'array', 'required' => false, 'default' => ''),
                     ),
                 "Get user profile information with username",
                 'POST',

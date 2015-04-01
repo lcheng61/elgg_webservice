@@ -91,7 +91,7 @@ function stripe_card_add($token, $msg)
 expose_function('payment.stripe.card_add',
                 "stripe_card_add",
                 array(
-                      'token' => array ('type' => 'string', 'required' => true, 'default' => ""),
+                      'token' => array ('type' => 'string', 'required' => true, 'default' => ''),
                       'msg' => array ('type' => 'string', 'required' => false, 'default' => null),
                     ),
                 "add a card for a user",
