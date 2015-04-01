@@ -1328,7 +1328,7 @@ function send_new_password_request2($user_guid) {
         // email message body
         $email = "
 Dear $user->username,\n\n
-Someone requrested to reset your password. You can ignore this message if you don't know it. Your password will not be changed. To reset your password, click on the link below: \n
+Someone requrested to reset your password or to use your email to register. You can ignore this message if you don't know it. Your account and password will not be changed. To confirm reseting your password, click on the link below: \n
 $link.\n\n
 
 Best regards,\n
@@ -1407,7 +1407,7 @@ function user_send_register_mail($email, $name, $username, $password) {
     $message = "
 Dear $display_name,
 
-Thank you for registering Lovebeauty! We will contact you shortly.
+Thank you for registering for Lovebeauty! We will contact you shortly.
 
 Your username/password is:
     username: $username
@@ -1437,7 +1437,7 @@ function user_send_seller_register_mail($email, $name, $username, $password) {
     $message = "
 Dear $name,
 
-Thank you for registering Lovebeauty as a seller! We will contact you shortly.
+Thank you for registering for Lovebeauty as a seller! We will contact you shortly.
 
 Once your request is approved, you'll be able to use Lovebeauty's seller portal. Now feel free to download an APP and have fun.
 
