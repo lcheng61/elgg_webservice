@@ -1115,6 +1115,10 @@ Once you have logged in, we highly recommend that you change your password.
 	'friend:newfriend:subject' => "%s has made you a friend!",
 	'friend:newfriend:body' => "%s has made you a friend!
 
+You cannot reply to this email.",
+
+	'friend:newfriend:body2' => "%s has made you a friend!
+
 To view their profile, click here:
 
 %s
@@ -1234,7 +1238,7 @@ You cannot reply to this email.",
 	'js:security:token_refreshed' => 'Connection to %s restored!',
 
 /**
- * Languages according to ISO 639-1 (with a couple of exceptions)
+ * Languages according to ISO 639-1
  */
 	"aa" => "Afar",
 	"ab" => "Abkhazian",
@@ -1253,7 +1257,6 @@ You cannot reply to this email.",
 	"bo" => "Tibetan",
 	"br" => "Breton",
 	"ca" => "Catalan",
-	"cmn" => "Mandarin Chinese", // ISO 639-3
 	"co" => "Corsican",
 	"cs" => "Czech",
 	"cy" => "Welsh",
@@ -1330,7 +1333,6 @@ You cannot reply to this email.",
 	"pl" => "Polish",
 	"ps" => "Pashto / Pushto",
 	"pt" => "Portuguese",
-	"pt_br" => 'Brazilian Portuguese',
 	"qu" => "Quechua",
 	"rm" => "Rhaeto-Romance",
 	"rn" => "Kirundi",
@@ -1381,6 +1383,8 @@ You cannot reply to this email.",
 	"za" => "Zuang",
 	"zh" => "Chinese",
 	"zu" => "Zulu",
+        "cmn" => "Mandarin Chinese", // ISO 639-3
+        "pt_br" => "Brazilian Portuguese",
 );
 
 add_translation("en",$english);
