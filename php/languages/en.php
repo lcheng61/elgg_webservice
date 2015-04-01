@@ -1180,7 +1180,7 @@ If you requested this, click on the link below. Otherwise ignore this email.
 	'generic_comment:on' => '%s on %s',
 
 	'generic_comment:email:subject' => 'You have a new comment!',
-	'generic_comment:email:body' => "You have a new comment on your item \"%s\" from %s. It reads:
+	'generic_comment:email:body2' => "You have a new comment on your item \"%s\" from %s. It reads:
 
 
 %s
@@ -1195,6 +1195,15 @@ To view %s's profile, click here:
 %s
 
 You cannot reply to this email.",
+
+	'generic_comment:email:body' => "You have a new comment on your item \"%s\" from %s. It reads:
+
+
+%s
+
+
+You cannot reply to this email.",
+
 
 /**
  * Entities

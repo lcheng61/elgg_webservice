@@ -494,10 +494,10 @@ function blog_post_comment($guid, $text, $rate, $type){
                     elgg_echo('generic_comment:email:body', array(
                         $entity->title,
                         $user->name,
-                        $comment['text'],
-                        $entity->getURL(),
-                        $user->name,
-                        $user->getURL()
+                        $comment['text']
+//                        $entity->getURL(),
+//                        $user->name
+//                        $user->getURL()
                 ))
             );
         }
