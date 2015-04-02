@@ -986,7 +986,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
         }
     }
 
-    if($context == "all"){
+    if(($context == "all") && $user->is_admin){
         $params = array(
             'types' => 'object',
             'subtypes' => 'seller_order',
@@ -1246,7 +1246,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             throw new InvalidParameterException('pay_list_thinker_order:usernamenotvalid');
         }
     }
-    if($context == "all"){
+    if($context == "all" && $user->is_admin){
         $params = array(
             'types' => 'object',
             'subtypes' => 'thinker_order',
