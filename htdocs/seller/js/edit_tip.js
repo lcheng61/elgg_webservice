@@ -122,8 +122,13 @@ $(function() {
 				page["tip_text"] = $(obj).html();
 				pages.push(page);
 			} else if ($(obj).is("embed")) {
-				console.log("It is a video page");
+				console.log("It is a video embed page");
 				page["tip_video_url"] = $(obj).attr("src");
+				pages.push(page);
+			} else if ($(obj).is("object")) {
+				console.log("It is a video object page");
+				console.log("src=" + $(obj).attr("data"));
+				page["tip_video_url"] = $(obj).attr("data");
 				pages.push(page);
 			} else if ($(obj).is("img")) {
 				console.log("It is a image page");
