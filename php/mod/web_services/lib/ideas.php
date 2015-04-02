@@ -190,7 +190,9 @@ function tip_get_detail($tip_id) {
     $return = array();
 
     $blog = get_entity($tip_id);
-
+    if (!$blog) {
+        throw new InvalidParameterException('Cannot find this tip_id');
+    }
 /*
     $options = array(
         'annotations_name' => 'ideas_comment',
@@ -228,9 +230,9 @@ function tip_get_detail($tip_id) {
 
     $return['tip_pages'] =             json_decode($blog->tip_pages, true);
 
-////// get products
+////// get products for seller portal
     $return['products_number'] = $blog->countEntitiesFromRelationship("sponsor", false);
-/*
+
     $items = $blog->getEntitiesFromRelationship("sponsor", false, 0, 0);
     foreach ($items as $item) {
         $product_info['id'] = $item->guid;
@@ -248,9 +250,9 @@ function tip_get_detail($tip_id) {
         if ($item->is_affiliate) {
             $product_info['images'][] = $item->affiliate_image;
         }
-//        $return['products'][] = $product_info;
+        $return['products'][] = $product_info;
     } 
-*/
+
 //////~
 
     $owner = get_entity($blog->owner_guid);
