@@ -4,7 +4,6 @@ $(function() {
 	var is_user_exists = false;
 	var is_user_email_exists = false;
 
-
 	$.validate({
 		form: '#edit_form',
 		modules: 'location, date, security, file',
@@ -63,10 +62,7 @@ $(function() {
 			console.log('read result from server: ' + JSON.stringify(data.result));
 			console.log("token = " + data.result.token);
 
-			BootstrapDialog.info('Congratulations! Your signup is done. We will contact you shortly.');
-			//setCookie('username', $('#name').val(), 1000);
-			//setCookie('token', data.result.token, 1000);
-			//window.location.href = 'index.html';
+			BootstrapDialog.alert('Congratulations! Your signup is done. We will contact you shortly.');
 
 		} else {
 			BootstrapDialog.alert('There is some error during save profile, error message =' +

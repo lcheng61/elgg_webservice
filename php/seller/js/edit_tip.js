@@ -69,8 +69,8 @@ $(function() {
 					});
 				}
 			} else if (data.status == -20) {
-					window.location.href = "login.html";
-				}
+				window.location.href = "login.html";
+			}
 		});
 	}
 
@@ -80,13 +80,13 @@ $(function() {
 		//console.log("cover caption =" + $('#cover_caption').html());
 
 
-//cover page is removed. Remove the error check. Submit the idea directly.
-//		if ($('#cover_img').attr("src") == undefined || $('#cover_img').attr("src").trim().length <= 0 ||
-//			$('#cover_caption').html().trim().length <= 0) {
-//			BootstrapDialog.alert('You have to set the cover image and caption before submit.');
-//		} else {
-//			submit_idea();
-//		}
+		//cover page is removed. Remove the error check. Submit the idea directly.
+		//		if ($('#cover_img').attr("src") == undefined || $('#cover_img').attr("src").trim().length <= 0 ||
+		//			$('#cover_caption').html().trim().length <= 0) {
+		//			BootstrapDialog.alert('You have to set the cover image and caption before submit.');
+		//		} else {
+		//			submit_idea();
+		//		}
 		submit_idea();
 	});
 
@@ -103,6 +103,7 @@ $(function() {
 		});
 
 
+		var thumbnail_url = null;
 		var pages = [];
 		var local_files = [];
 		var filenames = [];
@@ -125,11 +126,24 @@ $(function() {
 				console.log("It is a video embed page");
 				page["tip_video_url"] = $(obj).attr("src");
 				pages.push(page);
+
+				if (thumbnail_url == null || thumbnail_url == undefined) {
+					thumbnail_url = getVideoThumbanil($(obj).attr("src"));
+				}
+
 			} else if ($(obj).is("object")) {
 				console.log("It is a video object page");
-				console.log("src=" + $(obj).attr("data"));
-				page["tip_video_url"] = $(obj).attr("data");
+
+				var video_url = $(obj).attr("data");
+				console.log("src=" + video_url);
+				page["tip_video_url"] = video_url;
 				pages.push(page);
+
+
+				console.log("thumbnail_url=" + thumbnail_url);
+				if (thumbnail_url == null || thumbnail_url == undefined) {
+					thumbnail_url = getVideoThumbanil(video_url);
+				}
 			} else if ($(obj).is("img")) {
 				console.log("It is a image page");
 				var src = $(obj).attr("src");
@@ -142,6 +156,10 @@ $(function() {
 					//filenames.push($(obj).data("filename"));
 				} else {
 					page["tip_image_url"] = src;
+
+					if (thumbnail_url == null || thumbnail_url == undefined) {
+						thumbnail_url = src;
+					}
 				}
 
 				page["tip_image_caption"] = $(body).children("pre").html();
@@ -151,14 +169,14 @@ $(function() {
 
 
 		var message = {
-			"idea_id" : idea_id,
+			"idea_id": idea_id,
 			"category": $('#category option:selected').text(),
 			"tip_title": $('#title').val(),
-			//"tip_thumbnail_image_url": $('#cover_img').attr("src"),
+			"tip_thumbnail_image_url": thumbnail_url,
 			"tip_pages": pages,
 			"tip_tags": $('#allowSpacesTagsResult').val().split(','),
 			"products_id": product_ids
-			//"tip_notes": $('#info_content').html().trim()
+				//"tip_notes": $('#info_content').html().trim()
 		}
 
 		//console.log(message);
@@ -408,7 +426,7 @@ $(function() {
 			'" class="multSelktrImg">' + product_name + ' (product id ' + product_id + ')</option>');
 		optionObj.data("product_id", product_id);
 		optionObj.data("product_image", product_image);
-		
+
 		$('#divselktr').append(optionObj);
 	}
 
@@ -520,6 +538,17 @@ $(function() {
 		}
 
 		return url;
+	}
+
+	function getVideoThumbanil(url) {
+		var start = url.lastIndexOf("/");
+		var video_id = url.substring(start);
+		//console.log("video_id = " + video_id);
+
+		var thumbnail_url = "http://img.youtube.com/vi" + video_id + "/0.jpg";
+		//console.log("video thumbnail url = " + thumbnail_url);
+
+		return thumbnail_url;
 	}
 
 	function addVideoPage(url) {

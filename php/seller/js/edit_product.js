@@ -128,7 +128,7 @@ $(function() {
 	}
 
 	function onError(jqXHR, textStatus, errorThrown) {
-		BootstrapDialog.alert('There is some error during submit the product, error=' + textStatus);
+		BootstrapDialog.alert(textStatus);
 	}
 
 
