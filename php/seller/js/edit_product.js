@@ -122,8 +122,7 @@ $(function() {
 			console.log('read result from server: ' + data.result);
 			BootstrapDialog.alert('The prodcut is added/updated.');
 		} else {
-			BootstrapDialog.alert('Submit is not successful with message =' +
-				data.message);
+			BootstrapDialog.alert(data.message);
 		}
 	}
 
@@ -184,7 +183,8 @@ $(function() {
 		}
 		
 		if (src.indexOf("http%3A//localhost") >= 0 || src.indexOf("blob") == 0) {
-			$('#img' + id).attr("src", "");
+			$('#img' + id).attr("src", 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');
+			
 		} else {
 
 			var formUrl = server + product_image_delete + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
@@ -204,14 +204,13 @@ $(function() {
 						console.log('read result from server: ' + data.result);
 						$('#img' + id).attr("src", "");
 					} else {
-						BootstrapDialog.alert('Could not delete image, error message =' +
-							data.message);
+						BootstrapDialog.alert(data.message);
 					}
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					console.log(textStatus);
 					console.log(jqXHR);
-					BootstrapDialog.alert('There is some error during delete image, error=' + textStatus);
+					BootstrapDialog.alert(textStatus);
 				}
 			});
 		}

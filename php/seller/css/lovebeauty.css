@@ -5,7 +5,8 @@
 }
 .tile {
 	/*width: 30%;!important;*/
-	width: 500px;!important;
+	width: 500px
+	!important;
 	min-width: 245px;
 	/*color: #FF7270;*/
 	
