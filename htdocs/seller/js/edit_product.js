@@ -109,7 +109,7 @@ $(function() {
 				//resetForm: true        // reset the form after successful submit 
 
 			// $.ajax options can be used here too, for example: 
-			timeout:   10000 
+                        timeout:   1000000 // very very long timeout == no timeout
 		};
 
 		$('#edit_form').ajaxSubmit(options);
