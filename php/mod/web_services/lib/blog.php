@@ -488,6 +488,22 @@ function blog_post_comment($guid, $text, $rate, $type){
         // notify if poster wasn't owner
         if ($entity->owner_guid != $user->guid) {
 
+        // send a private message to the user
+            if ($type == 1) {
+                $subject = "Your product ($entity->title) is reviewed by $user->username";
+                $body = "$text (Rate: $rate)";
+            } else if ($type == 2) {
+                $subject = "Your idea ($entity->title) is commented by $user->username";
+                $body = "$text";
+            } else {
+                $return['success']['message'] = elgg_echo("$comment_type:NOTposted");
+            }
+            $owner = get_user($entity->owner_guid);
+            $ret = message_send_one($subject, $body, $owner->username, 0);
+            $return['success']['send_user_name'] = $owner->username;
+            $return['success']['private_message'] = $ret;
+            
+/*
             notify_user($entity->owner_guid,
                     $user->guid,
                     elgg_echo('generic_comment:email:subject'),
@@ -500,6 +516,7 @@ function blog_post_comment($guid, $text, $rate, $type){
 //                        $user->getURL()
                 ))
             );
+*/
         }
         $return['success']['message'] = elgg_echo("$comment_type:posted");
     } else {
