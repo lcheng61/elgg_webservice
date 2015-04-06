@@ -102,14 +102,14 @@ $(function() {
 			error: onError,
 
 			// other available options: 
-			url: formUrl,
+			url: formUrl
 				//type:      type        // 'get' or 'post', override for form's 'method' attribute 
 				//dataType:  null        // 'xml', 'script', or 'json' (expected server response type) 
 				//clearForm: true        // clear all form fields after successful submit 
 				//resetForm: true        // reset the form after successful submit 
 
-			// $.ajax options can be used here too, for example: 
-                        timeout:   1000000 // very very long timeout == no timeout
+				// $.ajax options can be used here too, for example: 
+				//timeout:   10000 
 		};
 
 		$('#edit_form').ajaxSubmit(options);
