@@ -1133,6 +1133,9 @@ function user_edit_profile($profile_str)
         $owner->save();
         $input["password"] = $new_password;
     }
+    // handle is_seller and gender seperately
+    $input['is_seller'] = $owner->is_seller;
+    $input['gender'] = $owner->gender;
 
     //~
 
