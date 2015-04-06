@@ -1083,7 +1083,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
 expose_function('payment.list.seller_order',
                 "pay_list_seller_order",
                 array(
-                      'context' => array ('type' => 'string', 'required' => false, 'default' => "all"),
+                      'context' => array ('type' => 'string', 'required' => false, 'default' => "mine"),
                       'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
