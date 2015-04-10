@@ -632,9 +632,12 @@ expose_function('product.get_seller_other_posts',
  * @return array $results search result
  */
  
+//function product_search($query, $category, $offset, $limit, 
+//        $sort, $order, $search_type, $entity_type,
+//        $entity_subtype, $owner_guid, $container_guid){
 function product_search($query, $category, $offset, $limit, 
         $sort, $order, $search_type, $entity_type,
-        $entity_subtype, $owner_guid, $container_guid){
+        $entity_subtype){
 
     $return = "";
 
@@ -647,16 +650,17 @@ function product_search($query, $category, $offset, $limit,
                     'search_type' => $search_type,
                     'type' => $entity_type,
                     'subtype' => $entity_subtype,
-                    'owner_guid' => $owner_guid,
-                    'container_guid' => $container_guid,
+//                    'owner_guid' => $owner_guid,
+//                    'container_guid' => $container_guid,
                     );
     $type = $entity_type;
     $results = elgg_trigger_plugin_hook('search', $type, $params, array());
     if ($results === FALSE) {
         throw new InvalidParameterException("search engine returns error");
     }
-    $return['total_number'] = count($results); //$results['count'];
-    if($results['count']){
+    $return['total_number'] = count($results['entities']); //$results['count'];
+//    if($results['count']){
+    if($results['entities']){
         foreach($results['entities'] as $single){
             if (1) {
                 $blog['product_id'] = $single->guid;
@@ -720,8 +724,8 @@ expose_function('product.search',
                         'search_type' =>array('type' => 'string', 'required'=>false, 'default' => 'all'),
                         'entity_type' =>array('type' => 'string', 'required'=>false, 'default' => "object"),
                         'entity_subtype' =>array('type' => 'string', 'required'=>false, 'default' => "market"),
-                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
-                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+//                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+//                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
                         ),
                 "Perform a search for products",
                 'GET',

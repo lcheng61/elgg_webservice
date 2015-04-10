@@ -770,11 +770,16 @@ expose_function('ideas.get_products_by_tip',
  *
  * @return array $results search result
  */
- 
+/* 
 function ideas_search($query, $category, $offset, $limit, 
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
+*/
     
+function ideas_search($query, $category, $offset, $limit, 
+        $sort, $order, $search_type, $entity_type,
+        $entity_subtype){
+
     $return = "";
     $params = array(
                     'query' => $query,
@@ -785,8 +790,8 @@ function ideas_search($query, $category, $offset, $limit,
                     'search_type' => $search_type,
                     'type' => $entity_type,
                     'subtype' => $entity_subtype,
-                    'owner_guid' => $owner_guid,
-                    'container_guid' => $container_guid,
+//                    'owner_guid' => $owner_guid,
+//                    'container_guid' => $container_guid,
                     );
                     
     $type = $entity_type;
@@ -794,6 +799,9 @@ function ideas_search($query, $category, $offset, $limit,
     if ($results === FALSE) {
         throw new InvalidParameterException("search engine returns error");
     }
+
+    $return['total_number'] = count($results['entities']); //$results['count'];
+
     if($results['count']){
         foreach($results['entities'] as $single){
 /*
@@ -866,8 +874,8 @@ expose_function('ideas.search',
                         'search_type' =>array('type' => 'string', 'required'=>false, 'default' => 'all'),
                         'entity_type' =>array('type' => 'string', 'required'=>false, 'default' => "object"),
                         'entity_subtype' =>array('type' => 'string', 'required'=>false, 'default' => "ideas"),
-                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
-                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+//                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+//                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
                         ),
                 "Perform a search for ideass",
                 'GET',
