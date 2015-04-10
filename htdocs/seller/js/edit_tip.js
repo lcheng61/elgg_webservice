@@ -14,8 +14,20 @@ $(function() {
 	} //otehrwise, create a new prodcut.
 
 
+	//check if it is IE.
+	function msieversion() {
 
+		var ua = window.navigator.userAgent;
+		var msie = ua.indexOf("MSIE ");
 
+		if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+			// If Internet Explorer, return version number
+			return true;
+		}
+
+		// If another browser, return 0
+		return false;
+	}
 
 	function getIdeaDetail() {
 		var get_ideaurl = server + idea_get + "&tip_id=" + idea_id +
@@ -122,7 +134,16 @@ $(function() {
 				console.log("It is a text page");
 				page["tip_text"] = $(obj).html();
 				pages.push(page);
-			} else if ($(obj).is("embed")) {
+			} else if ($(obj).is("iframe")) {
+				console.log("It is a video iframe page");
+				page["tip_video_url"] = $(obj).attr("src");
+				pages.push(page);
+
+				if (thumbnail_url == null || thumbnail_url == undefined) {
+					thumbnail_url = getVideoThumbanil($(obj).attr("src"));
+				}
+
+			}else if ($(obj).is("embed")) {
 				console.log("It is a video embed page");
 				page["tip_video_url"] = $(obj).attr("src");
 				pages.push(page);
@@ -212,7 +233,9 @@ $(function() {
 			success: function(data, textStatus, jqXHR) {
 				//data: return data from server
 				console.log(data);
-				if (data.status == 0) {
+				if (data.status == -20) {
+					BootstrapDialog.alert('You have signed out. Please sign in first.');
+				} else if (data.status == 0) {
 					console.log('read result from server: ' + data.result);
 					BootstrapDialog.alert('The idea is posted.');
 				} else {
@@ -231,13 +254,14 @@ $(function() {
 
 	function onSubmitSuccess(data, statusText, jqXHR) {
 		console.log(data);
-		if (data.status == 0) {
+		if (data.status == -20) {
+			BootstrapDialog.alert('You have signed out. Please sign in first.');
+		} else if (data.status == 0) {
 			console.log('read result from server: ' + data.result);
 			BootstrapDialog.alert('The idea is posted.');
 		} else {
 			if (data.message != undefined) {
-				BootstrapDialog.alert('There is some error during submit the idea, error message =' +
-					data.message);
+				BootstrapDialog.alert(data.message);
 			} else {
 				BootstrapDialog.alert('There is some error during submit the idea');
 			}
@@ -343,29 +367,32 @@ $(function() {
 					url = parsingVideoUrl(url);
 					console.log("url=" + url);
 
-					//console.log(button.parents().html());
-					//button.prev().prev().prev().prev().attr("data", url);
-					var objectTag = button.parent().children("object");
-					console.log("objectTag=" + objectTag);
-					if (objectTag != undefined) {
-						objectTag.attr("data", url);
-					}
+					$(button).prevAll().each(function() {
+						//alert($(this).prop('outerHTML'));
+						//console.log("is object=" + $(this).is("object"));
 
-					var embedTag = button.parent().children("embed");
-					//console.log("objectTag=" + objectTag);
-					if (embedTag != undefined) {
-						embedTag.attr("src", url);
-					}
+						if ($(this).is("object")) {
+							console.log("It is object tag.");
+							$(this).attr("data", url);
+						}
 
-					var ifrmaeTag = button.parent().children("iframe");
-					if (objectTag != undefined) {
-						objectTag.attr("src", url);
-					}
+						if ($(this).is("embed")) {
+							console.log("It is embed tag.");
+							$(this).attr("src", url);
+							console.log($(this).prop('outerHTML'));
+						}
 
-					var imgTag = button.parent().children("img");
-					if (imgTag != undefined) {
-						imgTag.attr("src", url);
-					}
+						if ($(this).is("iframe")) {
+							console.log("It is iframe tag.");
+							$(this).attr("src", url);
+						}
+						
+						if ($(this).is("img")) {
+							console.log("It is img tag.");
+							$(this).attr("src", url);
+						}						
+					});
+
 
 					dialogItself.close();
 				}
@@ -396,7 +423,7 @@ $(function() {
 		var key = $('#input-search').val();
 		if (key.length > 0) {
 
-			var search_producturl = server + product_search + "&query=" + key +
+			var search_producturl = server + product_search + "&offset=0&limit=50&query=" + key +
 				'&api_key=' + api_key + '&auth_token=' + getCookie('token');
 			console.log(search_producturl);
 
@@ -491,13 +518,39 @@ $(function() {
 		//max 10 content pages.		
 		if ($('#multi2').children().length < 10) {
 
-			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
-				'<div>Video page <i class="js-remove">✖</i></div></div>' +
-				'<div class="panel-body">' +
-				'<object width="360" height="240" border="1px"></object><br/><br/>  ' +
-				//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
-				'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
-				'</div></div>');
+
+			if (msieversion()) {
+				console.log("I am IE.");
+
+//				$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+//					'<div>Video page <i class="js-remove">✖</i></div></div>' +
+//					'<div class="panel-body">' +
+//					'<embed width="360" height="240" border="1px" src="" type="application/x-shockwave-flash" /><br/><br/>  ' +
+//					//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
+//					'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+//					'</div></div>');
+
+				$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+					'<div>Video page <i class="js-remove">✖</i></div></div>' +
+					'<div class="panel-body">' +
+					'<iframe width="360" height="240" border="1px" src="" /><br/><br/>  ' +
+					//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
+					'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+					'</div></div>');
+			} else {
+				console.log("I am NOT IE.");
+
+				$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+					'<div>Video page <i class="js-remove">✖</i></div></div>' +
+					'<div class="panel-body">' +
+					'<object width="360" height="240" border="1px" data=""></object><br/><br/>  ' +
+					//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
+					'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+					'</div></div>');
+
+			}
+
+
 			$("html, body").animate({
 				scrollTop: $(document).height()
 			}, "slow");
@@ -531,6 +584,10 @@ $(function() {
 	});
 
 	function parsingVideoUrl(url) {
+		//Remove the list and index parameters if url contains.
+		url = removeParam("index", url);
+		url = removeParam("list", url);
+
 		if (url.indexOf("youtube.com") >= 0) {
 			url = url.replace("watch?v=", "v/");
 		} else if (url.indexOf("youtu.be") >= 0) {
@@ -539,6 +596,29 @@ $(function() {
 
 		return url;
 	}
+
+
+	//Remove one parameter from url.
+	//var originalURL = "http://yourewebsite.com?id=10&color_id=1";
+	//var alteredURL = removeParam("color_id", originalURL);
+	function removeParam(key, sourceURL) {
+		var rtn = sourceURL.split("?")[0],
+			param,
+			params_arr = [],
+			queryString = (sourceURL.indexOf("?") !== -1) ? sourceURL.split("?")[1] : "";
+		if (queryString !== "") {
+			params_arr = queryString.split("&");
+			for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+				param = params_arr[i].split("=")[0];
+				if (param === key) {
+					params_arr.splice(i, 1);
+				}
+			}
+			rtn = rtn + "?" + params_arr.join("&");
+		}
+		return rtn;
+	}
+
 
 	function getVideoThumbanil(url) {
 		var start = url.lastIndexOf("/");
@@ -551,19 +631,39 @@ $(function() {
 		return thumbnail_url;
 	}
 
+
+
 	function addVideoPage(url) {
 		//console.log("get url=" + url);
 		url = parsingVideoUrl(url);
 		//console.log("url after parsing =" + url);
 
 
-		$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
-			'<div>Video page <i class="js-remove">✖</i></div></div>' +
-			'<div class="panel-body">' +
-			'<object width="360" height="240" border="1px" class="embed-style" data="' + url + '"></object><br/><br/>  ' +
-			//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
-			'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
-			'</div></div>');
+		if (msieversion()) {
+			console.log("I am IE.");
+//			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+//				'<div>Video page <i class="js-remove">✖</i></div></div>' +
+//				'<div class="panel-body">' +
+//				'<embed width="360" height="240" border="1" class="embed-style" src="' + url + '" type="application/x-shockwave-flash" /><br/><br/>  ' +
+//				'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+//				'</div></div>');
+
+			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+				'<div>Video page <i class="js-remove">✖</i></div></div>' +
+				'<div class="panel-body">' +
+				'<iframe width="360" height="240" border="1" class="embed-style" src="' + url + ' /><br/><br/>  ' +
+				'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+				'</div></div>');
+
+		} else {
+			console.log("I am NOT IE.");
+			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+				'<div>Video page <i class="js-remove">✖</i></div></div>' +
+				'<div class="panel-body">' +
+				'<object width="360" height="240" border="1" class="embed-style" data="' + url + '"></object><br/><br/>  ' +
+				'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+				'</div></div>');
+		}
 	}
 
 
