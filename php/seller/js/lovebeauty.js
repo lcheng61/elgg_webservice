@@ -1,6 +1,6 @@
 //var server = 'http://social.routzi.com/'
-//var server = 'http://www.lovebeauty.me/'
-//var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
+var server = 'http://www.lovebeauty.me/'
+var api_key = 'badb0afa36f54d2159e599a348886a7178b98533';
 
 
 //dev server
@@ -9,8 +9,8 @@
 
 
 //product server
-var server = 'http://m.lovebeauty.me/';
-var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
+//var server = 'http://m.lovebeauty.me/';
+//var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
 
 
 

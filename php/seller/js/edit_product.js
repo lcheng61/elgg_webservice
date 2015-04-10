@@ -102,14 +102,14 @@ $(function() {
 			error: onError,
 
 			// other available options: 
-			url: formUrl,
+			url: formUrl
 				//type:      type        // 'get' or 'post', override for form's 'method' attribute 
 				//dataType:  null        // 'xml', 'script', or 'json' (expected server response type) 
 				//clearForm: true        // clear all form fields after successful submit 
 				//resetForm: true        // reset the form after successful submit 
 
-			// $.ajax options can be used here too, for example: 
-			timeout:   1000000 // very very long timeout == no timeout
+				// $.ajax options can be used here too, for example: 
+				//timeout:   10000 
 		};
 
 		$('#edit_form').ajaxSubmit(options);
@@ -183,7 +183,8 @@ $(function() {
 		}
 		
 		if (src.indexOf("http%3A//localhost") >= 0 || src.indexOf("blob") == 0) {
-			$('#img' + id).attr("src", "");
+			$('#img' + id).attr("src", 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');
+			
 		} else {
 
 			var formUrl = server + product_image_delete + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
@@ -203,14 +204,13 @@ $(function() {
 						console.log('read result from server: ' + data.result);
 						$('#img' + id).attr("src", "");
 					} else {
-						BootstrapDialog.alert('Could not delete image, error message =' +
-							data.message);
+						BootstrapDialog.alert(data.message);
 					}
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					console.log(textStatus);
 					console.log(jqXHR);
-					BootstrapDialog.alert('There is some error during delete image, error=' + textStatus);
+					BootstrapDialog.alert(textStatus);
 				}
 			});
 		}
