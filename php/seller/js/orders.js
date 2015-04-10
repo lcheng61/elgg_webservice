@@ -27,7 +27,7 @@ $(function() {
 		}, {
 			"data": "purchased_time_friendly"
 		}, {
-			"data": "product_price"
+			"data": "total"
 		}, {
 			"data": "status"
 		}]

@@ -12,6 +12,8 @@
 var server = 'http://m.lovebeauty.me/';
 var api_key = '87573c9e87172e86b8a3e99bd73f1d9e9c19086b';
 
+
+
 var get_token = 'services/api/rest/json/?method=auth.gettoken2';
 var signout = 'services/api/rest/json/?method=user.logout';
 
