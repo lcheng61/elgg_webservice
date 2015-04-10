@@ -655,7 +655,7 @@ function product_search($query, $category, $offset, $limit,
     if ($results === FALSE) {
         throw new InvalidParameterException("search engine returns error");
     }
-    $return['total_number'] = $results['count'];
+    $return['total_number'] = count($results); //$results['count'];
     if($results['count']){
         foreach($results['entities'] as $single){
             if (1) {
