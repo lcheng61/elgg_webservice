@@ -1427,7 +1427,11 @@ function pay_detail_thinker_order($id)
     } else {
         $item['idea']['guid'] = $idea->guid;
         $item['idea']['name'] = $idea->title;
-	$item['idea']['tip_thumbnail_image_url'] = $idea->tip_thumbnail_image_url;
+        if (!$idea->tip_thumbnail_image_url) {
+            $item['idea']['tip_thumbnail_image_url'] = elgg_get_config('cdn_link').'/ideas/image/'.$idea->guid."/"."0"."/"."large/";
+        } else {
+            $item['idea']['tip_thumbnail_image_url'] = $idea->tip_thumbnail_image_url;
+        }
     }
 
     $item['product']['name'] = $single->product_name;
