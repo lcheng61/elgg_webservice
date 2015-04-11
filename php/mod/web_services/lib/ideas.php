@@ -155,7 +155,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
     }
     else {
         $return['total_number'] = 0;
-        $return['tips'] = "";
+        $return['tips'] = array();
     }
 
     return $return;

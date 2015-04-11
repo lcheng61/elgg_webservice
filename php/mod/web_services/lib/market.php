@@ -292,7 +292,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
     }
     else {
         $return['total_number'] = 0;
-        $return['products'] = "";
+        $return['products'] = array();
     }
 
     return $return;
