@@ -238,7 +238,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                  $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
                  $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
 
-                 if ($single->quantity < 0) {
+                 if ($single->quantity <= 0) {
                      $blog['quantity'] = 0;
                  } else {
                      $blog['quantity'] = $single->quantity;
@@ -685,6 +685,12 @@ function product_search($query, $category, $offset, $limit,
                  $blog['product_category'] = $single->marketcategory;
 //               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
                  $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'large/';
+
+                 if ($single->quantity <= 0) {
+                     $blog['quantity'] = 0;
+                 } else {
+                     $blog['quantity'] = $single->quantity;
+		 }
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['reviews_number'] = $num_comments;
