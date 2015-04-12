@@ -836,7 +836,7 @@ function ideas_search($query, $category, $offset, $limit,
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
 //               $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-                 if ($single->tip_thumbnail_image_url) {
+                 if (!$single->tip_thumbnail_image_url) {
                      $blog['tip_thumbnail_image_url'] = 
                              elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."large/";
                  } else {
