@@ -420,7 +420,6 @@ function pay_checkout_direct($msg)
 		$seller_order->shipping_cost = $product_value['shipping_cost'];
 		$seller_order->shipping_address = json_encode($order_info['shipping_address']);
 
-		$seller_order->total = $product_value['product_price'] * $product_value['item_number'] + $product_value['shipping_code'];
 		$seller_order->charge_card_name = $item->charge_card_name;
 
 // newly added on 1/16
@@ -1055,6 +1054,8 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
             $item['shipping_vendor'] = $single->shipping_vendor;
             $item['tracking_number'] = $single->tracking_number;
             $item['shipping_speed'] = $single->shipping_speed;
+
+            $item['total'] = $single->product_price * $single->product_quantity + $single->shipping_cost;
 
             $seller = get_user($single->seller_guid);
             if (!$seller) {
