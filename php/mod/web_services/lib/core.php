@@ -244,6 +244,7 @@ function auth_gettoken2($username, $password, $expire=527040) {
                 if (!$user) {
                     throw new InvalidParameterException('registration:usernamenotvalid');
                 }
+                login($user);
 $return['is_seller_raw'] = $user->is_seller;
                 if ($user->is_seller) {
 		    if ($user->is_seller == "true") {
