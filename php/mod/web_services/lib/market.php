@@ -692,6 +692,8 @@ function product_search($query, $category, $offset, $limit,
                      $blog['quantity'] = $single->quantity;
 		 }
 
+                 $blog['rate'] = $single->rate;
+
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['reviews_number'] = $num_comments;
 
