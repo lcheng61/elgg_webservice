@@ -420,6 +420,7 @@ function pay_checkout_direct($msg)
 		$seller_order->shipping_cost = $product_value['shipping_cost'];
 		$seller_order->shipping_address = json_encode($order_info['shipping_address']);
 
+		$seller_order->total = $product_value['product_price'] * $product_value['item_number'] + $product_value['shipping_code'];
 		$seller_order->charge_card_name = $item->charge_card_name;
 
 // newly added on 1/16
