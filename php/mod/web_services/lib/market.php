@@ -183,6 +183,10 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
 //            if (($single->marketcategory == $category) || 
 //                    ($category == "all")) {
             if (1) {
+                if ($single->quantity <= 0) {
+		    continue;
+		}
+
                 $blog['product_id'] = $single->guid;
 
                 $comments = $single->getAnnotations(
@@ -196,7 +200,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
 
                  $display_product_number++;
                  $blog['product_name'] = $single->title;
-                 $blog['product_price'] = floatval($single->price);
+                 $blog['product_price'] = $single->price; //floatval($single->price);
 
                  $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
                  $blog['tips_number'] = count($items);
@@ -357,7 +361,7 @@ function product_get_detail($product_id) {
 
     $return['content'] = strip_tags($blog->description);
     $return['product_id'] = $product_id;
-    $return['product_price'] = floatval($blog->price);
+    $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
 
     $return['category'] = $blog->marketcategory;
@@ -676,7 +680,7 @@ function product_search($query, $category, $offset, $limit,
                  $num_comments = count($comments);
 
                  $blog['product_name'] = $single->title;
-                 $blog['product_price'] = floatval($single->price);
+                 $blog['product_price'] = $single->price; //floatval($single->price);
 
                  $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
                  $blog['tips_number'] = count($items);
@@ -1218,7 +1222,7 @@ function recommend_list($category, $offset, $limit) {
                  $num_comments = count($comments);
 
                  $blog['product_name'] = $single->title;
-                 $blog['product_price'] = floatval($single->price);
+                 $blog['product_price'] = $single->price; //floatval($single->price);
 
                  $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
                  $blog['tips_number'] = count($items);
