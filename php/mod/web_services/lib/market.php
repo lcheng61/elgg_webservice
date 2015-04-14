@@ -183,10 +183,11 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
 //            if (($single->marketcategory == $category) || 
 //                    ($category == "all")) {
             if (1) {
+/*
                 if ($single->quantity <= 0) {
 		    continue;
 		}
-
+*/
                 $blog['product_id'] = $single->guid;
 
                 $comments = $single->getAnnotations(
