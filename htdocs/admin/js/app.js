@@ -220,10 +220,6 @@ App.LoginController = Ember.Controller.extend({
 			var _this = this;
 			var credentials = this.getProperties('identification', 'password');
 
-			//give the temp user name and password for test.
-			credentials.password = "123456";
-			credentials.identification = "dianzipaopao";
-
 			//Clear the password filed.
 			_this.set('password', null);
 
