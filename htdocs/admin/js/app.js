@@ -2,8 +2,7 @@
 window.ENV = window.ENV || {};
 window.ENV['simple-auth'] = {
 	crossOriginWhitelist: ['http://m.lovebeauty.me/'],
-	authorizer: 'authorizer:custom',
-	store: 'simple-auth-session-store:cookie'
+	authorizer: 'authorizer:custom'
 };
 window.ENV['simple-auth-cookie-store'] = {
 	cookieExpirationTime: 60
@@ -212,6 +211,10 @@ App.LoginController = Ember.Controller.extend({
 	rememberMeChanged: function() {
 		console.log("rememberMeis changed: " + this.get("rememberMe"));
 		this.get('session.store').cookieExpirationTime = this.get('rememberMe') ? 1209600 : null;
+		//this.set('session.store.cookieExpirationTime', this.get('rememberMe') ? 1209600 : null);
+		
+		console.log('session.store().cookieExpirationTime = ' + this.get('session.store').cookieExpirationTime);
+		//console.log('session.store.cookieExpirationTime = ' + this.get('session.store.cookieExpirationTime'));
 	}.observes('rememberMe'),
 
 	actions: {
