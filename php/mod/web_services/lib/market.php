@@ -86,91 +86,74 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
             throw new InvalidParameterException('registration:usernamenotvalid');
 	}
     }
-    if($context == "all"){
-        $params = array(
-            'types' => 'object',
-            'subtypes' => 'market',
-            'limit' => $limit,
-            'full_view' => FALSE,
-            'offset' => $offset,
-            'metadata_name_value_pairs' => array(
-                array(
-                    'name' => 'marketcategory',
-                    'value' => $category,
-                    'case_sensitive' => false
-                ),
-            )
-        );
+    $category_meta = 
+            array(
+                'name' => 'marketcategory',
+                'value' => $category,
+                'case_sensitive' => false
+            );
+    $quantity_meta =
+            array(
+                'name' => 'quantity',
+                'value' => 0,
+                'operand' => '>'
+            );
+    $params = array(
+        'types' => 'object',
+        'subtypes' => 'market',
+        'full_view' => FALSE,
+        'limit' => $limit,
+        'offset' => $offset,
+    );
+    $meta_pairs = array();
+    if ($category != "all") { // category
+        $meta_pairs[] = $category_meta;
     }
+    if (!$from_seller_portal) { // IOS
+        $meta_pairs[] = $quantity_meta;
+        $params['metadata_name_value_pairs'] = $meta_pairs;
+    }
+
+    if($context == "all"){ // For IOS product listing
+    }
+
     if($context == "mine" || $context ==  "user"){
-        $params = array(
-            'types' => 'object',
-            'subtypes' => 'market',
-            'owner_guid' => $user->guid,
-            'limit' => $limit,
-            'full_view' => FALSE,
-            'offset' => $offset,
-            'metadata_name_value_pairs' => array(
-                array(
-                    'name' => 'marketcategory',
-                    'value' => $category,
-                    'case_sensitive' => false
-                ),
-            )
-        );
+        $params['owner_guid'] = $user->guid;
     }
     if($context == "group"){
-        $params = array(
-            'types' => 'object',
-            'subtypes' => 'market',
-            'container_guid'=> $group_guid,
-            'limit' => $limit,
-            'full_view' => FALSE,
-            'offset' => $offset,
-            'metadata_name_value_pairs' => array(
-                array(
-                    'name' => 'marketcategory',
-                    'value' => $category,
-                    'case_sensitive' => false
-                ),
-            )
-        );
+        $params['container_guid'] = $group_guid;
     }
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'market', $limit, $offset);
-    }
-    if (!$from_seller_portal) {
-        if ($category == "all") {
-	    $latest_blogs = elgg_get_entities($params);
- 	} else {
-	    $latest_blogs = elgg_get_entities_from_metadata($params);
+    } else {
+        if (!$from_seller_portal) {
+            $latest_blogs = elgg_get_entities_from_metadata($params);
+        } else { // hackhack, server loop to avoid database memory leak. This should be replaced by client pagination
+            $tmp = array();
+            $latest_blogs = array();
+            $step = 50;
+            $limit = $step;
+            $offset_tmp = 0;
+            $iter_count = 0;
+            $total_steps = 10;
+            do {
+                $params = array(
+                    'types' => 'object',
+                    'subtypes' => 'market',
+                    'owner_guid' => $user->guid,
+                    'limit' => $limit,
+                    'full_view' => FALSE,
+                    'offset' => $offset_tmp,
+                );
+                $tmp = elgg_get_entities($params);
+                $offset_tmp += $step;
+                $latest_blogs = array_merge($tmp, $latest_blogs);
+                $iter_count ++;
+                if ($iter_count >= $total_steps) {
+                    break;
+                }
+            } while($tmp);
         }
-    } else { // hackhack, server loop to avoid database memory leak. This should be replaced by client pagination
-        $tmp = array();
-        $latest_blogs = array();
-        $step = 50;
-        $limit = $step;
-        $offset_tmp = 0;
-        $iter_count = 0;
-        $total_steps = 10;
-
-        do {
-            $params = array(
-                'types' => 'object',
-                'subtypes' => 'market',
-                'owner_guid' => $user->guid,
-                'limit' => $limit,
-                'full_view' => FALSE,
-                'offset' => $offset_tmp,
-            );
-            $tmp = elgg_get_entities($params);
-            $offset_tmp += $step;
-            $latest_blogs = array_merge($tmp, $latest_blogs);
-            $iter_count ++;
-            if ($iter_count >= $total_steps) {
-                break;
-            }
-        } while($tmp);
     }
 
     if($latest_blogs) {
@@ -180,24 +163,16 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
         $display_product_number = 0;
         foreach($latest_blogs as $single ) {
 
-//            if (($single->marketcategory == $category) || 
-//                    ($category == "all")) {
             if (1) {
-/*
-                if ($single->quantity <= 0) {
-		    continue;
-		}
-*/
                 $blog['product_id'] = $single->guid;
 
                 $comments = $single->getAnnotations(
                      'product_comment',    // The type of annotation
-                     0,   // The number to return
-                     0,  // Any indexing offset
+                      0,   // The number to return
+                      0,  // Any indexing offset
                      'asc'   // 'asc' or 'desc' (default 'asc')
                 );
                 $num_comments = count($comments);
-//                   $num_comments = $single->getAnnotationsSum('product_comment');
 
                  $display_product_number++;
                  $blog['product_name'] = $single->title;
@@ -637,9 +612,6 @@ expose_function('product.get_seller_other_posts',
  * @return array $results search result
  */
  
-//function product_search($query, $category, $offset, $limit, 
-//        $sort, $order, $search_type, $entity_type,
-//        $entity_subtype, $owner_guid, $container_guid){
 function product_search($query, $category, $offset, $limit, 
         $sort, $order, $search_type, $entity_type,
         $entity_subtype){
@@ -655,8 +627,6 @@ function product_search($query, $category, $offset, $limit,
                     'search_type' => $search_type,
                     'type' => $entity_type,
                     'subtype' => $entity_subtype,
-//                    'owner_guid' => $owner_guid,
-//                    'container_guid' => $container_guid,
                     );
     $type = $entity_type;
     $results = elgg_trigger_plugin_hook('search', $type, $params, array());
@@ -664,7 +634,6 @@ function product_search($query, $category, $offset, $limit,
         throw new InvalidParameterException("search engine returns error");
     }
     $return['total_number'] = count($results['entities']); //$results['count'];
-//    if($results['count']){
     if($results['entities']){
         foreach($results['entities'] as $single){
             if (1) {
