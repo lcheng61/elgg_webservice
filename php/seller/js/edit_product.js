@@ -117,9 +117,10 @@ $(function() {
 	}
 
 	function onSubmitSuccess(data, statusText, jqXHR) {
-		console.log(data);
 		if (data.status == 0) {
-			console.log('read result from server: ' + data.result);
+			//console.log('read result from server: ' + JSON.stringify(data));
+			product_id = data.result.product_id;
+			$('#product_id').val(product_id);
 			BootstrapDialog.alert('The prodcut is added/updated.');
 		} else {
 			BootstrapDialog.alert(data.message);
