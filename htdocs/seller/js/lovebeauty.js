@@ -90,9 +90,9 @@ $(function() {
 
 	username = getCookie("username");
 	console.log("username=" + username);
-	if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0 && window.location.href.indexOf("reset_password.html") < 0 && (username == undefined || username == "")) {
-		window.location.href = "login.html"
-	}
+//	if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0 && window.location.href.indexOf("reset_password.html") < 0 && (username == undefined || username == "")) {
+//		window.location.href = "login.html"
+//	}
 
 })
 

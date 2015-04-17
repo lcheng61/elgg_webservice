@@ -589,9 +589,17 @@ $(function() {
 		url = removeParam("list", url);
 
 		if (url.indexOf("youtube.com") >= 0) {
-			url = url.replace("watch?v=", "v/");
+			//url = url.replace("watch?v=", "v/");
+			url = url.replace("watch?v=", "embed/");
 		} else if (url.indexOf("youtu.be") >= 0) {
-			url = url.replace("youtu.be", "www.youtube.com/v");
+			//url = url.replace("youtu.be", "www.youtube.com/v");
+			url = url.replace("youtu.be", "www.youtube.com/embed");
+		}
+		
+		if (url.indexOf("?")>=0) {
+			url = url + "&wmode=opaque";
+		} else {
+			url = url + "?wmode=opaque";
 		}
 
 		return url;
