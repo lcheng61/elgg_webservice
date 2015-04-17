@@ -212,7 +212,7 @@ App.LoginController = Ember.Controller.extend({
 		console.log("rememberMeis changed: " + this.get("rememberMe"));
 		this.get('session.store').cookieExpirationTime = this.get('rememberMe') ? 1209600 : null;
 		//this.set('session.store.cookieExpirationTime', this.get('rememberMe') ? 1209600 : null);
-		
+
 		console.log('session.store().cookieExpirationTime = ' + this.get('session.store').cookieExpirationTime);
 		//console.log('session.store.cookieExpirationTime = ' + this.get('session.store.cookieExpirationTime'));
 	}.observes('rememberMe'),
@@ -259,7 +259,7 @@ App.DataTableView = Em.View.extend({
 		var data = [];
 		if (value !== null && value !== undefined) {
 			//console.log('Got Value: ' + JSON.stringify(value));
-			data = value; 
+			data = value;
 		}
 		var columns = this.get('columns');
 		App.usersTable = this.$().dataTable({
@@ -301,16 +301,20 @@ App.UsersRoute = Ember.Route.extend(SimpleAuth.AuthenticatedRouteMixin, {
 		controller.set('model', model);
 		var columns = [{
 			"sClass": "item",
-			"sTitle" : "User Name",
+			"sTitle": "User Name",
 			"mData": "username"
 		}, {
 			"sClass": "item",
-			"sTitle" : "Email",
+			"sTitle": "Email",
 			"mData": "email"
 		}, {
 			"sClass": "item",
-			"sTitle" : "Creatation Time",
+			"sTitle": "Creatation Time",
 			"mData": "time"
+		},{
+			"sClass": "item",
+			"sTitle": "Seller",
+			"mData": "is_seller"
 		}, {
 			"sClass": "item",
 			"mData": null,
@@ -330,7 +334,7 @@ App.UsersRoute = Ember.Route.extend(SimpleAuth.AuthenticatedRouteMixin, {
 		//console.log("       signupOnly="+this.controllerFor("users").get("signupOnly"));
 
 		return Ember.$.getJSON(App.urls.server + App.urls.user_get_all + "&api_key=" +
-			App.urls.api_key + "&signup_only=" + this.controllerFor("users").get("signupOnly")).then(function(data) {	
+			App.urls.api_key + "&signup_only=" + this.controllerFor("users").get("signupOnly")).then(function(data) {
 			//console.log("get user list: " + JSON.stringify(data));
 
 			var return_data = {};
@@ -356,12 +360,12 @@ App.UsersController = Ember.ArrayController.extend({
 	signupOnlyChanged: function() {
 		//Has to destroy the previous table.
 		App.usersTable.fnDestroy();
-		
+
 		//Refresh the view to create a new table.
 		this.get("target.router").refresh();
-		
+
 	}.observes('signupOnly'),
-	
+
 	actions: {
 		showDetails: function(userId) {
 			//this.transitionToRoute('details',userId);
