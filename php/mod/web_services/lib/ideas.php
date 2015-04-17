@@ -337,8 +337,6 @@ function ideas_post_tip($message, $idea_id)
         $idea_id = $post->guid;
         $new_post = true;
     }
-
-    // save all info of this tip
     $json = json_decode($message, true);
 
     $post->tip_pages = json_encode($json['tip_pages']);
@@ -414,7 +412,7 @@ function ideas_post_tip($message, $idea_id)
 		    ideas_add_image($post, $imgdata, $image_num);
 
 //                  $image_link = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
-                    $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."large/";
+                    $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."master/";
 
                     $json['tip_pages'][$page_num]['tip_image_url'] = $image_link;
                     $img_item[] = $image_link;
