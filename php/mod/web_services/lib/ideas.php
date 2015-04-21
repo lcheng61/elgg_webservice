@@ -242,7 +242,7 @@ function tip_get_detail($tip_id) {
         foreach ($images as $key => $value) {
             if ($value == 1) {
 //              $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
-                $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."master/";
+                $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
             } else {
 	        $product_info['images'][] = "";
       	    }
@@ -392,10 +392,18 @@ function ideas_post_tip($message, $idea_id)
 
             $json['tip_thumbnail_image_url'] = $image_link;
             $return['tip_thumbnail_image_url'] = $image_link;
-
             $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
         }
-        
+
+        // hack for the server
+        if (!$post->tip_thumbnail_image_url) {
+            $image_num = 1;
+            $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/1/"."large/";
+            $json['tip_thumbnail_image_url'] = $image_link;
+            $return['tip_thumbnail_image_url'] = $image_link;
+            $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
+        }
+        // ~
     }
 
     foreach ($json['tip_pages'] as $page) {
