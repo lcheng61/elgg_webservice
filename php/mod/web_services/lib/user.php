@@ -48,7 +48,6 @@ function user_get_profile($username) {
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
-    
     $user_fields = elgg_get_config('profile_fields');
     
     foreach ($user_fields as $key => $type) {
@@ -314,6 +313,100 @@ expose_function('user.save_profile',
                 'POST',
                 true,
                 false);
+
+
+/**
+ * Web service to get seller setting
+ *
+ */
+function user_get_seller_setting($username) {    
+    if(!$username) {
+        $user = get_loggedin_user();
+        if (!$user) {
+            throw new InvalidParameterException('registration:usernamenotvalid');
+        }
+    } else {
+        $user = get_user_by_username($username);
+        if (!$user) {
+            throw new InvalidParameterException('registration:usernamenotvalid');
+	}
+    }
+    if (!$user->seller_setting) {
+        throw new InvalidParameterException('seller:settingnotvalid');
+    }
+    $json = json_decode($user->seller_setting, true);
+
+    $return['logo'] = $json['logo'];
+    $return['company_address_1'] = $json['company']['address_1'];
+    $return['company_address_2'] = $json['company']['address_2'];
+    $return['company_city']      = $json['company']['city'];
+    $return['company_state']     = $json['company']['state'];
+    $return['company_zipcode']   = $json['company']['zipcode'];
+    $return['company_phone']     = $json['company']['phone'];
+
+    $return['bill_address_1']    = $json['bill']['address_1'];
+    $return['bill_address_2']    = $json['bill']['address_2'];
+    $return['bill_city']         = $json['bill']['city'];
+    $return['bill_state']        = $json['bill']['state'];
+    $return['bill_zipcode']      = $json['bill']['zipcode'];
+    $return['bill_phone']        = $json['bill']['phone'];
+
+    $return['min_free_shipping_limit']    = $json['shipping_policy']['min_free_shipping_limit'];
+    $return['shipping_flat_cost']         = $json['shipping_policy']['shipping_flat_cost'];
+    $return['currency']                   = $json['currency'];
+    $return['customized_text']            = $json['customized_text'];
+    $return['notes']                      = $json['notes'];
+    $return['return_policy']              = $json['return_policy'];
+
+    return $return;
+}
+
+expose_function('user.get_seller_setting',
+                "user_get_seller_setting",
+                array(
+                      'username' => array ('type' => 'string', 'required' => false, 'default' => ""),
+                     ),
+                "Get seller setting",
+                'GET',
+                true,
+                false);
+
+/**
+ * Web service to set seller setting
+ *
+ */
+function user_set_seller_setting($message) {
+    $user = elgg_get_logged_in_user_entity();
+    if (!$user) {
+        throw new InvalidParameterException('registration:usernamenotvalid');
+    }
+    if (!$user->is_seller) {
+        throw new InvalidParameterException('registration:notseller');
+    }
+    $json = json_decode($message, true);
+
+    if (!$json['logo']) {
+        $json['logo'] = get_entity_icon_url($user,'medium');
+    }
+    
+    $user->seller_setting = json_encode($json);
+
+    if(!$user->save()) {
+        throw new RegistrationException(elgg_echo('registration:usercannotsave'));
+    }
+    return "success";
+}
+    
+expose_function('user.set_seller_setting',
+                "user_set_seller_setting",
+                array(
+                        'message' => array ('type' => 'string', 'required' => true, 'default' => ''),
+                    ),
+                "Set seller setting",
+                'POST',
+                true,
+                true);
+
 
 /**
  * Web service to get all users registered with an email ID
