@@ -1750,6 +1750,7 @@ function user_list_signup($signup_only) {
             $state = "Common user";
 	}
         $result['is_seller'] = $user->is_seller;
+        $result['is_admin'] = $user->is_admin;
         $result['state'] = $state;
         $result['email'] = $user->email;
         $result['username'] = $user->username;
