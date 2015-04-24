@@ -9,7 +9,7 @@
  *
  */
 //////////////
-function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
+function product_get_posts_with_recommend($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
     if (($from_seller_portal != 1) && ($limit != 0)) {
@@ -39,8 +39,8 @@ function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_port
             $group_guid, $category, $username);
 }
 
-expose_function('product.get_posts',
-                "product_get_posts",
+expose_function('product.get_posts_with_recommend',
+                "product_get_posts_with_recommend",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
@@ -279,7 +279,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
 }
 
 
-expose_function('product.get_posts_common',
+expose_function('product.get_posts',
                 "product_get_posts_common",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
