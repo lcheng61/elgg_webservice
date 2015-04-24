@@ -332,33 +332,9 @@ function user_get_seller_setting($username) {
 	}
     }
     if (!$user->seller_setting) {
-        throw new InvalidParameterException('seller:settingnotvalid');
+        return "";
     }
-    $json = json_decode($user->seller_setting, true);
-
-    $return['logo'] = $json['logo'];
-    $return['company_address_1'] = $json['company']['address_1'];
-    $return['company_address_2'] = $json['company']['address_2'];
-    $return['company_city']      = $json['company']['city'];
-    $return['company_state']     = $json['company']['state'];
-    $return['company_zipcode']   = $json['company']['zipcode'];
-    $return['company_phone']     = $json['company']['phone'];
-
-    $return['bill_address_1']    = $json['bill']['address_1'];
-    $return['bill_address_2']    = $json['bill']['address_2'];
-    $return['bill_city']         = $json['bill']['city'];
-    $return['bill_state']        = $json['bill']['state'];
-    $return['bill_zipcode']      = $json['bill']['zipcode'];
-    $return['bill_phone']        = $json['bill']['phone'];
-
-    $return['min_free_shipping_limit']    = $json['shipping_policy']['min_free_shipping_limit'];
-    $return['shipping_flat_cost']         = $json['shipping_policy']['shipping_flat_cost'];
-    $return['currency']                   = $json['currency'];
-    $return['customized_text']            = $json['customized_text'];
-    $return['notes']                      = $json['notes'];
-    $return['return_policy']              = $json['return_policy'];
-
-    return $return;
+    return $user->seller_setting;
 }
 
 expose_function('user.get_seller_setting',
