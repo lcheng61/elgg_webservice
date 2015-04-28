@@ -11,6 +11,297 @@
  * Save card info
  */
 
+//require 'payment_internal.php';
+
+$team_email2 = "team@lovebeauty.me";
+
+/////////////////////////////////////// direct_checkout
+/*
+The check out process
+1. charge stripe
+2. create buyer order
+3. For each seller
+       create seller order
+       create pdf for each order
+           get_seller_setting api
+           create pdf invoice link with random number and store it
+           write pdf invoice link to seller order
+       send email for each order with invoice pdf attached
+4.     For each product sku
+           create thinker order
+               include seller info
+           update product stock quantity
+           send email for each order
+5. Modify buyer order
+       include seller_order id
+       send email to buyer
+
+*/
+
+
+/*
+ * Create per order email sent to seller
+ */
+function create_seller_email($from_email, $seller_username, $seller_email, $seller_order_guid)
+{
+    $body = "
+Hello $seller->username,
+
+Congratulations! You just received a new order (#$seller_order_guid). Please check your seller portal.
+
+Please reply to this email should you have any questions.
+
+Yours truly,
+Lovebeauty Team
+";
+    $subject = "[Lovebeauty] New order $seller_order_guid";
+    $email_sent = elgg_send_email ($from_email, $seller_email, $subject, $body);
+
+    return $email_sent;
+}
+
+/*
+ * Create buyer email
+ */
+function create_buyer_email($from_email, $buyer_username, $buyer_email, $buyer_order_guid, $product_msg)
+{
+    $body = "
+Hello $buyer_username,
+
+Thank you for shopping with us. Your order (#$buyer_order_guid) is listed here:
+
+$product_msg
+
+Please reply this email should you have any questions.
+
+Yours truly,
+Lovebeauty Team
+";
+    $subject = "[Lovebeauty] Thank you for your shopping ($buyer_order_guid).";
+    $email_sent = elgg_send_email ($from_email, $buyer_email, $subject, $body);
+    return $email_sent;
+}
+
+function create_thinker_email($from_email, $thinker_username, $thinker_email, $thinker_order_guid, $dollar_earned)
+{
+    $body = "
+Hello $thinker_username,
+
+Congratulations! You just received a commission (\$$dollar_earned) for your great work. Please check  \"idea contribution\" in your APP and keep earning.
+
+Thank you for your great idea. Please reply this email should you have any questions.
+
+Yours truly,
+Lovebeauty Team
+";
+    $subject = "[Lovebeauty] Thinker contribution ($thinker_order_guid) was made";
+    $email_sent = elgg_send_email ($from_email, $thinker_email, $subject, $body);
+    return $email_sent;
+}
+
+function create_seller_pdf_invoice($seller_email, $products)
+{
+    // use fpdf
+
+    $product_msg = "";
+
+    foreach ($products as $product_key => $product_value) {
+        $product_price = $product_value['product_price'];
+        $shipping_cost = $product_value['shipping_cost'];
+
+        $product_msg = $product_msg."    name: ".$product_value['product_name']."\n";
+        $product_msg = $product_msg."    price: ".'$'.$product_price." x ".$product_value['item_number']."\n";
+    }
+
+    $product_msg = $product_msg."--- --- ---\n";
+    $total_amount = $order_info['amount'] / 100;
+
+    $product_msg = $product_msg."Total cost: ".'$'.$total_amount."\n";
+    $product_msg = $product_msg."Currency: ".$order_info['currency']."\n";
+    $product_msg = $product_msg."Card last 4 digit: ".$card['last4']."\n";
+    $product_msg = $product_msg."Shipping address: ".$order_info['shipping_address']."\n";
+    $product_msg = $product_msg."Delivery method: ".$order_info['shipping_method']."\n";
+
+}
+
+function create_buyer_order($from_email, $charge, $card, $time_friendly, $timestamp, $msg, $buyer)
+{
+    // Create the buyer pay order object
+    $item = new ElggObject();
+    $item->type = 'object';
+    $item->subtype = 'buyer_order';
+
+    $item->object_guid = $charge['id'];
+    $card = $charge['card'];
+    $item->charge_card_name = $card['last4'];
+
+    $item->time_friendly = $time_friendly;
+    $item->timestamp = $timestamp;
+
+    $item->msg = $msg;
+    $item->status = "Paid";
+    $item->shipping_vendor = "None";
+    $item->tracking_number = "None";
+    $item->shipping_speed = "None";
+
+    if($item->save()){
+        $return['card_name'] = $item->charge_card_name;
+        $return['order_id'] = $charge['id']; //$item->guid;
+        $return['order_id_lb'] = $item->guid;
+        $return['content'] = elgg_echo("pay:charge:order:saved");
+        $return['buyer_email'] = $buyer->email;
+        // send email, format it later
+    }
+    return $item;
+}
+
+function create_buyer_order_followup($from_email, $buyer_username, $buyer_email,
+        $buyer_order_guid, $sellers, $order_info)
+{
+    // collect seller info, compose email, then send email to the buyer
+    $product_msg = "";
+    foreach ($sellers as $key => $value) {
+        $products = $value['products'];
+        $product_msg = $product_msg."Seller name: ".$value['seller_name']."\n";
+        foreach ($products as $product_key => $product_value) {
+            $product_price = $product_value['product_price'];
+            $shipping_cost = $product_value['shipping_cost'];
+
+            $product_msg = $product_msg."    name: ".$product_value['product_name']."\n";
+            $product_msg = $product_msg."    price: ".'$'.$product_price." x ".$product_value['item_number']."\n";
+        }
+        $product_msg = $product_msg."Shipping cost: ".$product_value['shipping_cost']."\n";
+        $product_msg = $product_msg."\n";
+    }
+    $product_msg = $product_msg."--- --- ---\n";
+    $total_amount = $order_info['amount'] / 100;
+    $product_msg = $product_msg."Total cost: ".'$'.$total_amount."\n";
+    $product_msg = $product_msg."Currency: ".$order_info['currency']."\n";
+    $product_msg = $product_msg."Card last 4 digit: ".$card['last4']."\n";
+    $product_msg = $product_msg."Shipping address: ".$order_info['shipping_address']."\n";
+    $product_msg = $product_msg."Delivery method: ".$order_info['shipping_method']."\n";
+
+    $return['create_buyer_email'] = create_buyer_email($from_email,
+                       $buyer_username, $buyer_email, $buyer_order_guid, $product_msg);
+    return $return;
+}
+
+function create_seller_order($from_email, $seller_value, $shipping_address, $buyer, $card, $order_info, $item, $time_friendly, $timestamp)
+{
+    $products = $seller_value['products'];
+    $seller = get_user_by_username($seller_value['seller_name']);
+
+//    $seller_info['seller_name'] = $seller->username;
+//    $seller_info['seller_email'] = $seller->email;
+
+        // per seller info
+    $seller_order = new ElggObject();
+    $seller_order->type = 'object';
+    $seller_order->subtype = "seller_order";
+    $seller_order->access_id = ACCESS_LOGGED_IN;
+    $seller_order->seller_guid = $value['seller_id'];
+    $seller_order->coupon = $order_info['coupon'];
+
+    // all per-seller product info
+    $seller_order->products_msg = json_encode($products);
+    $seller_order->charge_card_name = $card['last4'];
+    $seller_order->shipping_address = $shipping_address;
+
+    $seller_order->buyer_order_id = $item->guid;
+    $seller_order->charge_card_info = 
+                "{$buyer->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
+
+    $seller_order->shipping_vendor = "None";
+    $seller_order->tracking_number = "None";
+    $seller_order->shipping_speed = "None";
+
+    $seller_order->time_friendly = $time_friendly;
+    $seller_order->timestamp = $timestamp;
+    $seller_order->status = "paid";
+
+    if ($seller_order->save()) {
+        create_seller_email($from_email, $seller->username, $seller->email, $seller_order->guid);
+    } else {
+        throw new InvalidParameterException(elgg_echo("pay:charge:seller_order:saveerror"));
+    }
+    //create pdf invoice and shipping_slip, XXX
+
+    // $seller_order->invoice = "";
+    return $seller_order;
+}
+
+/*
+ * update leftover quantity for each product
+ */
+function update_product_quantity($product, $sold_number) {
+    // decrease the product quantity
+    $product->quantity -= $sold_number; //$product_value['item_number'];
+    if ($product->quantity < 0) {
+        throw new InvalidParameterException(elgg_echo("pay:charge:product:outofstock"));
+    }
+    $product->sold_count += $sold_number; //$product_value['item_number'];
+    $product->save();
+}
+
+/*
+ * create one thinker_order per product and send email.
+ */
+function create_thinker_order($from_email, $product_value, $seller, $seller_order_guid, $buyer_guid, $buyer_order_guid, $time_friendly, $timestamp)
+{
+    // start with thinker order, and update product details
+    $product = get_entity($product_value['product_id']);
+    if (!$product) {
+        throw new InvalidParameterException(elgg_echo("pay:thinker_order:save"));
+    }
+    // find the tip owner (if exist) and create the tip owner's credit object, XXX
+
+    if ($product_value['thinker_id'] && $product_value['thinker_idea_id']) {
+        $thinker_order = new ElggObject();
+        $thinker_order->access_id = ACCESS_LOGGED_IN;
+        $thinker_order->type = 'object';
+        $thinker_order->subtype = "thinker_order";
+        $thinker_order->seller_guid = $seller->guid;
+	$thinker_order->seller_order_guid = $seller_order_guid;
+	$thinker_order->buyer_order_guid = $buyer_order_guid;
+        $thinker_order->buyer_guid = $buyer_guid;
+        $thinker_order->product_guid = $product_value['product_id'];
+        $thinker_order->product_name = $product_value['product_name'];
+	$thinker_order->product_image_url = $product_value['product_image_url'];
+        $thinker_order->thinker_guid = $product_value['thinker_id'];
+        $thinker_order->thinker_idea_guid = $product_value['thinker_idea_id'];
+	$thinker_order->time_friendly = $time_friendly;
+	$thinker_order->timestamp = $timestamp;
+	$thinker_order->status = "paid";
+        $thinker_order->product_price = $product_value['product_price'];
+        $thinker_order->product_quantity = $product_value['item_number'];
+
+        $thinker = get_user($product_value['thinker_id']);
+
+        $points_earned = ($product_value['product_price'] * $product_value['item_number'] * 1); // 1% of the product price
+        $dollar_earned = intval($points_earned) / 100;
+        if (!$thinker->points) {
+            $thinker->points = 0;
+        }
+        $thinker->points += intval($points_earned);
+        $thinker_order->points = intval($points_earned);
+
+        $thinker->save();
+                
+        $thinker_item = "";
+        if ($thinker_order->save()) {
+            $thinker_item['order_id'] = $thinker_order->guid;
+
+            create_thinker_email($from_email, $thinker->username, $thinker->email, $thinker_order->guid, $dollar_earned);
+        } else {
+            throw new InvalidParameterException(elgg_echo("pay:thinker_order:save"));
+        }
+    }
+    return $thinker_order;
+}
+
+///////////////////////////////////////~
+
+
 function stripe_card_add($token, $msg)
 {
    $card_test = 0;
@@ -267,6 +558,129 @@ expose_function('payment.get_shipping_address',
 
 function pay_checkout_direct($msg)
 {
+    $from_email = "team@lovebeauty.me";
+    $return = "";
+    if (strlen($msg) == 0) {
+        throw new InvalidParameterException('payment:charge:message:wrong');
+    }
+    $date = date_create();
+    $time_friendly = date_format($date, 'Y-m-d H:i:s');
+    $timestamp = date_format($date, 'U');
+
+    $json = json_decode($msg, true);
+    $order_info['amount'] = $json['amount'];
+    $order_info['currency'] = $json['currency'];
+    $order_info['card'] = $json['card'];
+    $order_info['description'] = $json['description'];
+    $order_info['shipping_address'] = $json['order_info']['shipping_address'];
+  
+    $order_info['shipping_method'] = $json['order_info']['shipping_method'];
+    $order_info['coupon'] = $json['order_info']['coupon'];
+
+    $sellers = $json['order_info']['sellers'];
+
+    $user = elgg_get_logged_in_user_entity();
+    if (!$user) {
+        throw new InvalidParameterException('registration:usernamenotvalid');
+    }
+    $resutl['charged_user'] = $user->username;
+
+    // saving shipping address to user profile
+    $my_address = json_encode($json['order_info']['shipping_address']);
+    $user->shipping_address = $my_address;
+    if (!$user->save()) {
+        throw new InvalidParameterException('User address cannot be saved');
+    }
+    $stripe = new StripeClient();
+    $customer = new StripeCustomer($user->guid);
+
+    if (strlen($order_info['card']) == 0) {
+        // Get the customer info
+	if (!$customer->getCustomerId()) {
+            throw new InvalidParameterException('registration:stripe_no_card');
+	}
+    } else {
+        // check if the card has been added.
+        $cards = $stripe->getCards($user->guid, 100);
+  	$found = 0;
+        foreach ($cards['data'] as $key => $value) {
+            $card_json = json_decode($value, true);
+            if ($card_json['id'] == $order_info['card']) {
+	        $found = 1;
+	    }
+        }
+	if (!$found) {
+            $card = $stripe->createCard($user->guid, $order_info['card']);
+            if (!$card) {
+                throw new InvalidParameterException('stripe:cards:add:error');
+            }
+     	    $set_default = $stripe->setDefaultCard($user->guid, $card->id);
+	    if (!strlen($set_default)) {
+	        register_error(elgg_echo('stripe:cards:make_default:error'));
+                $return['error'] = $stripe->showErrors();
+                throw new InvalidParameterException('stripe:cards:make_default:error');
+            }
+        }
+    }
+    // check if card_id was actually a token. If yes then we need to change it to
+    // the default card_id
+
+    // Now charge to the $customer->getCustomerId();
+    $charge = $stripe->createCharge($customer->getCustomerId(), $order_info);
+    if (!$charge) {
+        throw new InvalidParameterException('stripe:cards:charge:error');
+    }
+    $card = $charge['card'];
+    $order_info['card'] = $card['id'];
+    
+    $buyer_order = create_buyer_order($from_email, $charge, $card, $time_friendly, $timestamp, $msg, $user);
+
+    foreach ($sellers as $key => $value) {
+        $seller_order = create_seller_order($from_email, $value, $user->shipping_address, $user,
+                $order_info['card'], $order_info, $buyer_order, $time_friendly, $timestamp);
+
+        $products = $value['products'];
+        $seller = get_user_by_username($value['seller_name']);
+        $seller_info['seller_name'] = $seller->username;
+        $seller_info['seller_email'] = $seller->email;
+
+        foreach ($products as $product_key => $product_value) {
+            $product = get_entity($product_value['product_id']);
+            if (!$product) {
+     	        continue;
+            }
+            update_product_quantity($product, $product_value['item_number']);
+            $thinker_order = create_thinker_order($from_email, $product_value, $seller,
+                    $seller_order->guid, $user->guid, $buyer_order->guid,
+                    $time_friendly, $timestamp);
+        }
+    }
+// to IOS
+    $return['order_id']  = "$buyer_order->guid";
+    $return['timestamp'] = $timestamp;
+    $return['email_sent'] = $user->email;
+    $return['charged_amount'] = $order_info['amount'];
+
+    $return['buyer_order_followup'] =
+            create_buyer_order_followup($from_email, $user->username,
+            $user->email, $buyer_order->guid,
+            $sellers, $order_info);
+
+    return $return;
+}
+expose_function('payment.checkout_direct',
+                "pay_checkout_direct",
+                array(
+                      'msg' => array ('type' => 'string', 'required' => false, 'default' => null),
+                    ),
+                "checkout directly without using shopping cart",
+                'POST',
+                true,
+                true);
+
+
+function pay_checkout_direct_old($msg)
+{
     if (strlen($msg) == 0) {
         throw new InvalidParameterException('payment:charge:message:wrong');
     }
@@ -291,11 +705,11 @@ function pay_checkout_direct($msg)
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
 
+/* We don't support using points to buy
     $points = intval($json['points']);
     if ($user->points < $points) {
         throw new InvalidParameterException('User points not sufficient');
     }
-/* We don't support using points to buy
     if ($points > 0) {
         $user->points = $user->points - $points;
         if ($user->points < 0) {
@@ -353,7 +767,6 @@ function pay_checkout_direct($msg)
     if (!$charge) {
         throw new InvalidParameterException('stripe:cards:charge:error');
     }
-    
     $return['charged_user'] = $user->username;
     $return['charged_amount'] = $order_info['amount'];
 
@@ -416,6 +829,7 @@ function pay_checkout_direct($msg)
 		$seller_order->product_image_url = $product_value['product_image_url'];
 		$seller_order->product_price = $product_value['product_price'];
 		$seller_order->product_quantity = $product_value['item_number'];
+
 		$seller_order->shipping_code = $product_value['shipping_code'];
 		$seller_order->shipping_cost = $product_value['shipping_cost'];
 		$seller_order->shipping_address = json_encode($order_info['shipping_address']);
@@ -433,7 +847,6 @@ function pay_checkout_direct($msg)
                 $seller_order->shipping_speed = "None";
 
 // ~
-
 		$seller_order->time_friendly = $time_friendly;
 		$seller_order->timestamp = $timestamp;
 
@@ -599,8 +1012,8 @@ Lovebeauty Team
 
     return $return;
 }
-expose_function('payment.checkout_direct',
-                "pay_checkout_direct",
+expose_function('payment.checkout_direct_old',
+                "pay_checkout_direct_old",
                 array(
                       'msg' => array ('type' => 'string', 'required' => false, 'default' => null),
                     ),
