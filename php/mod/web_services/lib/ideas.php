@@ -890,3 +890,50 @@ expose_function('ideas.search',
 
 
 
+function ideas_flag($idea_id, $msg) {
+    $blog = get_entity($idea_id);
+    if (!$blog) {
+        throw new InvalidParameterException('Cannot find this idea_id');
+    }
+    $subject = "[Lovebeauty idea-flag] ".$blog->title;
+    $spam_link = elgg_normalize_url('services/api/rest/json/?method=ideas.get_detail&tip_id='.$idea_id);
+    $spam_json = tip_get_detail($idea_id);
+    $spam_json = json_encode($spam_json);
+
+//return $spam_json;
+
+    $body =
+"
+$msg
+
+Problematic idea URL:
+
+$spam_link
+
+json message of the idea:
+
+$spam_json
+
+Please take action ASAP!
+
+Regards,
+Lovebeauty Team
+";
+
+
+    $from_email = "team@lovebeauty.me";
+    $to_email = "spam@lovebeauty.me";
+    $return['email_sent'] = elgg_send_email($from_email, $to_email, $subject, $body);
+    return $return;
+
+}
+
+expose_function('ideas.flag',
+                "ideas_flag",
+                array(  'idea_id' => array('type' => 'int', 'required'=>true, 'default'=>0),
+                        'msg' => array('type' => 'string', 'required'=>true, 'default' => ''),
+                     ),
+                "Flag an inappropriate idea",
+                "POST",
+                true,
+                true);
