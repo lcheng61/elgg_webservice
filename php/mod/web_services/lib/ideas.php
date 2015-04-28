@@ -890,12 +890,12 @@ expose_function('ideas.search',
 
 
 
-function ideas_flag($idea_id, $msg) {
+function ideas_flag($idea_id, $idea_title, $idea_author, $reporter, $details) {
     $blog = get_entity($idea_id);
     if (!$blog) {
         throw new InvalidParameterException('Cannot find this idea_id');
     }
-    $subject = "[Lovebeauty idea-flag] ".$blog->title;
+    $subject = "[Lovebeauty idea-flag]#".$idea_id.": ".$idea_title; //$blog->title;
     $spam_link = elgg_normalize_url('services/api/rest/json/?method=ideas.get_detail&tip_id='.$idea_id);
     $spam_json = tip_get_detail($idea_id);
     $spam_json = json_encode($spam_json);
@@ -904,7 +904,9 @@ function ideas_flag($idea_id, $msg) {
 
     $body =
 "
-$msg
+Reporter[$reporter] complained idea_author[$idea_author].
+
+$details
 
 Problematic idea URL:
 
@@ -930,8 +932,11 @@ Lovebeauty Team
 
 expose_function('ideas.flag',
                 "ideas_flag",
-                array(  'idea_id' => array('type' => 'int', 'required'=>true, 'default'=>0),
-                        'msg' => array('type' => 'string', 'required'=>true, 'default' => ''),
+                array(  'idea_id'     => array('type' => 'int', 'required'=>true, 'default'=>0),
+                        'idea_title'  => array('type' => 'string', 'required'=>false, 'default'=>""),
+                        'idea_author' => array('type' => 'string', 'required'=>false, 'default'=>""),
+                        'reporter'    => array('type' => 'string', 'required'=>false, 'default'=>""),
+                        'details'     => array('type' => 'string', 'required'=>false, 'default'=>""),
                      ),
                 "Flag an inappropriate idea",
                 "POST",
