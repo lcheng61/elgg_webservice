@@ -38,6 +38,44 @@ The check out process
 
 
 /*
+ * Calculate shipping cost
+ */
+function calculate_shipping_cost_per_seller($sellers)
+{
+    foreach ($sellers as $key => $value) {
+        $seller_total_cost = 0;
+        $seller_setting = user_get_seller_setting($value['seller_name']);
+        $shipping_policy = $seller_setting['shipping_policy'];
+
+        $free_shipping_quantity_limit =
+                $shipping_policy['free_shipping_quantity_limit'];
+        $free_shipping_cost_limit =
+                $shipping_policy['free_shipping_cost_limit'];
+        $shipping_fee =
+                $shipping_policy['shipping_fee'];
+
+        foreach ($products as $product_key => $product_value) {
+            $product = get_entity($product_value['product_id']);
+            if (!$product) {
+     	        continue;
+            }
+            $seller_total_cost += ($product_value['product_price'] *
+                    $product_value['item_number']);
+        }
+        $seller_shipping_cost = 0;
+        if ($seller_total_cost < $free_shipping_cost_limit) {
+            $seller_shipping_cost = $shipping_fee;
+        } else {
+            $seller_shipping_cost = 0;
+        }
+        $seller_total_cost += $seller_shipping_cost;
+        $value['seller_total_cost'] = $seller_total_cost;
+        $value['seller_shipping_cost'] = $seller_shipping_cost;
+    }
+    return sellers;
+}
+
+/*
  * Create per order email sent to seller
  */
 function create_seller_email($from_email, $seller_username, $seller_email, $seller_order_guid)
@@ -1477,7 +1515,8 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
             $item['shipping_speed'] = $single->shipping_speed;
 
             $item['products_msg'] = json_decode($single->products_msg, true);
-            $item['total'] = $single->product_price * $single->product_quantity + $single->shipping_cost;
+//            $item['total'] = $single->product_price * $single->product_quantity + $single->shipping_cost;
+            $item['total'] = 0;
 
             $seller = get_user($single->seller_guid);
             if (!$seller) {
@@ -1492,7 +1531,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
 	    }
 
             $display_number ++;
-            $return['product'][] = $item;
+            $return['seller_order'][] = $item;
         }
 	
         $return['total_number'] = $display_number;
@@ -1609,10 +1648,10 @@ function pay_detail_seller_order($order_id)
     $item['product_guid'] = $single->product_guid;
     $item['coupon_code'] = $single->coupon;
     $item['coupon_discount'] = 0;
-    $item['product_name'] = $single->product_name;
-    $item['product_image_url'] = $single->product_image_url;
-    $item['product_price'] = $single->product_price;
-    $item['product_quantity'] = $single->product_quantity;
+//    $item['product_name'] = $single->product_name;
+//    $item['product_image_url'] = $single->product_image_url;
+//    $item['product_price'] = $single->product_price;
+//    $item['product_quantity'] = $single->product_quantity;
     $item['shipping_code'] = $single->shipping_code;
     $item['shipping_cost'] = $single->shipping_cost;
 
@@ -1620,6 +1659,7 @@ function pay_detail_seller_order($order_id)
     $item['shipping_vendor'] = $single->shipping_vendor;
     $item['tracking_number'] = $single->tracking_number;
     $item['shipping_speed'] = $single->shipping_speed;
+    $item['products_msg'] = json_decode($single->products_msg, true);
 
     if ($single->shipping_address) {
         $item['shipping_address'] = json_decode($single->shipping_address, true);
