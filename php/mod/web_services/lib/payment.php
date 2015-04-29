@@ -13,8 +13,6 @@
 
 //require 'payment_internal.php';
 
-$team_email2 = "team@lovebeauty.me";
-
 /////////////////////////////////////// direct_checkout
 /*
 The check out process
@@ -199,7 +197,7 @@ function create_seller_order($from_email, $seller_value, $shipping_address, $buy
     $seller_order->type = 'object';
     $seller_order->subtype = "seller_order";
     $seller_order->access_id = ACCESS_LOGGED_IN;
-    $seller_order->seller_guid = $value['seller_id'];
+    $seller_order->seller_guid = $seller_value['seller_id'];
     $seller_order->coupon = $order_info['coupon'];
 
     // all per-seller product info
@@ -583,7 +581,7 @@ function pay_checkout_direct($msg)
     if (!$user) {
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
-    $resutl['charged_user'] = $user->username;
+    $return['charged_user'] = $user->username;
 
     // saving shipping address to user profile
     $my_address = json_encode($json['order_info']['shipping_address']);
@@ -591,7 +589,7 @@ function pay_checkout_direct($msg)
     if (!$user->save()) {
         throw new InvalidParameterException('User address cannot be saved');
     }
-    $stripe = new StripeClient();
+    $stripe = new StripeClient('production');
     $customer = new StripeCustomer($user->guid);
 
     if (strlen($order_info['card']) == 0) {
@@ -618,6 +616,7 @@ function pay_checkout_direct($msg)
 	    if (!strlen($set_default)) {
 	        register_error(elgg_echo('stripe:cards:make_default:error'));
                 $return['error'] = $stripe->showErrors();
+// return exception or return error message ?
                 throw new InvalidParameterException('stripe:cards:make_default:error');
             }
         }
@@ -639,6 +638,8 @@ function pay_checkout_direct($msg)
         $seller_order = create_seller_order($from_email, $value, $user->shipping_address, $user,
                 $order_info['card'], $order_info, $buyer_order, $time_friendly, $timestamp);
 
+	$return['seller_order'][] = $seller_order->guid;
+
         $products = $value['products'];
         $seller = get_user_by_username($value['seller_name']);
         $seller_info['seller_name'] = $seller->username;
@@ -653,9 +654,10 @@ function pay_checkout_direct($msg)
             $thinker_order = create_thinker_order($from_email, $product_value, $seller,
                     $seller_order->guid, $user->guid, $buyer_order->guid,
                     $time_friendly, $timestamp);
+     	    $return['thinker_order'][] = $thinker_order->guid;
         }
     }
-// to IOS
+// to IOS, don't change
     $return['order_id']  = "$buyer_order->guid";
     $return['timestamp'] = $timestamp;
     $return['email_sent'] = $user->email;
@@ -1347,7 +1349,8 @@ function pay_list_buyer_order($context, $username, $limit, $offset)
             $json['order_info']['charge_card_name'] = $single->charge_card_name;
             $json['order_info']['time_friendly'] = $single->time_friendly;
             $json['order_info']['timestamp'] = $single->timestamp;
-            $json['order_info']['order_guid'] = $single->object_guid;
+            $json['order_info']['order_guid'] = $single->guid;
+            $json['order_info']['order_guid_stripe'] = $single->object_guid;
 
             $json['order_info']['status'] = $single->status;
             $json['order_info']['shipping_vendor'] = $single->shipping_vendor;
@@ -1437,21 +1440,26 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
                 $return['delete'][] = false;
             }
 */
-
-            // XXX: should be part of the filter
+/*
             if (($item['timestamp'] < $time_start) || ($item['timestamp'] > $time_end)) {
 	        continue;
 	    }
+*/
+
+            // XXX: ideally should be part of the filter
+            if (($single->timestamp < $time_start) || ($single->timestamp > $time_end)) {
+	        continue;
+	    }
             $item['order_guid'] = $single->guid;
-            $item['product_guid'] = $single->product_guid;
+//            $item['product_guid'] = $single->product_guid;
             $item['coupon_code'] = $single->coupon;
             $item['coupon_discount'] = 0;
-            $item['product_name'] = $single->product_name;
-            $item['product_image_url'] = $single->product_image_url;
-            $item['product_price'] = $single->product_price;
-            $item['product_quantity'] = $single->product_quantity;
-            $item['shipping_code'] = $single->shipping_code;
-            $item['shipping_cost'] = $single->shipping_cost;
+//            $item['product_name'] = $single->product_name;
+//            $item['product_image_url'] = $single->product_image_url;
+//            $item['product_price'] = $single->product_price;
+//            $item['product_quantity'] = $single->product_quantity;
+//            $item['shipping_code'] = $single->shipping_code;
+//            $item['shipping_cost'] = $single->shipping_cost;
 
 	    if ($single->shipping_address) {
                 $item['shipping_address'] = json_decode($single->shipping_address, true);
@@ -1468,6 +1476,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
             $item['tracking_number'] = $single->tracking_number;
             $item['shipping_speed'] = $single->shipping_speed;
 
+            $item['products_msg'] = json_decode($single->products_msg, true);
             $item['total'] = $single->product_price * $single->product_quantity + $single->shipping_cost;
 
             $seller = get_user($single->seller_guid);
