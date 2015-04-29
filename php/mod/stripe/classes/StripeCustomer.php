@@ -128,7 +128,7 @@ class StripeCustomer {
 //			$this->user->removePrivateSetting('stripe_customer_id');
 			error_log($e->getMessage());
 // cl: why call itself ??? It is dead-loop
-			return $this->getCustomerAccount();
+//			return $this->getCustomerAccount();
 //			return 0;
 		}
 	}
