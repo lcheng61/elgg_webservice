@@ -54,6 +54,7 @@ function calculate_shipping_cost_per_seller($sellers)
         $shipping_fee =
                 $shipping_policy['shipping_fee'];
 
+	$products = $value['products'];
         foreach ($products as $product_key => $product_value) {
             $product = get_entity($product_value['product_id']);
             if (!$product) {
@@ -69,10 +70,10 @@ function calculate_shipping_cost_per_seller($sellers)
             $seller_shipping_cost = 0;
         }
         $seller_total_cost += $seller_shipping_cost;
-        $value['seller_total_cost'] = $seller_total_cost;
-        $value['seller_shipping_cost'] = $seller_shipping_cost;
+        $sellers[$key]['seller_total_cost'] = $seller_total_cost;
+        $sellers[$key]['seller_shipping_cost'] = $seller_shipping_cost;
     }
-    return sellers;
+    return $sellers;
 }
 
 /*
@@ -242,6 +243,10 @@ function create_seller_order($from_email, $seller_value, $shipping_address, $buy
     $seller_order->products_msg = json_encode($products);
     $seller_order->charge_card_name = $card['last4'];
     $seller_order->shipping_address = $shipping_address;
+
+    // all per-seller cost info
+    $seller_order->total_cost = $seller_value['seller_total_cost'];
+    $seller_order->shipping_cost = $seller_value['seller_shipping_cost'];
 
     $seller_order->buyer_order_id = $item->guid;
     $seller_order->charge_card_info = 
@@ -615,12 +620,7 @@ function pay_checkout_direct($msg)
 
     $sellers = $json['order_info']['sellers'];
 
-/////
-//    $new_sellers = calculate_shipping_cost_per_seller($sellers);
-//    return $new_selelrs;
-//    return;
-////
-
+    $sellers = calculate_shipping_cost_per_seller($sellers);
 
     $user = elgg_get_logged_in_user_entity();
     if (!$user) {
@@ -683,7 +683,7 @@ function pay_checkout_direct($msg)
 
     foreach ($sellers as $key => $value) {
         $seller_order = create_seller_order($from_email, $value, $user->shipping_address, $user,
-                $order_info['card'], $order_info, $buyer_order, $time_friendly, $timestamp);
+                $card, $order_info, $buyer_order, $time_friendly, $timestamp);
 
 	$return['seller_order'][] = $seller_order->guid;
 
@@ -1487,11 +1487,6 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
                 $return['delete'][] = false;
             }
 */
-/*
-            if (($item['timestamp'] < $time_start) || ($item['timestamp'] > $time_end)) {
-	        continue;
-	    }
-*/
 
             // XXX: ideally should be part of the filter
             if (($single->timestamp < $time_start) || ($single->timestamp > $time_end)) {
@@ -1524,8 +1519,8 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
             $item['shipping_speed'] = $single->shipping_speed;
 
             $item['products_msg'] = json_decode($single->products_msg, true);
-//            $item['total'] = $single->product_price * $single->product_quantity + $single->shipping_cost;
-            $item['total'] = 0;
+            $item['total'] = $single->total_cost;
+            $item['shipping_cost'] = $single->shipping_cost;
 
             $seller = get_user($single->seller_guid);
             if (!$seller) {
@@ -1546,6 +1541,7 @@ function pay_list_seller_order($context, $username, $limit, $offset, $time_start
         $return['total_number'] = $display_number;
     }
     else {
+        $return['seller_order'] = array();
         $return['total_number'] = 0;
         $return['product'] = "";
     }
@@ -1663,6 +1659,7 @@ function pay_detail_seller_order($order_id)
 //    $item['product_quantity'] = $single->product_quantity;
     $item['shipping_code'] = $single->shipping_code;
     $item['shipping_cost'] = $single->shipping_cost;
+    $item['total'] = $single->total_cost;
 
     $item['status'] = $single->status;
     $item['shipping_vendor'] = $single->shipping_vendor;
@@ -1679,7 +1676,6 @@ function pay_detail_seller_order($order_id)
     $item['charge_card_info'] = $single->charge_card_info;
     $item['purchased_time_friendly'] = $single->time_friendly;
     $item['purchased_timestamp'] = $single->timestamp;
-
 
     $seller = get_user($single->seller_guid);
     if (!$seller) {
