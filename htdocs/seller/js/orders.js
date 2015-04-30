@@ -18,7 +18,7 @@ $(function() {
 	var tableOrders = $('#orders').DataTable({
 		"ajax": {
 			"url": formUrl,
-			"dataSrc": "result.product"
+			"dataSrc": "result.seller_order"
 		},
 		"stateSave": true,
 		"processing": true,
