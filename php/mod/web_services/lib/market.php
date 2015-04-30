@@ -393,7 +393,11 @@ function product_get_detail($product_id) {
                 'annotation_owner_guid' => elgg_get_logged_in_user_guid(),
                 'annotation_name' => 'likes',
         ));
-        $like = $likes[0];
+	if ($likes) {
+            $like = $likes[0];
+        } else {
+            $like = 0;
+        }
     }
     $return['liked'] = ($like && $like->canEdit());
 ////// done like checking
