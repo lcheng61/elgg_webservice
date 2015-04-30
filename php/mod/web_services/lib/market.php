@@ -586,7 +586,7 @@ function product_get_seller_other_posts($limit = 10,
     $owner = get_entity($product_post->owner_guid);
     $seller_username = $owner->username;
 
-    $return = product_get_posts($context, $limit, $offset, 0, 0, $category, $seller_username);
+    $return = product_get_posts_common($context, $limit, $offset, 0, 0, $category, $seller_username);
 
     return $return;
 
