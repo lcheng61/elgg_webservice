@@ -176,9 +176,9 @@ function create_buyer_order($from_email, $charge, $card, $time_friendly, $timest
 
     $item->msg = $msg;
     $item->status = "Paid";
-    $item->shipping_vendor = "None";
-    $item->tracking_number = "None";
-    $item->shipping_speed = "None";
+    $item->shipping_vendor = "";
+    $item->tracking_number = "";
+    $item->shipping_speed = "";
 
     if($item->save()){
         $return['card_name'] = $item->charge_card_name;
@@ -247,9 +247,9 @@ function create_seller_order($from_email, $seller_value, $shipping_address, $buy
     $seller_order->charge_card_info = 
                 "{$buyer->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
 
-    $seller_order->shipping_vendor = "None";
-    $seller_order->tracking_number = "None";
-    $seller_order->shipping_speed = "None";
+    $seller_order->shipping_vendor = "";
+    $seller_order->tracking_number = "";
+    $seller_order->shipping_speed = "";
 
     $seller_order->time_friendly = $time_friendly;
     $seller_order->timestamp = $timestamp;
@@ -834,9 +834,9 @@ function pay_checkout_direct_old($msg)
 
     $item->msg = $msg;
     $item->status = "Paid";
-    $item->shipping_vendor = "None";
-    $item->tracking_number = "None";
-    $item->shipping_speed = "None";
+    $item->shipping_vendor = "";
+    $item->tracking_number = "";
+    $item->shipping_speed = "";
 
     if($item->save()){
         $return['card_name'] = $item->charge_card_name;
@@ -891,9 +891,9 @@ function pay_checkout_direct_old($msg)
                         "{$user->username}-{$card['brand']}-{$card['last4']}-{$card['exp_month']}-{$card['exp_year']}";
 
                 $seller_order->status = "Paid";
-                $seller_order->shipping_vendor = "None";
-                $seller_order->tracking_number = "None";
-                $seller_order->shipping_speed = "None";
+                $seller_order->shipping_vendor = "";
+                $seller_order->tracking_number = "";
+                $seller_order->shipping_speed = "";
 
 // ~
 		$seller_order->time_friendly = $time_friendly;
