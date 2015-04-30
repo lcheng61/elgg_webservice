@@ -365,7 +365,7 @@ function stripe_card_add($token, $msg)
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
 
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
     if ($card_test == 1) {
         $card = $stripe->createCard($user->guid, $card_info);
         $return['name'] = $card->name;
@@ -441,7 +441,7 @@ function stripe_card_remove($card_id)
         throw new InvalidParameterException('registration:cannot_edit');
     }
 
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
     if ($stripe->deleteCard($user->guid, $card_id)) {
         $return["result"] = elgg_echo('stripe:cards:remove:success');
     } else {
@@ -478,7 +478,7 @@ function stripe_card_set_default($card_id)
     }
     $return['user'] = $user->username;
 
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
     if ($stripe->setDefaultCard($user->guid, $card_id)) {
         $return = elgg_echo('stripe:cards:make_default:success');
     } else {
@@ -509,7 +509,7 @@ function stripe_card_get_all($limit = 10)
         throw new InvalidParameterException('registration:cannot_edit');
     }
 
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
 
     $cards = $stripe->getCards($user->guid, $limit);
     foreach ($cards['data'] as $key => $value) {
@@ -547,7 +547,7 @@ function stripe_card_get_default()
         throw new InvalidParameterException('registration:cannot_edit');
     }
 
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
 //    $return = $stripe->getDefaultCard($user->guid);
 //    $return = serialize($stripe->getDefaultCard($user->guid));
     if (!$return) {
@@ -634,7 +634,7 @@ function pay_checkout_direct($msg)
     if (!$user->save()) {
         throw new InvalidParameterException('User address cannot be saved');
     }
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
     $customer = new StripeCustomer($user->guid);
 
     if (strlen($order_info['card']) == 0) {
@@ -776,7 +776,7 @@ function pay_checkout_direct_old($msg)
     } else {
         $return['address_copied'] = true;
     }
-    $stripe = new StripeClient('production');
+    $stripe = new StripeClient();
     $customer = new StripeCustomer($user->guid);
 
     if (strlen($order_info['card']) == 0) {
@@ -1126,7 +1126,7 @@ function pay_checkout()
     if($order->save()){
         notification_create(array($order->seller_guid, $order->getOwnerGUID()), 0, $order->getGuid(), array('notification_view'=>'pay_order'));
 
-        $stripe = new StripeClient('production');
+        $stripe = new StripeClient();
         return $stripe->createCharge($user->guid, 
             array(  'amount' => $order->amount,
                     'currency' => "usd",
