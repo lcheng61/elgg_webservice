@@ -9,7 +9,7 @@
 		<meta name="description" content="">
 		<meta name="author" content="">
 
-		<title>SLoveBeauty seller portal</title>
+		<title>LoveBeauty seller portal</title>
 
 		<!-- Bootstrap Core CSS -->
 		<link href="css/bootstrap.min.css" rel="stylesheet">
@@ -120,6 +120,9 @@
 								</ul>
 								<!-- /.nav-second-level -->
 							</li>
+							<li>
+								<a class="active" href="settings.html"><i class="fa fa-spotify fa-fw"></i> Settings</a>
+							</li>							
 						</ul>
 					</div>
 					<!-- /.sidebar-collapse -->
@@ -146,7 +149,7 @@
 									<div class="col-lg-12">
 										<div class="form-group">
 											<label>Product name</label>
-											<input class="form-control" name="title" placeholder="Input your product name here." id="title" data-validation="required" data-validation-error-msg="You have to give the product name.">
+											<input class="form-control" name="title" placeholder="Input your product name here." id="title" data-validation="required" data-validation-error-msg="Missing product name.">
 											<input type="hidden" id="product_id" name="product_id" value="" />
 										</div>
 									</div>
@@ -177,14 +180,14 @@
 									<div class="col-lg-6">
 										<div class="form-group">
 											<label>Price</label>
-											<input class="form-control" placeholder="Product price" id="price" name="price" data-validation="required" data-validation-error-msg="You have to give the product price.">
+											<input class="form-control" placeholder="Product price such as 1.99" id="price" name="price" data-validation="number" data-validation-allowing="float"  data-validation-error-msg="Invalid price.">
 										</div>
 									</div>
 
 									<div class="col-lg-12">
 										<div class="form-group">
-											<label>Description</label>
-											<textarea class="form-control" rows="5" id="description" name="description" data-validation="required"></textarea>
+											<label>Description (Please include return policy here)</label>
+											<textarea class="form-control" rows="5" id="description" name="description" data-validation="required" data-validation-error-msg="Missing product description."></textarea>
 										</div>
 									</div>
 									<!-- /.col-lg-12 -->
@@ -264,88 +267,96 @@
 											</div>
 										</div>
 									</div>
-							</div>
 
-							<div class="col-lg-12">
-								<!--blank line-->
-								<br />
-							</div>
+									<div class="col-lg-12">
+										<!--blank line-->
+										<br />
+									</div>
 
-							<div class="col-lg-6">
-								<div class="form-group">
-									<label>Quantity</label>
-									<input class="form-control" placeholder="Product qautity" id="quantity" name="quantity" data-validation="required" data-validation-error-msg="You have to give the product quantity.">
-								</div>
-							</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Quantity</label>
+											<input class="form-control" placeholder="Product qautity" id="quantity" name="quantity" value="10" data-validation="number" data-validation-error-msg="You have to give the product quantity.">
+										</div>
+									</div>
 
-							<div class="col-lg-6">
-								<div class="form-group">
-									<label>Tags (seperated by space)</label>
-									<input class="form-control" placeholder="Tags" id="tags" name="tags">
-								</div>
-							</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Tags (seperated by space)</label>
+											<input class="form-control" placeholder="Tags" id="tags" name="tags">
+										</div>
+									</div>
+									<div class="col-lg-12">
+										<!--blank line-->
+									</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Estimated delivery time</label>
+											<input class="form-control" placeholder="10 days" id="delivery_time" name="delivery_time" data-validation="required" data-validation-error-msg="Missing delivery time.">
+										</div>
+									</div>
 
-							<div class="col-lg-6">
-								<div class="form-group">
-									<label>Estimated delivery time</label>
-									<input class="form-control" placeholder="Delivery time" id="delivery_time" name="delivery_time" data-validation="required" data-validation-error-msg="You have to set a deliver time for this product.">
-								</div>
-							</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Shipping cost of this product</label>
+											<input class="form-control" placeholder="Delivery fee" id="shipping_fee" name="shipping_fee" value="0" data-validation="number" data-validation-allowing="float" data-validation-error-msg="Invalid shipping cost.">
+										</div>
+									</div>
 
-							<div class="col-lg-6" id='affiliate_url_div'>
-								<div class="form-group">
-									<label>Affiliate Url (Only use this when the product is affiliate product)</label>
-									<input class="form-control" placeholder="Affilicate product url" id="affiliate_product_url" name="affiliate_product_url">
-								</div>
-							</div>
+									<div class="col-lg-6" id='affiliate_url_div'>
+										<div class="form-group">
+											<label>Affiliate Url (Only use this when the product is affiliate product)</label>
+											<input class="form-control" placeholder="Affilicate product url" id="affiliate_product_url" name="affiliate_product_url">
+										</div>
+									</div>
 
-							<div class="col-lg-6" id='affiliate_image_url_div'>
-								<div class="form-group">
-									<label>Affiliate Image Url (Only use this when the product is affiliate product)</label>
-									<input class="form-control" placeholder="The image of the affiliate" id="affiliate_image_url" name="affiliate_image">
-								</div>
-							</div>
+									<div class="col-lg-6" id='affiliate_image_url_div'>
+										<div class="form-group">
+											<label>Affiliate Image Url (Only use this when the product is affiliate product)</label>
+											<input class="form-control" placeholder="The image of the affiliate" id="affiliate_image_url" name="affiliate_image">
+										</div>
+									</div>
 
-							<div class="col-lg-12" id='is_affiliate_div'>
-								<div class="form-group">
-									<label>
-										<input type="checkbox" id="is_affiliate" name="is_affiliate" value="1"> Affilicate product (Only check this when the product is affiliate product)
-									</label>
-								</div>
-							</div>
-							<div class="col-lg-12">
-								<div class="form-group">
-									<label>
-										<input type="checkbox" id="is_archived" name="is_archived" value="1"> Archive the product (it will not be shown to customers).
-									</label>
-								</div>
-							</div>
+									<div class="col-lg-12" id='is_affiliate_div'>
+										<div class="form-group">
+											<label>
+												<input type="checkbox" id="is_affiliate" name="is_affiliate" value="1"> Affilicate product (Only check this when the product is affiliate product)
+											</label>
+										</div>
+									</div>
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>
+												<input type="checkbox" id="is_archived" name="is_archived" value="1"> Archive the product (it will not be shown to customers).
+											</label>
+										</div>
+									</div>
 
-							<div class="col-lg-12">
-								<p></p>
-								</br>
-							</div>
+									<div class="col-lg-12">
+										<p></p>
+										</br>
+									</div>
 
-							<div class="col-lg-1">
-								<button type="submit" class="btn btn-success btn-block btn-sm" id="submit">Submit</button>
-							</div>
-							<div class="col-lg-1">
-								<button type="reset" class="btn btn-warning btn-block btn-sm">Reset</button>
-							</div>
+									<div class="col-lg-1">
+										<button type="submit" class="btn btn-success btn-block btn-sm" id="submit">Submit</button>
+									</div>
+									<div class="col-lg-1">
+										<button type="reset" class="btn btn-warning btn-block btn-sm">Reset</button>
+									</div>
 
-							</form>
+								</form>
 
+							</div>
+							<!-- /.panel-body -->
 						</div>
-						<!-- /.panel-body -->
+						<!-- /.panel -->
 					</div>
-					<!-- /.panel -->
+					<!-- /.col-lg-12 -->
+					<br />
+					<br />
 				</div>
-				<!-- /.col-lg-12 -->
-				<br />
-				<br />
 			</div>
-		</div>
-		<!-- /#page-wrapper -->
+			<!-- /#page-wrapper -->
 
 		</div>
 		<!-- /#wrapper -->
