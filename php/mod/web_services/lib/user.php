@@ -1890,7 +1890,7 @@ function user_set_seller($username) {
     if (!$user) {
         throw new RegistrationException(elgg_echo('username:not:found'));
     }
-    $user->is_seller = true;
+    $user->is_seller = "true";
     if (!$user->save()) {
        throw new RegistrationException('User cannot be saved');
     }
