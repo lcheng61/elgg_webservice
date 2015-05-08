@@ -1797,7 +1797,6 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
 	        $item['idea']['guid'] = "";
 	        $item['idea']['name'] = "";
                 $item['idea']['tip_thumbnail_image_url'] = elgg_get_config('cdn_link')."/ico/default_idea.jpg";
-                $item['idea']['tip_thumbnail_image_url'] = "";
             } else {
 	        $item['idea']['guid'] = $idea->guid;
 	        $item['idea']['name'] = $idea->title;
