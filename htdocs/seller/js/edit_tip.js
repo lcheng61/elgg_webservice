@@ -653,6 +653,7 @@ $(function() {
 		//console.log("video_id = " + video_id);
 
 		var thumbnail_url = "http://img.youtube.com/vi" + video_id + "/0.jpg";
+		thumbnail_url = thumbnail_url.replace("?wmode=opaque", "");
 		//console.log("video thumbnail url = " + thumbnail_url);
 
 		return thumbnail_url;
