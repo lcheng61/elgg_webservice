@@ -1772,7 +1772,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
 	    } else {
                 $item['thinker']['thinker_guid'] = $single->thinker_guid;
                 $item['thinker']['thinker_name'] = $thinker->username;
-                $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'small');
+                $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'large');
 	    }
 	    if (!$seller) {
 	        $item['seller']['guid'] = "";
@@ -1781,7 +1781,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             } else {
 	        $item['seller']['guid'] = $seller->guid;
 	        $item['seller']['name'] = $seller->username;
-	        $item['seller']['avatar'] = get_entity_icon_url($seller, 'small');
+	        $item['seller']['avatar'] = get_entity_icon_url($seller, 'large');
             }
 	    if (!$buyer) {
 	        $item['buyer']['guid'] = "";
@@ -1790,7 +1790,7 @@ function pay_list_thinker_order($context, $username, $limit, $offset, $time_star
             } else {
 	        $item['buyer']['guid'] = $buyer->guid;
 	        $item['buyer']['name'] = $buyer->username;
-	        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'small');
+	        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'large');
             }
 
 	    if (!$idea) {
@@ -1868,7 +1868,7 @@ function pay_detail_thinker_order($id)
     } else {
         $item['thinker']['thinker_guid'] = $single->thinker_guid;
         $item['thinker']['thinker_name'] = $thinker->username;
-        $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'small');
+        $item['thinker']['thinker_avatar'] = get_entity_icon_url($thinker, 'large');
     }
     if (!seller) {
         $item['seller']['guid'] = "";
@@ -1877,7 +1877,7 @@ function pay_detail_thinker_order($id)
     } else {
         $item['seller']['guid'] = $seller->guid;
         $item['seller']['name'] = $seller->username;
-        $item['seller']['avatar'] = get_entity_icon_url($seller, 'small');
+        $item['seller']['avatar'] = get_entity_icon_url($seller, 'large');
     }
     if (!buyer) {
         $item['buyer']['guid'] = "";
@@ -1886,7 +1886,7 @@ function pay_detail_thinker_order($id)
     } else {
         $item['buyer']['guid'] = $buyer->guid;
         $item['buyer']['name'] = $buyer->username;
-        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'small');
+        $item['buyer']['avatar'] = get_entity_icon_url($buyer, 'large');
     }
 
     if (!idea) {

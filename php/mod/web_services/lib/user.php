@@ -206,7 +206,7 @@ function user_get_profile($username) {
     $profile_info['username'] = $user->username;
     $profile_info['email'] = $user->email;
     $profile_info['profile_fields'] = $profile_fields;
-    $profile_info['avatar_url'] = get_entity_icon_url($user,'medium');
+    $profile_info['avatar_url'] = get_entity_icon_url($user,'large');
 
     $profile_info['is_seller'] = $user->is_seller;
 
@@ -362,7 +362,7 @@ function user_set_seller_setting($message) {
     $json = json_decode($message, true);
 
     if (!$json['logo']) {
-        $json['logo'] = get_entity_icon_url($user,'medium');
+        $json['logo'] = get_entity_icon_url($user,'large');
     }
     
     $user->seller_setting = json_encode($json);
@@ -832,7 +832,7 @@ function user_get_friends($limit = 10, $offset = 0, $username = "") {
             $friend['username'] = $single->username;
             $friend['name'] = $single->name;
             $friend['is_seller'] = $single->is_seller;
-            $friend['avatar_url'] = get_entity_icon_url($single,'small');
+            $friend['avatar_url'] = get_entity_icon_url($single,'large');
             $friend['do_i_follow'] = user_is_friend($user->guid, $single->guid);
             $return['follower'][] = $friend;
         }
@@ -883,7 +883,7 @@ function user_get_friends_of($limit = 10, $offset = 0, $username = "") {
             $friend['username'] = $single->username;
             $friend['name'] = $single->name;
             $friend['is_seller'] = $single->is_seller;
-            $friend['avatar_url'] = get_entity_icon_url($single,'small');
+            $friend['avatar_url'] = get_entity_icon_url($single,'large');
      	    $return['following'][] = $friend;
         }
     } else {
@@ -945,7 +945,7 @@ $options = array(
         $post['owner']['guid'] = $owner->guid;
         $post['owner']['name'] = $owner->name;
         $post['owner']['username'] = $owner->username;
-        $post['owner']['avatar_url'] = get_entity_icon_url($owner,'small');
+        $post['owner']['avatar_url'] = get_entity_icon_url($owner,'large');
         
         $post['time_created'] = (int)$single->time_created;
         $return[] = $post;

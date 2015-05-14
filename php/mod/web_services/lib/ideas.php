@@ -140,7 +140,7 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $owner = get_entity($single->owner_guid);
                  $blog['tip_author']['user_id'] = $owner->guid;
                  $blog['tip_author']['user_name'] = $owner->username;
-                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
                  $blog['tip_author']['is_seller'] = $owner->is_seller;
                  $blog['tip_author']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
 
@@ -259,7 +259,7 @@ function tip_get_detail($tip_id) {
     $return['tip_author']['user_id'] = $owner->guid;
     $return['tip_author']['user_name'] = $owner->username;
     $return['tip_author']['is_seller'] = $owner->is_seller;
-    $return['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+    $return['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
 
     $me = get_loggedin_user();
     if ($me) {
@@ -733,7 +733,7 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
         $owner = get_entity($item->owner_guid);
         $product_info['product_seller']['user_id'] = $owner->guid;
         $product_info['product_seller']['user_name'] = $owner->username;
-        $product_info['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+        $product_info['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
 
         $images = unserialize($item->images);
         $product_info['images'] = "";
@@ -855,7 +855,7 @@ function ideas_search($query, $category, $offset, $limit,
                  $owner = get_entity($single->owner_guid);
                  $blog['tip_author']['user_id'] = $owner->guid;
                  $blog['tip_author']['user_name'] = $owner->username;
-                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
                  $blog['tip_author']['is_seller'] = $owner->is_seller;
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));

@@ -254,7 +254,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                  $blog['product_seller']['user_id'] = $owner->guid;
 //                $blog['product_seller']['name'] = $owner->name;
                  $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
                  $blog['product_seller']['is_seller'] = ($owner->is_seller == "true");
                  $blog['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
                
@@ -376,7 +376,7 @@ function product_get_detail($product_id) {
     $owner = get_entity($blog->owner_guid);
     $return['product_seller']['user_id'] = $owner->guid;
     $return['product_seller']['user_name'] = $owner->username;
-    $return['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+    $return['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
     $return['product_seller']['is_seller'] = ($owner->is_seller == "true");
     $me = get_loggedin_user();
     if ($me) {
@@ -474,7 +474,7 @@ function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
             $comment['owner']['guid'] = $owner->guid;
             $comment['owner']['name'] = $owner->name;
             $comment['owner']['username'] = $owner->username;
-            $comment['owner']['avatar_url'] = get_entity_icon_url($owner,'small');
+            $comment['owner']['avatar_url'] = get_entity_icon_url($owner,'large');
         
             $comment['time_created'] = (int)$single->time_created;
             $return[] = $comment;
@@ -534,7 +534,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
         $owner = get_entity($item->owner_guid);
         $tip['owner']['user_id'] = $owner->guid;
         $tip['owner']['user_name'] = $owner->username;
-        $tip['owner']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+        $tip['owner']['user_avatar_url'] = get_entity_icon_url($owner,'large');
         
         $tip['likes_number'] = likes_count($item);
         $options = array(
@@ -678,7 +678,7 @@ function product_search($query, $category, $offset, $limit,
                  $owner = get_entity($single->owner_guid);
                  $blog['product_seller']['user_id'] = $owner->guid;
                  $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
                  $blog['product_seller']['is_seller'] = $owner->is_seller;
  
                  $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
@@ -1222,7 +1222,7 @@ function recommend_list($category, $offset, $limit) {
                  $owner = get_entity($single->owner_guid);
                  $blog['product_seller']['user_id'] = $owner->guid;
                  $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
                  $blog['product_seller']['is_seller'] = $owner->is_seller;
  
                  $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
