@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<title>LoveBeauty seller portal</title>
+
+		<!-- Bootstrap Core CSS -->
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- MetisMenu CSS -->
+		<link href="css/plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
+
+		<!-- Custom CSS -->
+		<link href="css/sb-admin-2.css" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+		<link rel="stylesheet" href="css/plugins/bootstrap-dialog/bootstrap-dialog.min.css" />
+		<link href="css/lovebeauty.css" rel="stylesheet">
+
+		<!--center the image in the div.-->
+		<style type="text/css">
+			.panel-body img {
+				display: block;
+				margin: auto;
+			}
+		</style>
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+	</head>
+
+	<body>
+
+		<div id="wrapper">
+			<!-- Navigation -->
+			<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="index.html">LoveBeauty Seller Admin</a>
+				</div>
+				<!-- /.navbar-header -->
+
+				<ul class="nav navbar-top-links navbar-right">
+					<!-- /.dropdown -->
+					<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+							<i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+						</a>
+						<ul class="dropdown-menu dropdown-user">
+							<li><a href="edit_profile.html"><i class="fa fa-user fa-fw"></i> User Profile</a>
+							</li>
+							<!--
+	                        	描述： No settings for the moment.
+	                        	<li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
+	                        </li>
+	                        -->
+
+							<li class="divider"></li>
+							<li><a href="#" id="signout"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+							</li>
+							<li class="divider"></li>
+							<li><a href="signup.html" id="signup"><i class="fa fa-sign-out fa-fw"></i> Signup</a>
+							</li>
+						</ul>
+						<!-- /.dropdown-user -->
+					</li>
+					<!-- /.dropdown -->
+				</ul>
+				<!-- /.navbar-top-links -->
+
+				<div class="navbar-default sidebar" role="navigation">
+					<div class="sidebar-nav navbar-collapse">
+						<ul class="nav" id="side-menu">
+							<li>
+								<a class="active" href="index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+							</li>
+
+							<li>
+								<a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Products<span class="fa arrow"></span></a>
+								<ul class="nav nav-second-level">
+									<li>
+										<a href="products.html">All products</a>
+									</li>
+									<li>
+										<a href="edit_product.html">Add Product</a>
+									</li>
+								</ul>
+								<!-- /.nav-second-level -->
+							</li>
+							<li>
+								<a class="active" href="orders.html"><i class="fa fa-dashboard fa-fw"></i> Orders</a>
+							</li>
+							<li>
+								<a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Ideas<span class="fa arrow"></span></a>
+								<ul class="nav nav-second-level">
+									<li>
+										<a href="tutorials.html">All Ideas</a>
+									</li>
+									<li>
+										<a href="edit_tutorial.html">New Idea</a>
+									</li>
+								</ul>
+								<!-- /.nav-second-level -->
+							</li>
+							<li>
+								<a class="active" href="settings.html"><i class="fa fa-spotify fa-fw"></i> Settings</a>
+							</li>
+						</ul>
+					</div>
+					<!-- /.sidebar-collapse -->
+				</div>
+				<!-- /.navbar-static-side -->
+			</nav>
+			<div id="page-wrapper">
+				<!--<div class="container">-->
+				<div class="row">
+					<div class="col-lg-12">
+						<h1 class="page-header" id="page_title">Settings</h1>
+					</div>
+					<!-- /.col-lg-12 -->
+				</div>
+				<!-- end of row of title -->
+
+				<div class="row">
+					<form role="form" id='settings_form' method="post">
+						<div class="col-lg-6">
+							<div class="panel panel-default">
+								<div class="panel-heading">Company Detail</div>
+								<div class="panel-body">
+
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Name</label>
+											<input class="form-control" name="company_name" placeholder="Input your company name here." id="company_name" data-validation="required" data-validation-error-msg="Missing company name.">
+										</div>
+									</div>
+
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Address 1</label>
+											<input class="form-control" name="company_address1" placeholder="company address" id="company_address1">
+										</div>
+									</div>
+
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Address 2</label>
+											<input class="form-control" name="company_address2" placeholder="company address" id="company_address2">
+										</div>
+									</div>
+
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>City</label>
+											<input class="form-control" name="company_city" placeholder="company address" id="company_city">
+										</div>
+									</div>
+
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>State</label>
+											<input class="form-control" name="company_state" placeholder="company address" id="company_state">
+										</div>
+									</div>
+
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Zip</label>
+											<input class="form-control" name="company_zip" placeholder="zip code" id="company_zip">
+										</div>
+									</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Country</label>
+											<input class="form-control" name="company_country" placeholder="input country name here" id="company_country">
+										</div>
+									</div>
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Phone</label>
+											<input class="form-control" name="company_phone" placeholder="contact phone" id="company_phone">
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									Billing Detail
+									<div class="checkbox navbar-right" style="line-height: 0px;">
+										<label>
+											<input type="checkbox" id="thesameaddress" value="" style=" -webkit-transform: translateY(-60%);-ms-transform: translateY(-60%);transform: translateY(-60%);">the same as company address</label>
+									</div>
+								</div>
+								<div class="panel-body">
+
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Name</label>
+											<input class="form-control" name="billing_name" placeholder="Input your company name here." id="billing_name" data-validation="required" data-validation-error-msg="Missing company name.">
+										</div>
+									</div>
+
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Address 1</label>
+											<input class="form-control" name="billing_address1" placeholder="company address" id="billing_address1">
+										</div>
+									</div>
+
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Address 2</label>
+											<input class="form-control" name="billing_address2" placeholder="company address" id="billing_address2">
+										</div>
+									</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>City</label>
+											<input class="form-control" name="billing_city" placeholder="company address" id="billing_city">
+										</div>
+									</div>
+
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>State</label>
+											<input class="form-control" name="billing_state" placeholder="company address" id="billing_state">
+										</div>
+									</div>
+
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Zip</label>
+											<input class="form-control" name="billing_zip" placeholder="zip code" id="billing_zip">
+										</div>
+									</div>
+									<div class="col-lg-6">
+										<div class="form-group">
+											<label>Country</label>
+											<input class="form-control" name="billing_country" placeholder="input country name here" id="billing_country">
+										</div>
+									</div>
+									<div class="col-lg-12">
+										<div class="form-group">
+											<label>Phone</label>
+											<input class="form-control" name="billing_phone" placeholder="contact phone" id="billing_phone">
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+						<!-- /.Logo-->
+						<div class="col-lg-6 col-md-12 col-sm-12">
+							<div class="panel panel-primary">
+								<div class="panel-heading" id="editable">
+									<div>Company Logo<i id="deleteImage1">✖</i>
+									</div>
+								</div>
+								<div class="panel-body">
+
+									<img width="250px" height="250px" scr="" id="img1" />
+									<br />
+									<button type="button" id="change" class="btn btn-primary btn-default btn-block">Input Image URL</button>
+								</div>
+								<div class="panel-footer">
+									<input type="file" name="upload1" id="upload1">
+								</div>
+							</div>
+						</div>
+
+						<!-- shipping policy -->
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Free shipping minium quautity</label>
+								<input class="form-control" id="free_shipping_quantity_limit"  value="0" data-validation="number" data-validation-allowing="float" data-validation-error-msg="Invalid number.">
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Free shipping cost limit</label>
+								<input class="form-control" id="free_shipping_cost_limit" value="0" data-validation-allowing="float" data-validation-error-msg="Invalid number.">
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Shipping fee</label>
+								<input class="form-control" id="shipping_fee"  value="0" data-validation="number" data-validation-allowing="float" data-validation-error-msg="Invalid number.">
+							</div>
+						</div>
+
+						<!-- /.currency -->
+						<div class="col-lg-6">
+							<div class="form-group">
+								<label>Currency</label>
+								<select class="form-control" id="currency" name="currency" value="USD">
+									<option>USD</option>
+								</select>
+								<!--<option>RMB</option>
+												<option>nails</option>
+												<option>hair</option>
+												<option>others</option>-->
+
+							</div>
+						</div>
+						<div class="col-lg-12">
+							<div class="form-group">
+								<label for="comment">Message to customer</label>
+								<textarea class="form-control" rows="5" id="message"></textarea>
+							</div>
+						</div>
+						<div class="col-lg-12">
+							<div class="form-group">
+								<label for="comment">Return policy</label>
+								<textarea class="form-control" rows="5" id="return_policy"></textarea>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-lg-1">
+								<button type="submit" class="btn btn-success btn-block btn-sm" id="submit">Submit</button>
+							</div>
+							<div class="col-lg-1">
+								<button type="reset" class="btn btn-warning btn-block btn-sm">Reset</button>
+							</div>
+						</div>
+					</form>
+				</div>
+
+				<br />
+				<br />
+			</div>
+		</div>
+		<!-- /#page-wrapper -->
+
+		</div>
+		<!-- /#wrapper -->
+
+		<!-- jQuery Version 1.11.0 -->
+		<script src="js/plugins/jquery-1.11.1.min.js"></script>
+
+		<!-- Bootstrap Core JavaScript -->
+		<script src="js/plugins/bootstrap.min.js"></script>
+
+		<!-- Metis Menu Plugin JavaScript -->
+		<script src="js/plugins/metisMenu/metisMenu.min.js"></script>
+
+		<script src="js/plugins/jquery.form-validator/jquery.form-validator.min.js"></script>
+
+		<script src="js/plugins/bootstrap-dialog/bootstrap-dialog.min.js"></script>
+
+		<script src="js/plugins/jquery-form/jquery.form.min.js"></script>
+
+		<!-- Custom Theme JavaScript -->
+		<script src="js/lovebeauty.js"></script>
+		<script src="js/settings.js"></script>
+
+	</body>
+
+</html>

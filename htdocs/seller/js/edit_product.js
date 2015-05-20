@@ -48,6 +48,7 @@ $(function() {
 					$('#tags').val(data.result.tags);
 				}
 				$('#delivery_time').val(data.result.delivery_time);
+				$('#shipping_fee').val(data.result.shipping_fee);
 				$('#affiliate_product_url').val(data.result.affiliate.affiliate_product_url);
 				$('#affiliate_image_url').val(data.result.affiliate.affiliate_image);
 				

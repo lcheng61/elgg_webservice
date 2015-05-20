@@ -34,18 +34,28 @@ $(function() {
 				$('#order_status').val(data.result.status.toLowerCase());
 
 				var subtotal = 0;
+				var shipping_cost = 0;
 
-				var product_price = data.result.product_price;
-				var product_quantity = data.result.product_quantity;
-				var product_price = product_price * product_quantity;
-				subtotal += product_price;
 
-				var item = '<div class="row"><div class="col-lg-11"><big>' + data.result.product_name +
-					'</big></div><div class="col-lg-1"><big>$' + product_price +
-					'</big></div></div><div class="row"><div class="col-lg-4">quantity: ' + product_quantity +
-					'</div><div class="col-lg-4">price: ' + product_price + '</div></div><br /><br />';
-				$('#items').append(item);
 
+				if (data.result.products_msg) {
+					for (var i = 0; i < data.result.products_msg.length; i++) {
+						var product = data.result.products_msg[i];
+
+						var product_price = product.product_price;
+						var product_quantity = product.item_number;
+						var product_price = product_price * product_quantity;
+						subtotal += product_price;
+						shipping_cost += product.shipping_cost;
+
+						var item = '<div class="row"><div class="col-lg-11"><big>' + product.product_name +
+							'</big></div><div class="col-lg-1"><big>$' + product_price +
+							'</big></div></div><div class="row"><div class="col-lg-4">quantity: ' + product_quantity +
+							'</div><div class="col-lg-4">price: ' + product_price + '</div></div><br /><br />';
+						$('#items').append(item);
+
+					}
+				}
 
 				$('#shipping_vendor').val(data.result.shipping_vendor);
 				$('#shipping_tracknumber').val(data.result.tracking_number);
@@ -55,17 +65,16 @@ $(function() {
 
 				var coupon = data.result.coupon_discount;
 				$('#summary_coupon').append("-$" + coupon);
+				$('#summary_shipment').append("$" + shipping_cost);
 
-				var shippment = data.result.shipping_cost;
-				$('#summary_shipment').append("$" + shippment);
-
-				var total_before_tax = subtotal + shippment - coupon;
+				var total_before_tax = subtotal + shipping_cost - coupon;
 				var total = total_before_tax + 0; //tax is included in the price.
 				//$('#summary_total-before_tax').append(total_before_tax);
 				$('#summary_grand_total').append("$" + total);
 
 				$('#billing_method').append(data.result.payment_method);
-				$('#billing_cardnumber').append(data.result.charge_card_name);
+				//$('#billing_cardname').append(data.result.charge_card_name);
+				$('#billing_cardnumber').append(data.result.charge_card_info.substring(data.result.charge_card_info.length - 4));
 
 				var shippment_addr = '<address>' + data.result.shipping_address.addressline1 +
 					'<br/> ' + data.result.shipping_address.city + ', ' + data.result.shipping_address.state +
@@ -114,18 +123,18 @@ $(function() {
 	$('#submit').click(function() {
 		var formUrl = server + order_post + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
 		console.log(formUrl);
-//		var formData = 'order_id=' + order_id + '&status=' + $('#order_status').val() +
-//			'&shipping_vendor=' + $('#shipping_vendor').val() +
-//			'&track_number=' + $('#shipping_tracknumber').val() +
-//			'&shipping_speed=' + $('#shipping_speed').val();
-		
+		//		var formData = 'order_id=' + order_id + '&status=' + $('#order_status').val() +
+		//			'&shipping_vendor=' + $('#shipping_vendor').val() +
+		//			'&track_number=' + $('#shipping_tracknumber').val() +
+		//			'&shipping_speed=' + $('#shipping_speed').val();
+
 		var formData = new FormData();
 		formData.append("order_id", order_id);
 		formData.append("status", $('#order_status').val());
 		formData.append("shipping_vendor", $('#shipping_vendor').val());
-		formData.append("track_number", $('#shipping_tracknumber').val() );
+		formData.append("track_number", $('#shipping_tracknumber').val());
 		formData.append("shipping_speed", $('#shipping_speed').val());
-			
+
 		console.log(formData);
 
 		$.ajax({

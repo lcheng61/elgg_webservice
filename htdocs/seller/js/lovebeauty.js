@@ -44,7 +44,8 @@ var check_user_availability = 'services/api/rest/json/?method=user.check_usernam
 var check_user_email_availability = 'services/api/rest/json/?method=user.check_email_availability';
 
 var statistics = 'services/api/rest/json/?method=payment.analyze.seller_order';
-
+var user_get_settings = 'services/api/rest/json/?method=user.get_seller_setting';
+var user_set_settings = 'services/api/rest/json/?method=user.set_seller_setting';
 
 var username;
 var token;

@@ -1,8 +1,8 @@
 // Sets the min-height of #page-wrapper to window size
 $(function() {
 
-	var idea;
-	var idea_id = getUrlParameter("tip_id");
+	idea_id = getUrlParameter("tip_id");
+	tip_thumbnail_image_url = "";
 
 	//$("#allowSpacesTags").tagit();
 
@@ -38,6 +38,7 @@ $(function() {
 			console.log(JSON.stringify(data));
 			if (data.status == 0) { //read prodcut detail successfully.
 				console.log('tip title=' + data.result.tip_title);
+
 				$('#title').val(data.result.tip_title);
 				//$('#cover_caption').html(data.result.tip_title);
 				$('#category').val(data.result.tip_category);
@@ -53,6 +54,7 @@ $(function() {
 
 				if (data.result.tip_thumbnail_image_url != undefined) {
 					$('#cover_img').attr("src", data.result.tip_thumbnail_image_url);
+					tip_thumbnail_image_url = data.result.tip_thumbnail_image_url;
 				}
 
 				if (data.result.tip_notes != undefined) {
@@ -115,10 +117,13 @@ $(function() {
 		});
 
 
-		var thumbnail_url = null;
 		var pages = [];
 		var local_files = [];
 		var filenames = [];
+		var tip_image_local_cover = false;
+
+		//The flag to show if the thumbnail image url is updated.
+		var update_thumbnail_image_url = false;
 
 		$('#multi2').find('.panel-body').each(function(index, body) {
 			var page = {};
@@ -139,17 +144,19 @@ $(function() {
 				page["tip_video_url"] = $(obj).attr("src");
 				pages.push(page);
 
-				if (thumbnail_url == null || thumbnail_url == undefined) {
-					thumbnail_url = getVideoThumbanil($(obj).attr("src"));
+				if (!update_thumbnail_image_url) {
+					update_thumbnail_image_url = true;
+					tip_thumbnail_image_url = getVideoThumbanil($(obj).attr("src"));
 				}
 
-			}else if ($(obj).is("embed")) {
+			} else if ($(obj).is("embed")) {
 				console.log("It is a video embed page");
 				page["tip_video_url"] = $(obj).attr("src");
 				pages.push(page);
 
-				if (thumbnail_url == null || thumbnail_url == undefined) {
-					thumbnail_url = getVideoThumbanil($(obj).attr("src"));
+				if (!update_thumbnail_image_url) {
+					update_thumbnail_image_url = true;
+					tip_thumbnail_image_url = getVideoThumbanil($(obj).attr("src"));
 				}
 
 			} else if ($(obj).is("object")) {
@@ -161,25 +168,41 @@ $(function() {
 				pages.push(page);
 
 
-				console.log("thumbnail_url=" + thumbnail_url);
-				if (thumbnail_url == null || thumbnail_url == undefined) {
-					thumbnail_url = getVideoThumbanil(video_url);
+				if (!update_thumbnail_image_url) {
+					update_thumbnail_image_url = true;
+					tip_thumbnail_image_url = getVideoThumbanil(video_url);
 				}
 			} else if ($(obj).is("img")) {
 				console.log("It is a image page");
 				var src = $(obj).attr("src");
 				console.log("src=" + src);
 				if (src.indexOf("data:image") == 0 || src.indexOf("blob:http") == 0) {
+					
+					//Local image.
 					page["tip_image_local"] = true;
 					console.log("image page has local file: " + $(obj).data("file"));
-					local_files.push($(obj).data("file"));
-					//console.log("image page has local file name: " + $(obj).data("filename"));
-					//filenames.push($(obj).data("filename"));
+					var file_obj = {
+						id: index,
+						file: $(obj).data("file")
+					}
+					//local_files.push($(obj).data("file"));
+					local_files.push(file_obj);
+
+
+					if (!update_thumbnail_image_url) {
+						update_thumbnail_image_url = true;
+						tip_image_local_cover = true;
+						tip_thumbnail_image_url=undefined;
+					}
 				} else {
+					
+					//Image url
 					page["tip_image_url"] = src;
 
-					if (thumbnail_url == null || thumbnail_url == undefined) {
-						thumbnail_url = src;
+					//Update thumbnail url.
+					if (!update_thumbnail_image_url) {
+						update_thumbnail_image_url = true;
+						tip_thumbnail_image_url = src;
 					}
 				}
 
@@ -193,14 +216,14 @@ $(function() {
 			"idea_id": idea_id,
 			"category": $('#category option:selected').text(),
 			"tip_title": $('#title').val(),
-			"tip_thumbnail_image_url": thumbnail_url,
+			"tip_thumbnail_image_url": tip_thumbnail_image_url,
 			"tip_pages": pages,
+			"tip_image_local_cover": tip_image_local_cover,
 			"tip_tags": $('#allowSpacesTagsResult').val().split(','),
 			"products_id": product_ids
 				//"tip_notes": $('#info_content').html().trim()
 		}
 
-		//console.log(message);
 		var messageStr = JSON.stringify(message);
 		console.log(messageStr);
 
@@ -208,10 +231,11 @@ $(function() {
 		formData.append("message", messageStr);
 		formData.append("idea_id", idea_id);
 		for (var i = 0; i < local_files.length; i++) {
-			formData.append("tip_image_local_" + (i + 1), local_files[i]);
+			//formData.append("tip_image_local_" + (i + 1), local_files[i]);
+			formData.append("tip_image_local_" + (local_files[i].id+1), local_files[i].file);
 		}
 
-
+		
 		//used by ajax form submit. It is not used for the moment.
 		//		for (var i = 0; i < filenames.length; i++) {
 		//			$("#submit_files").append('<input type="file" name="tip_image_local_' +
@@ -232,11 +256,12 @@ $(function() {
 			crossDomain: true,
 			success: function(data, textStatus, jqXHR) {
 				//data: return data from server
-				console.log(data);
+				console.log('read result from server: ' + JSON.stringify(data));
 				if (data.status == -20) {
 					BootstrapDialog.alert('You have signed out. Please sign in first.');
 				} else if (data.status == 0) {
-					console.log('read result from server: ' + data.result);
+					idea_id = data.result.idea_id;
+					$('#idea_id').val(idea_id);
 					BootstrapDialog.alert('The idea is posted.');
 				} else {
 					BootstrapDialog.alert('There is some error during submit the idea, error message =' +
@@ -386,11 +411,11 @@ $(function() {
 							console.log("It is iframe tag.");
 							$(this).attr("src", url);
 						}
-						
+
 						if ($(this).is("img")) {
 							console.log("It is img tag.");
 							$(this).attr("src", url);
-						}						
+						}
 					});
 
 
@@ -522,13 +547,13 @@ $(function() {
 			if (msieversion()) {
 				console.log("I am IE.");
 
-//				$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
-//					'<div>Video page <i class="js-remove">✖</i></div></div>' +
-//					'<div class="panel-body">' +
-//					'<embed width="360" height="240" border="1px" src="" type="application/x-shockwave-flash" /><br/><br/>  ' +
-//					//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
-//					'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
-//					'</div></div>');
+				//				$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+				//					'<div>Video page <i class="js-remove">✖</i></div></div>' +
+				//					'<div class="panel-body">' +
+				//					'<embed width="360" height="240" border="1px" src="" type="application/x-shockwave-flash" /><br/><br/>  ' +
+				//					//'<iframe width="360" height="240"></iframe><br/><br/>  ' +
+				//					'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+				//					'</div></div>');
 
 				$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
 					'<div>Video page <i class="js-remove">✖</i></div></div>' +
@@ -649,12 +674,12 @@ $(function() {
 
 		if (msieversion()) {
 			console.log("I am IE.");
-//			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
-//				'<div>Video page <i class="js-remove">✖</i></div></div>' +
-//				'<div class="panel-body">' +
-//				'<embed width="360" height="240" border="1" class="embed-style" src="' + url + '" type="application/x-shockwave-flash" /><br/><br/>  ' +
-//				'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
-//				'</div></div>');
+			//			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
+			//				'<div>Video page <i class="js-remove">✖</i></div></div>' +
+			//				'<div class="panel-body">' +
+			//				'<embed width="360" height="240" border="1" class="embed-style" src="' + url + '" type="application/x-shockwave-flash" /><br/><br/>  ' +
+			//				'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change</button>' +
+			//				'</div></div>');
 
 			$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
 				'<div>Video page <i class="js-remove">✖</i></div></div>' +
@@ -721,10 +746,22 @@ function readURL(input, image) {
 	if (input.files && input.files[0]) {
 		//console.log(input.files[0]);
 
-		var url = window.URL.createObjectURL(input.files[0]);
+		//var url = window.URL.createObjectURL(input.files[0]);
+		var url = createObjectURL(input.files[0]);
 		image.attr('src', url);
 
 		image.data("file", input.files[0]);
 		image.data("filename", $(input).val());
 	}
+}
+
+
+function createObjectURL(file) {
+    if ( window.webkitURL ) {
+        return window.webkitURL.createObjectURL( file );
+    } else if ( window.URL && window.URL.createObjectURL ) {
+        return window.URL.createObjectURL( file );
+    } else {
+        return null;
+    }
 }
