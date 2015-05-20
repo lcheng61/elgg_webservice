@@ -317,6 +317,10 @@ App.UsersRoute = Ember.Route.extend(SimpleAuth.AuthenticatedRouteMixin, {
 			"mData": "is_seller"
 		}, {
 			"sClass": "item",
+			"sTitle": "Admin",
+			"mData": "is_admin"
+		},{
+			"sClass": "item",
 			"mData": null,
 			"bSearchable": false,
 			"bSortable": false,
