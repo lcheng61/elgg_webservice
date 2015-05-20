@@ -181,7 +181,12 @@ $(function() {
 					//Local image.
 					page["tip_image_local"] = true;
 					console.log("image page has local file: " + $(obj).data("file"));
-					local_files.push($(obj).data("file"));
+					var file_obj = {
+						id: index,
+						file: $(obj).data("file")
+					}
+					//local_files.push($(obj).data("file"));
+					local_files.push(file_obj);
 
 
 					if (!update_thumbnail_image_url) {
@@ -226,7 +231,8 @@ $(function() {
 		formData.append("message", messageStr);
 		formData.append("idea_id", idea_id);
 		for (var i = 0; i < local_files.length; i++) {
-			formData.append("tip_image_local_" + (i + 1), local_files[i]);
+			//formData.append("tip_image_local_" + (i + 1), local_files[i]);
+			formData.append("tip_image_local_" + (local_files[i].id+1), local_files[i].file);
 		}
 
 		
@@ -741,10 +747,22 @@ function readURL(input, image) {
 	if (input.files && input.files[0]) {
 		//console.log(input.files[0]);
 
-		var url = window.URL.createObjectURL(input.files[0]);
+		//var url = window.URL.createObjectURL(input.files[0]);
+		var url = createObjectURL(input.files[0]);
 		image.attr('src', url);
 
 		image.data("file", input.files[0]);
 		image.data("filename", $(input).val());
 	}
+}
+
+
+function createObjectURL(file) {
+    if ( window.webkitURL ) {
+        return window.webkitURL.createObjectURL( file );
+    } else if ( window.URL && window.URL.createObjectURL ) {
+        return window.URL.createObjectURL( file );
+    } else {
+        return null;
+    }
 }
