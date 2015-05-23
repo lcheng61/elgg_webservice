@@ -380,6 +380,7 @@ function ideas_post_tip($message, $idea_id)
 
     elgg_load_library('ideas');
 
+
     if ($json['tip_image_local_cover'] == "true") {
         $file_name = "tip_image_local_cover";
         // upload image
@@ -393,9 +394,12 @@ function ideas_post_tip($message, $idea_id)
             $json['tip_thumbnail_image_url'] = $image_link;
             $return['tip_thumbnail_image_url'] = $image_link;
             $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
-        }
+        } else {
+//throw new InvalidParameterException('registration:tip_image_local_cover_not_exist');
+	}
 
         // hack for the server
+/*
         if (!$post->tip_thumbnail_image_url) {
             $image_num = 1;
             $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/1/"."large/";
@@ -403,12 +407,18 @@ function ideas_post_tip($message, $idea_id)
             $return['tip_thumbnail_image_url'] = $image_link;
             $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
         }
+*/
         // ~
     }
 
     foreach ($json['tip_pages'] as $page) {
         if ($page['tip_image_local']) {
+//throw new InvalidParameterException('registration:tip_image_local_not_exist_02');
+
             if ($page['tip_image_local'] == "true") {
+
+//throw new InvalidParameterException('registration:tip_image_local_not_exist_1');
+
                 if ($image_num > 10) {
                     break;
                 }
@@ -416,6 +426,8 @@ function ideas_post_tip($message, $idea_id)
 
 	        // upload image
 	        if ((isset($_FILES[$file_name]['name'])) && (substr_count($_FILES[$file_name]['type'],'image/'))) {
+//throw new InvalidParameterException('registration:tip_image_local_not_exist_2');
+
 	            $imgdata = get_uploaded_file($file_name);
 		    ideas_add_image($post, $imgdata, $image_num);
 
@@ -424,7 +436,20 @@ function ideas_post_tip($message, $idea_id)
 
                     $json['tip_pages'][$page_num]['tip_image_url'] = $image_link;
                     $img_item[] = $image_link;
-	        }
+
+// check if thumbnail is still empty. If yes, assign it
+                    // hack for the server
+                    if (!$post->tip_thumbnail_image_url) {
+			$image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."large/";
+                        $json['tip_thumbnail_image_url'] = $image_link;
+                        $return['tip_thumbnail_image_url'] = $image_link;
+                        $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
+                    }
+                    // ~
+	        } else {
+throw new InvalidParameterException("here_"."$file_name");
+   	            throw new InvalidParameterException('registration:tip_image_local_not_exist');
+		}
 	    } else {
                 $img_item[] = "";
             }
@@ -434,6 +459,11 @@ function ideas_post_tip($message, $idea_id)
 	$page_num ++;
         $image_num ++;
     }
+    if (!$post->tip_thumbnail_image_url) {
+        $post->tip_thumbnail_image_url = "";
+    }
+    $return['tip_thumbnail_image_url'] = $post->tip_thumbnail_image_url;
+
     $post->tip_pages = json_encode($json['tip_pages']);
     $return['tip_pages'] = $post->tip_pages;
     if (!$post->save()) {
