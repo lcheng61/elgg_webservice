@@ -413,12 +413,7 @@ function ideas_post_tip($message, $idea_id)
 
     foreach ($json['tip_pages'] as $page) {
         if ($page['tip_image_local']) {
-//throw new InvalidParameterException('registration:tip_image_local_not_exist_02');
-
             if ($page['tip_image_local'] == "true") {
-
-//throw new InvalidParameterException('registration:tip_image_local_not_exist_1');
-
                 if ($image_num > 10) {
                     break;
                 }
@@ -426,8 +421,6 @@ function ideas_post_tip($message, $idea_id)
 
 	        // upload image
 	        if ((isset($_FILES[$file_name]['name'])) && (substr_count($_FILES[$file_name]['type'],'image/'))) {
-//throw new InvalidParameterException('registration:tip_image_local_not_exist_2');
-
 	            $imgdata = get_uploaded_file($file_name);
 		    ideas_add_image($post, $imgdata, $image_num);
 
@@ -447,8 +440,7 @@ function ideas_post_tip($message, $idea_id)
                     }
                     // ~
 	        } else {
-throw new InvalidParameterException("here_"."$file_name");
-   	            throw new InvalidParameterException('registration:tip_image_local_not_exist');
+                    throw new InvalidParameterException("tip_image_local_not_exist_"."$file_name");
 		}
 	    } else {
                 $img_item[] = "";

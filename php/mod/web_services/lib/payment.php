@@ -38,7 +38,7 @@ The check out process
 
 
 /*
- * Calculate shipping cost
+ * Calculate shipping cost for each product, each seller and total
  */
 function calculate_shipping_cost_per_seller($sellers)
 {
@@ -75,6 +75,16 @@ function calculate_shipping_cost_per_seller($sellers)
     }
     return $sellers;
 }
+expose_function('payment.calculate_shipping_cost_per_seller',
+                "calculate_shipping_cost_per_seller",
+                array(
+                      'msg' => array ('type' => 'string', 'required' => false, 'default' => null),
+                    ),
+                "Calculate shipping cost for each seller",
+                'GET',
+                true,
+                false);
+
 
 /*
  * Create per order email sent to seller
@@ -193,7 +203,7 @@ function create_buyer_order($from_email, $charge, $card, $time_friendly, $timest
 }
 
 function create_buyer_order_followup($from_email, $buyer_username, $buyer_email,
-        $buyer_order_guid, $sellers, $order_info)
+        $buyer_order_guid, $sellers, $order_info, $card)
 {
     // collect seller info, compose email, then send email to the buyer
     $product_msg = "";
@@ -203,19 +213,28 @@ function create_buyer_order_followup($from_email, $buyer_username, $buyer_email,
         foreach ($products as $product_key => $product_value) {
             $product_price = $product_value['product_price'];
             $shipping_cost = $product_value['shipping_cost'];
-
+            $product_options = $product_value['product_options'];
+            $product_options_json = json_decode($product_options, true);
             $product_msg = $product_msg."    name: ".$product_value['product_name']."\n";
+            foreach($product_options_json as $opt_key => $opt_value) {
+                $product_msg = $product_msg."        ".$opt_value['key'].": ".$opt_value['value']."\n";
+            }
             $product_msg = $product_msg."    price: ".'$'.$product_price." x ".$product_value['item_number']."\n";
         }
         $product_msg = $product_msg."Shipping cost: ".$product_value['shipping_cost']."\n";
         $product_msg = $product_msg."\n";
     }
+
+    $ajson = $order_info['shipping_address'];
+    $address = $ajson['addressline1']." ".$ajson['addressline2'].", ".$ajson['city ']." ".$ajson['state']." ".$ajson['zipcode '];
+
     $product_msg = $product_msg."--- --- ---\n";
     $total_amount = $order_info['amount'] / 100;
     $product_msg = $product_msg."Total cost: ".'$'.$total_amount."\n";
     $product_msg = $product_msg."Currency: ".$order_info['currency']."\n";
     $product_msg = $product_msg."Card last 4 digit: ".$card['last4']."\n";
-    $product_msg = $product_msg."Shipping address: ".$order_info['shipping_address']."\n";
+//    $product_msg = $product_msg."Shipping address: ".json_encode($order_info['shipping_address'])."\n";
+    $product_msg = $product_msg."Shipping address: ".$address."\n";
     $product_msg = $product_msg."Delivery method: ".$order_info['shipping_method']."\n";
 
     $return['create_buyer_email'] = create_buyer_email($from_email,
@@ -613,6 +632,7 @@ function pay_checkout_direct($msg)
     $order_info['currency'] = $json['currency'];
     $order_info['card'] = $json['card'];
     $order_info['description'] = $json['description'];
+
     $order_info['shipping_address'] = $json['order_info']['shipping_address'];
   
     $order_info['shipping_method'] = $json['order_info']['shipping_method'];
@@ -713,7 +733,7 @@ function pay_checkout_direct($msg)
     $return['buyer_order_followup'] =
             create_buyer_order_followup($from_email, $user->username,
             $user->email, $buyer_order->guid,
-            $sellers, $order_info);
+            $sellers, $order_info, $card);
 
     return $return;
 }

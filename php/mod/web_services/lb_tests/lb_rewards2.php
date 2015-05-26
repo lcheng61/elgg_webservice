@@ -36,6 +36,7 @@ function test_title($title)
     $email3 = "lbtest3@xxx.com";
     $name3 = "lbtest3";
 
+
 // clean up 
     // login as a seller
     test_title("login as a seller");
@@ -56,6 +57,8 @@ function test_title($title)
     $result = $client->post('user.delete', $params);
 
 //~
+
+
     // register a new seller
     test_title("register a new seller");
     $params = array('username' => $username1,
@@ -185,7 +188,6 @@ function test_title($title)
 //    echo "card id: ".$card_id."\n";
     lb_assert($result->name == "test_2015", "buyer register, Check card_id");
 
-
     // buy a product
     test_title("Buy a product");
     $msg = '{"amount":10000,"currency":"usd","card":"card_1594RmDzelfnJcBJZG2JOtAM","description":"this is a test","coupon":"abcd","order_info":{"total_price":100,"total_shipping_cost":0,"total_tax":0,"coupon":"abcdefg","shipping_address":{"address_id":"7363","name":"My Home","addressline1":"736 S Mary AVE","addressline2":"","city ":"Sunnyvale","state":"CA","zipcode ":"94087","phone_number ":"4082188791","is_default":true},"sellers":[{"seller_id":234,"seller_name":"leo123","seller_avatar":"http://social.routzi.com/mod/profile/icondirect.php?lastcache=1416849407&joindate=1400171622&guid=42&size=small","product_cost":100,"shipping_cost":0,"tax":0,"subtotal":100,"products":[{"product_id":1445,"thinker_id":42,"thinker_idea_id":1514,"product_name":"Nail polishing","product_image_url":"http://www.woman.at/_storage/asset/4150236/storage/womanat:key-visual/file/52817065/31266684.jpg","product_price":50,"item_number":2,"shipping_code":"70","shipping_cost":10}]}]}}';
@@ -198,20 +200,27 @@ function test_title($title)
     $json['order_info']['sellers'][0]['products'][0]['thinker_id'] = $thinker_id;
     $json['order_info']['sellers'][0]['products'][0]['thinker_idea_id'] = $thinker_idea_id;
     $msg = json_encode($json);
-//    echo $msg."\n";
+    echo $msg."\n";
     
     $params = array('msg' => $msg);
     $result = $client->post('payment.checkout_direct', $params);
+echo "\n\n";
+echo json_encode($result);
+echo "\n\n";
+//
 
     lb_assert($result->charged_user == $username3, "buyer direct checkout, check email");
 
     $order_id = $result->order_id;
-//echo json_encode($result);
-//echo "\n";
-//echo $result->order_id;
-//echo "\n";
+/*
+echo json_encode($result);
+echo "\n";
+echo $result->order_id;
+echo "\n";
+*/
     // thinker order detail
-    $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
+//    $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
+    $thinker_order_id = json_encode($result->thinker_order[0]);
 
     // check buyer's get_shipping address
     test_title("Check buyer's shipping address");
@@ -225,11 +234,16 @@ function test_title($title)
     test_title("Check buyer's order history");
     $params = array();
     $result = $client->get('payment.list.buyer_order', $params);
+
+//echo $order_id;
+//echo json_encode($result);
+//return;
+
     lb_assert($result->msg[0]->order_info->order_guid == $order_id, "transaction id matches order id");
 //    echo "\n====\n";
 //    echo json_encode($result);
 //    echo "\n====\n";
-            
+
     // login as a thinker
     test_title("login as a thinker");
     $result = $client->obtainAuthToken($username2, $password2);
@@ -256,8 +270,29 @@ function test_title($title)
 //    echo json_encode($result)."\n";
 //    echo "\n";
 
-// Delete 3 users
+    // login as a seller
+    test_title("login as a seller");
+    $result = $client->obtainAuthToken($username1, $password1);
+    lb_assert($result, "login as a seller");
 
+    // check seller order
+    test_title("check seller order");
+    $params = array();
+    $result = $client->get('payment.list.seller_order', $params);
+    echo json_encode($result);
+    echo "\n====\n";
+
+    // check seller order detail
+    $seller_order_id = json_encode($result->seller_order[0]->order_guid);
+echo $seller_order_id."\n";
+
+    $params = array('order_id' => $seller_order_id);
+    $result = $client->get('payment.detail.seller_order', $params);
+
+echo json_encode($result);
+
+// Delete 3 users
+/*
     // login as a seller
     test_title("login as a seller");
     $result = $client->obtainAuthToken($username1, $password1);
@@ -283,5 +318,5 @@ function test_title($title)
     $result = $client->post('user.delete', $params);
 
     echo $result."\n";
-
+*/
 ?>

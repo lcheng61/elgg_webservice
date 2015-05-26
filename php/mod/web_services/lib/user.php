@@ -365,11 +365,12 @@ function user_set_seller_setting($message) {
         $json['logo'] = get_entity_icon_url($user,'large');
     }
     
-    $user->seller_setting = json_encode($json);
-
+    login($user);
+    $user->seller_setting = $message; //json_encode($json);
     if(!$user->save()) {
         throw new RegistrationException(elgg_echo('registration:usercannotsave'));
     }
+    logout();
     return "success";
 }
     

@@ -18,13 +18,23 @@ function test_title($title)
     echo "***********************************************************\n";
 }
 
-//   $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
-   $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
+   $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
 
    $username = "lbtest2";
    $password = "lbtest2";
    $email = "lbtest2@xxx.com";
    $name = "lbtest2";
+
+   // clean up
+   $result = $client->obtainAuthToken($username, $password);
+   if (!$result) {
+       echo "Error in getting auth token!\n";
+   }
+   test_title("Delete user cleanup");
+   $params = array('username' => $username);
+   $result = $client->post('user.delete', $params);
+   echo $result."\n";
+
 
    // register a new user
    test_title("Register");
@@ -51,6 +61,29 @@ function test_title($title)
    if (!$result) {
        echo "Error in getting auth token!\n";
    }
+///////////
+   $options = '
+[
+    {
+      "key":"size",
+      "values": [
+        "small",
+        "medium",
+        "large"
+      ]
+    },
+    {
+      "key":"color",
+      "values": [
+        "black",
+        "red",
+        "pink"
+      ]
+    }
+]
+';
+///////////~
+
 
    // post a product
    test_title("Post product");
@@ -59,6 +92,7 @@ function test_title($title)
                    'quantity' => 100,
                    'price' => 19.99,
                    'description' => 'This is to test recommend product',
+                   'options' => $options,
                   );
    $result = $client->post('product.post', $params);
    $product_id = $result->product_id;
@@ -74,6 +108,7 @@ function test_title($title)
    echo lb_assert($result->product_description == 'This is to test recommend product', "description");
    echo lb_assert($result->quantity == 100, "quantity");
    echo lb_assert($result->product_price == 19.99, "price");
+   echo lb_assert($result->product_options[0]['values'][0] == "small", "options");
 
    // set admin flag for the user
    $params = array('username' => "lbtest2");

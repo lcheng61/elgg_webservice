@@ -339,6 +339,7 @@ function product_get_detail($product_id) {
     $return['product_id'] = $product_id;
     $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
+    $return['product_options'] = $blog->options;
 
     $return['category'] = $blog->marketcategory;
     if ($blog->quantity < 0) {
@@ -722,10 +723,31 @@ function product_post($product_id, $title, $category, $description,
     $price, $tags, $quantity, $delivery_time, $shipping_fee,
     $free_shipping_quantity_limit, $free_shipping_cost_limit,
     $is_affiliate, $affiliate_product_id, $affiliate_product_url,
-    $is_archived, $affiliate_syncon, $affiliate_image)
+    $is_archived, $affiliate_syncon, $affiliate_image, $options)
 {
 
     $user = elgg_get_logged_in_user_entity();
+
+// get per-seller setting and appy them to the product
+    $seller_setting = user_get_seller_setting($user->username);
+
+    $json = json_decode($seller_setting, true);
+
+    $shipping_policy = $json['shipping_policy'];
+
+    if ($free_shipping_quantity_limit == 0) {
+        $free_shipping_quantity_limit =
+                $shipping_policy['free_shipping_quantity_limit'];
+    }
+    if ($free_shipping_cost_limit ==0) {
+        $free_shipping_cost_limit =
+                $shipping_policy['free_shipping_cost_limit'];
+    }
+    if ($shipping_fee == 0) {
+        $shipping_fee =
+                $shipping_policy['shipping_fee'];
+    }
+//~
 
     // edit or create a new entity
     if ($product_id) {
@@ -765,6 +787,7 @@ function product_post($product_id, $title, $category, $description,
         'is_archived' => $is_archived,
         'affiliate_syncon' => $affiliate_syncon,
         'affiliate_image' => $affiliate_image,
+        'options' => $options,
     );
 
     // fail if a required entity isn't set
@@ -853,12 +876,10 @@ expose_function('product.post',
                        'title' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'category' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'description' => array('type' => 'string', 'required' => false, 'default' => ''),
-//                       'price' => array('type' => 'float', 'required' => false, 'default' => ''),
                        'price' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'tags' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'quantity' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'delivery_time' => array('type' => 'string', 'required' => false, 'default' => ""),
-//                       'shipping_fee' => array('type' => 'float', 'required' => false, 'default' => 0),
                        'shipping_fee' => array('type' => 'string', 'required' => false, 'default' => 0),
                        'free_shipping_quantity_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'free_shipping_cost_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
@@ -869,6 +890,7 @@ expose_function('product.post',
                        'is_archived' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'affiliate_syncon' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'affiliate_image' => array('type' => 'string', 'required' => false, 'default' => ""),
+                       'options' => array('type' => 'string', 'required' => false, 'default' => ""),
                      ),
                 "Post a product by seller",
                 "POST",

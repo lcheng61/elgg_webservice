@@ -36,6 +36,7 @@ function test_title($title)
     $email3 = "lbtest3@xxx.com";
     $name3 = "lbtest3";
 
+
 // clean up 
     // login as a seller
     test_title("login as a seller");
@@ -56,6 +57,8 @@ function test_title($title)
     $result = $client->post('user.delete', $params);
 
 //~
+
+
     // register a new seller
     test_title("register a new seller");
     $params = array('username' => $username1,
@@ -82,6 +85,7 @@ function test_title($title)
    
     // post a product
     test_title("Post product");
+    $options = '[{"key":"size","values": ["small","medium","large"]},{"key":"color","values": ["black","red","pink"]}]';
     $params = array('category' => 'lb_rewards test',
                    'title' => 'test reward product',
                    'quantity' => 100,
@@ -92,6 +96,7 @@ function test_title($title)
                    'affiliate_product_url' => '',
                    'is_archived' => 0,
                    'affiliate_syncon' => 0,
+                   'options' => $options,
                   );
     $result = $client->post('product.post', $params);
     $product_id = $result->product_id;
@@ -124,7 +129,7 @@ function test_title($title)
     // post an idea
     test_title("post an idea");
 
-   $message = '{   "tip_title": "Dermablend Professional- Tattoo Cover Up Makeup: Go Beyond The Cover",   "tip_thumbnail_image_url": "http://www.woman.at/_storage/asset/4150236/storage/womanat:key-visual/file/52817065/31266684.jpg",   "tip_pages": [     {       "tip_image_url": "http://cdn.maedchen.de/bilder/make-up-und-beauty-produkte-zum-schminken-fuer-maedchen-557x313-151005.jpg",       "tip_image_caption": "Step 1"     },     {       "tip_video_url": " http://youtu.be/Jwngbzv0gbY"     },     {       "tip_text": "wertyuiopxcvbnm, sdfghjkldfghjk"     },     {       "tip_image_local": "true" }   ],   "tip_notes": "Excepteur adipisicing tempor cupidatat exercitation nostrud aliquip enim cupidatat Lorem aute elit laboris enim magna. Ut incididunt ad anim aute ad officia deserunt sunt esse tempor ea qui magna quis. Duis aliqua duis incididunt voluptate incididunt esse consequat consectetur sit tempor. Nisi quis velit minim quis.\r\n",   "tip_tags": [     "makeup",     "eye",     "fashion"   ],   "category": "fashion",   "products_id": [    "$product_id"   ] }';
+   $message = '{   "tip_title": "Dermablend Professional- Tattoo Cover Up Makeup: Go Beyond The Cover",   "tip_thumbnail_image_url": "http://www.woman.at/_storage/asset/4150236/storage/womanat:key-visual/file/52817065/31266684.jpg",   "tip_pages": [     {       "tip_image_url": "http://cdn.maedchen.de/bilder/make-up-und-beauty-produkte-zum-schminken-fuer-maedchen-557x313-151005.jpg",       "tip_image_caption": "Step 1"     },     {       "tip_video_url": " http://youtu.be/Jwngbzv0gbY"     },     {       "tip_text": "wertyuiopxcvbnm, sdfghjkldfghjk"     },     {       "tip_image_local": "false" }   ],   "tip_notes": "Excepteur adipisicing tempor cupidatat exercitation nostrud aliquip enim cupidatat Lorem aute elit laboris enim magna. Ut incididunt ad anim aute ad officia deserunt sunt esse tempor ea qui magna quis. Duis aliqua duis incididunt voluptate incididunt esse consequat consectetur sit tempor. Nisi quis velit minim quis.\r\n",   "tip_tags": [     "makeup",     "eye",     "fashion"   ],   "category": "fashion",   "products_id": [    "$product_id"   ] }';
 
     $json = json_decode($message, true);
     $json['products_id'][0] = $product_id;
@@ -172,6 +177,8 @@ function test_title($title)
     $result = $client->get('product.get_detail', $params);
     lb_assert($result->tips_number == 1, "check number of tips linked to the product");
     lb_assert($result->ideas[0]->id == $thinker_idea_id, "check tip id");
+    $json_options = json_decode($result->product_options, true);
+    echo lb_assert($json_options[0]["values"][0] == "small", "options");
 
 //    echo "total_tips = ".$result->tips_number."\n";
 //    echo json_encode($result);
@@ -181,10 +188,10 @@ function test_title($title)
     $msg = '{"number":"4012888888881881","exp_month":"06","exp_year":"2016","cvc":"123","name":"test_2015","brand":"visa"}';
     $params = array('msg' => $msg);
     $result = $client->post('payment.stripe.card_add', $params);
+//echo json_encode($result);
     $card_id = $result->cards[0]->id;
 //    echo "card id: ".$card_id."\n";
     lb_assert($result->name == "test_2015", "buyer register, Check card_id");
-
 
     // buy a product
     test_title("Buy a product");
@@ -197,21 +204,30 @@ function test_title($title)
     $json['order_info']['sellers'][0]['products'][0]['product_id'] = $product_id;
     $json['order_info']['sellers'][0]['products'][0]['thinker_id'] = $thinker_id;
     $json['order_info']['sellers'][0]['products'][0]['thinker_idea_id'] = $thinker_idea_id;
+    $json['order_info']['sellers'][0]['products'][0]['product_options'] = '[{"key":"size","value":"medium"},{"key":"color","value": "red"}]';
+
     $msg = json_encode($json);
-//    echo $msg."\n";
+    echo $msg."\n";
     
     $params = array('msg' => $msg);
     $result = $client->post('payment.checkout_direct', $params);
+echo "\n\n";
+echo json_encode($result);
+echo "\n\n";
+//
 
     lb_assert($result->charged_user == $username3, "buyer direct checkout, check email");
 
     $order_id = $result->order_id;
-//echo json_encode($result);
-//echo "\n";
-//echo $result->order_id;
-//echo "\n";
+/*
+echo json_encode($result);
+echo "\n";
+echo $result->order_id;
+echo "\n";
+*/
     // thinker order detail
-    $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
+//    $thinker_order_id = json_encode($result->seller_info->products[0]->thinker_info[0]->order_id);
+    $thinker_order_id = json_encode($result->thinker_order[0]);
 
     // check buyer's get_shipping address
     test_title("Check buyer's shipping address");
@@ -225,11 +241,15 @@ function test_title($title)
     test_title("Check buyer's order history");
     $params = array();
     $result = $client->get('payment.list.buyer_order', $params);
+
+//echo $order_id;
+//echo json_encode($result);
+
     lb_assert($result->msg[0]->order_info->order_guid == $order_id, "transaction id matches order id");
 //    echo "\n====\n";
 //    echo json_encode($result);
 //    echo "\n====\n";
-            
+
     // login as a thinker
     test_title("login as a thinker");
     $result = $client->obtainAuthToken($username2, $password2);
@@ -255,6 +275,32 @@ function test_title($title)
     $result = $client->get('payment.detail.thinker_order', $params);
 //    echo json_encode($result)."\n";
 //    echo "\n";
+
+    // login as a seller
+    test_title("login as a seller");
+    $result = $client->obtainAuthToken($username1, $password1);
+    lb_assert($result, "login as a seller");
+
+    // check seller order
+    test_title("check seller order");
+    $params = array();
+    $result = $client->get('payment.list.seller_order', $params);
+    echo json_encode($result);
+    echo "\n====\n";
+
+    // check seller order detail
+    $seller_order_id = json_encode($result->seller_order[0]->order_guid);
+
+echo $seller_order_id."\n";
+echo "===================";
+
+    $params = array('order_id' => $seller_order_id);
+    $result = $client->get('payment.detail.seller_order', $params);
+
+    $product_options = $result->products_msg[0]->product_options;
+    $product_options_json = json_decode($product_options, true);
+
+    echo lb_assert($product_options_json[0]['value'] == "medium", "check product option");
 
 // Delete 3 users
 
