@@ -32,6 +32,7 @@
 				display: block;
 				margin: auto;
 			}
+			.op_name {} .op_values {}
 		</style>
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -122,7 +123,7 @@
 							</li>
 							<li>
 								<a class="active" href="settings.html"><i class="fa fa-spotify fa-fw"></i> Settings</a>
-							</li>							
+							</li>
 						</ul>
 					</div>
 					<!-- /.sidebar-collapse -->
@@ -180,7 +181,7 @@
 									<div class="col-lg-6">
 										<div class="form-group">
 											<label>Price</label>
-											<input class="form-control" placeholder="Product price such as 1.99" id="price" name="price" data-validation="number" data-validation-allowing="float"  data-validation-error-msg="Invalid price.">
+											<input class="form-control" placeholder="Product price such as 1.99" id="price" name="price" data-validation="number" data-validation-allowing="float" data-validation-error-msg="Invalid price.">
 										</div>
 									</div>
 
@@ -330,6 +331,62 @@
 												<input type="checkbox" id="is_archived" name="is_archived" value="1"> Archive the product (it will not be shown to customers).
 											</label>
 										</div>
+									</div>
+
+
+									<input type="hidden" id="options" name="options" value="" />
+									<div class="col-lg-6">
+										<div class="panel panel-default">
+											<div class="panel-heading">
+												<h3 class="panel-title">Add/edit options</h3>
+											</div>
+											<div class="panel-body" id="panel_edit_options" style="height:380;max-height: 380;overflow-y: scroll;">
+
+												<table class="table">
+													<thead>
+														<tr>
+															<th>Option Name</th>
+															<th>Option Values</th>
+															<th>Action</th>
+														</tr>
+													</thead>
+													<tbody id="table_body">
+														<tr>
+															<td>
+																<input type="text" class="form-control op_name" value="Color">
+															</td>
+															<td>
+																<input type="text" class="form-control op_values" value="Blue, Red">
+															</td>
+															<td>
+																<button type="button" class="btn btn-warning">X</button>
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+											<div class="panel-footer">
+												<button type="button" class="btn btn-default" id="add">Add</button>
+												<label>Option values should be separated values by ","</label>
+											</div>
+										</div>
+									</div>
+									<div class="col-lg-1">
+										<br />
+										<button type="button" class="btn btn-default" id="preview">Preview</button>
+										<br />
+									</div>
+									<div class="col-lg-5">
+
+										<div class="panel panel-success">
+											<div class="panel-heading">
+												<h3 class="panel-title">Preview the result by clicking preview button.</h3>
+											</div>
+											<div class="panel-body" id="preview_result" style="height:440;max-height: 440;overflow-y: scroll;">
+
+											</div>
+										</div>
+
 									</div>
 
 									<div class="col-lg-12">

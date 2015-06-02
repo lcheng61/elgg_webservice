@@ -492,9 +492,11 @@ function blog_post_comment($guid, $text, $rate, $type){
             if ($type == 1) {
                 $subject = "Your product ($entity->title) is reviewed by $user->username";
                 $body = "$text (Rate: $rate)";
+                $push_msg = "Your product ($entity->title) is reviewed by $user->username, lovebeauty://product_review?productid=$entity->guid&username=$user->username";
             } else if ($type == 2) {
                 $subject = "Your idea ($entity->title) is commented by $user->username";
                 $body = "$text";
+                $push_msg = "Your idea ($entity->title) is reviewed by $user->username, lovebeauty://idea_comment?ideaid=$entity->guid&username=$user->username";
             } else {
                 $return['success']['message'] = elgg_echo("$comment_type:NOTposted");
             }
@@ -502,6 +504,8 @@ function blog_post_comment($guid, $text, $rate, $type){
             $ret = message_send_one($subject, $body, $owner->username, 0);
             $return['success']['send_user_name'] = $owner->username;
             $return['success']['private_message'] = $ret;
+	    ret = push_notification($push_msg, $entity->owner_guid);
+            $return['success']['push_notification'] = $ret;
             
 /*
             notify_user($entity->owner_guid,

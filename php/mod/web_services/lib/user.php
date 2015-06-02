@@ -734,6 +734,14 @@ function user_friend_add($friend, $username) {
         $return['success'] = true;
 //        $return['message'] = elgg_echo('friends:add:successful' , array($friend_user->name));
         $return['message'] = "friends:add:successful";
+        // send email
+        $subject = "$username followed you.";
+        $ret = message_send_one($subject, "", $friend, 0);
+        $return['email_sent'] = $ret;
+        // send push notification
+        $push_msg = "$username followed you. lovebeauty://follow?username=$username";
+        $ret = push_notification($push_msg, $friend_user->guid);
+        $return['notification_sent'] = $ret;
     } else {
         $msg = elgg_echo("friends:add:failure", array($friend_user->name));
          throw new InvalidParameterException($msg);

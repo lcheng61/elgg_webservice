@@ -11,11 +11,11 @@ $(function() {
 
 
 	console.log("is admin user: " + getCookie('is_admin'));
-	if (getCookie('is_admin')!=='true') {
+	if (getCookie('is_admin') !== 'true') {
 		$("#is_affiliate_div").hide();
 		$("#affiliate_url_div").hide();
 		$("#affiliate_image_url_div").hide();
-	} 
+	}
 
 	console.log("height=" + $(".panel").height());
 
@@ -51,25 +51,35 @@ $(function() {
 				$('#shipping_fee').val(data.result.shipping_fee);
 				$('#affiliate_product_url').val(data.result.affiliate.affiliate_product_url);
 				$('#affiliate_image_url').val(data.result.affiliate.affiliate_image);
-				
+
 				if (data.result.affiliate.is_affiliate == 1) {
 					$('#is_affiliate').prop('checked', true);
 				} else {
 					$('#is_affiliate').prop('checked', false);
 				}
-				
+
 				if (data.result.affiliate.is_archived == 1) {
 					$('#is_archived').prop('checked', true);
 				} else {
 					$('#is_archived').prop('checked', false);
 				}
-				
+
 				if (data.result.images != undefined) {
 					$.each(data.result.images, function(n, url) {
 						$('#img' + (n + 1)).attr("src", url + "?" + 100000 * Math.random());
 					});
 				}
 
+
+				optStr = data.result.product_options;
+				if (optStr != undefined) {
+					try {
+						var options = JSON.parse(optStr);
+						displayOptionsItems(options);
+						displayOptionsPreview(options);
+					}catch(e) {						
+					}
+				}
 
 			}
 		});
@@ -96,6 +106,8 @@ $(function() {
 		var formUrl = server + product_post + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
 		console.log(formUrl);
 
+		//update options field.
+		$("#options").val(JSON.stringify(getOptionsArray()));
 
 		var options = {
 			//beforeSubmit:  showRequest,  // pre-submit callback 
@@ -109,8 +121,8 @@ $(function() {
 				//clearForm: true        // clear all form fields after successful submit 
 				//resetForm: true        // reset the form after successful submit 
 
-				// $.ajax options can be used here too, for example: 
-				//timeout:   10000 
+			// $.ajax options can be used here too, for example: 
+			//timeout:   10000 
 		};
 
 		$('#edit_form').ajaxSubmit(options);
@@ -178,15 +190,15 @@ $(function() {
 	function delete_image(id) {
 		var src = $('#img' + id).attr("src");
 		console.log("image src=" + src);
-		
-		$("#upload"+id).val("");
-		if (src == undefined || src.length<1) {
+
+		$("#upload" + id).val("");
+		if (src == undefined || src.length < 1) {
 			return;
 		}
-		
+
 		if (src.indexOf("http%3A//localhost") >= 0 || src.indexOf("blob") == 0) {
 			$('#img' + id).attr("src", 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');
-			
+
 		} else {
 
 			var formUrl = server + product_image_delete + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
@@ -216,6 +228,90 @@ $(function() {
 				}
 			});
 		}
+	}
+
+
+
+	// add button click
+	$("#add").button().click(function() {
+		addOptionsItem("Name", "Value1, Value2");
+	});
+
+
+	//The delete button in the options table.
+	$('#table_body').on('click', 'button', function(el) {
+		$(this).parent().parent().remove()
+	});
+
+
+	// preview button click
+	$("#preview").button().click(function() {
+		var options = getOptionsArray();
+
+		displayOptionsPreview(options);
+	});
+
+
+	function addOptionsItem(name, values) {
+		$("#table_body").append('<tr><td><input type="text" class="form-control op_name" value="' + name +
+			'"></td><td><input type="text" class="form-control op_values" value="' + values +
+			'"></td><td><button type="button" class="btn btn-warning">X</button></td></tr>');
+	}
+
+
+	function displayOptionsItems(options) {
+		//Clear previous preview result.
+		$("#table_body").empty();
+
+		//Display preview result.
+		for (i = 0; i < options.length; i++) {
+			op = options[i];
+
+			addOptionsItem(op.key, op.values);
+		}
+	}
+
+	function displayOptionsPreview(options) {
+		//Clear previous preview result.
+		$("#preview_result").empty();
+
+		//Display preview result.
+		for (i = 0; i < options.length; i++) {
+			op = options[i];
+
+			$("#preview_result").append('<div class="row"><label for="select1">' + op.key +
+				'</label>   <select>' + getOptionString(op.values) + '</select></div>');
+		}
+	}
+
+	function getOptionString(values) {
+		var retstr = "";
+		for (j = 0; j < values.length; j++) {
+			retstr += '<option value="' + (j + 1) + '">' + values[j] + '</option>';
+		}
+
+		return retstr;
+	}
+
+
+	function getOptionsArray() {
+
+		var options = new Array()
+		$('#table_body > tr').each(function(key, row) {
+			/*console.log(row);*/
+
+			var name = $(row).find(".op_name").val();
+			var values = $(row).find(".op_values").val();
+
+			var obj = {
+				"key": name,
+				"values": values.split(",")
+			}
+
+			options.push(obj);
+		});
+
+		return options;
 	}
 
 })

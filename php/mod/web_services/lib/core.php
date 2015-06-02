@@ -279,3 +279,52 @@ expose_function(
     true,
     false
 );
+
+/*
+ * Push message to a target user
+ */
+
+function push_notification($msg, $user_id) {
+
+    $url = 'https://api.parse.com/1/push';
+
+    $appId = 'bY2NzaiWKmujzMfvUB6rH2y56l4Q4FNsBJdHAtQN';
+    $restKey = 'iBKA3kaND3pKDUemHCUu7mzeAY6Oxu5nHnCjQJVD';
+
+    $target_name = "lovebeautyUser";
+    $target_id = "$user_id";
+
+    $push_payload = json_encode(array(
+        "where" => array(
+                $target_name => $target_id
+        ),
+        "data" => array(
+                "alert" => $msg
+        )
+    ));
+
+    $rest = curl_init();
+    curl_setopt($rest,CURLOPT_URL,$url);
+    curl_setopt($rest,CURLOPT_PORT,443);
+    curl_setopt($rest,CURLOPT_POST,1);
+    curl_setopt($rest,CURLOPT_POSTFIELDS,$push_payload);
+    curl_setopt($rest,CURLOPT_HTTPHEADER,
+        array("X-Parse-Application-Id: " . $appId,
+                "X-Parse-REST-API-Key: " . $restKey,
+                "Content-Type: application/json"));
+
+    $response = curl_exec($rest);
+    return $response;
+}
+expose_function(
+    "push.notification",
+    "push_notification",
+    array(
+        'msg' => array ('type' => 'string'),
+        'user_id' => array ('type' => 'int'),
+    ),
+    elgg_echo('user.push_notification'),
+    'POST',
+    true,
+    true
+);
