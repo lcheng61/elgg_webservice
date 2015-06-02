@@ -339,7 +339,7 @@ function product_get_detail($product_id) {
     $return['product_id'] = $product_id;
     $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
-    $return['product_options'] = $blog->options;
+    $return['product_options'] = json_decode($blog->options);
 
     $return['category'] = $blog->marketcategory;
     if ($blog->quantity < 0) {
