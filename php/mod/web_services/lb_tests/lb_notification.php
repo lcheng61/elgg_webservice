@@ -18,8 +18,8 @@ function test_title($title)
     echo "***********************************************************\n";
 }
 
-    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
-//    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
+//    $client = new ElggApiClient("http://social.routzi.com", "badb0afa36f54d2159e599a348886a7178b98533");
+    $client = new ElggApiClient("http://m.lovebeauty.me", "902a5f73385c0310936358c4d7d58b403fe2ce93");
 
     // user 1
     $username1 = "lbpush1";
@@ -160,7 +160,7 @@ echo "\n".$result."\n";
 echo "\n".$result."\n";
 
 // Delete 2 users
-/*
+
     // login as user 1
     test_title("login as a user 1");
     $result = $client->obtainAuthToken($username1, $password1);
@@ -179,6 +179,6 @@ echo "\n".$result."\n";
     $result = $client->post('user.delete', $params);
 
     echo $result."\n";
-*/
+
 
 ?>

@@ -628,8 +628,8 @@ function relationship_notification_hook($event, $type, $object) {
 
 	return notify_user($object->guid_two,
 			$object->guid_one,
-			elgg_echo('friend:newfriend:subject', array($user_one->name)),
-			elgg_echo("friend:newfriend:body", array($user_one->name))
+			elgg_echo('friend:newfriend:subject', array($user_one->username)),
+			elgg_echo("friend:newfriend:body", array($user_one->username))
 	);
 }
 
