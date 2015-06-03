@@ -67,12 +67,7 @@ $english = array(
 
 	%s
 
-
 	To view your messages, click here:
-
-	%s
-
-	To send %s a message, click here:
 
 	%s
 
