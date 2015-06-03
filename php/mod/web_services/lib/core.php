@@ -284,7 +284,7 @@ expose_function(
  * Push message to a target user
  */
 
-function push_notification($msg, $user_id) {
+function push_notification($msg, $link, $user_id) {
 
     $url = 'https://api.parse.com/1/push';
 
@@ -299,7 +299,8 @@ function push_notification($msg, $user_id) {
                 $target_name => $target_id
         ),
         "data" => array(
-                "alert" => $msg
+                "alert" => $msg,
+                "p" => $link
         )
     ));
 
