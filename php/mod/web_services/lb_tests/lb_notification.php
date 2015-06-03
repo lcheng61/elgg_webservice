@@ -108,7 +108,7 @@ function test_title($title)
     $tip_id = $result->idea_id;
     lb_assert($result->tip_title, "user 1 posts an idea");
 
-
+    echo "Open LB APP with social server, sign out and sign in with lbpush1/lbpush1. Wait for push. Also check email.";
     for ($i = 0; $i < 10; $i ++) {
         sleep(3);
         echo $i." ";
@@ -131,19 +131,19 @@ function test_title($title)
 
 
 
-    // user 2 comments user 1's product
+    // user 2 reviews user 1's product
     $params = array('guid' => $product_id,
                     'rate' => "4",
-                    'text' => "good idea",
+                    'text' => "good product",
                     'type' => 1,
                   );
     $result = $client->post('blog.post_comment', $params);
 echo "\n".$result."\n";
 
-    // user 2 reviews user 1's idea
+    // user 2 comments user 1's idea
     $params = array('guid' => $tip_id,
                     'rate' => "4",
-                    'text' => "good product",
+                    'text' => "good idea",
                     'type' => 2,
                   );
     $result = $client->post('blog.post_comment', $params);
