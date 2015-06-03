@@ -44,14 +44,31 @@ $(function() {
 
 						var product_price = product.product_price;
 						var product_quantity = product.item_number;
-						var product_price = product_price * product_quantity;
-						subtotal += product_price;
+						var product_total_price = product_price * product_quantity;
+						subtotal += product_total_price;
 						shipping_cost += product.shipping_cost;
 
+
+						var item_options = "";
+						if (product.product_options != undefined) {
+
+							var options = product.product_options
+							if (!isJsonObject(options)) {
+								options = JSON.parse(options);
+							}
+
+							//Display preview result.
+							for (j = 0; j < options.length; j++) {
+								op = options[j];
+								item_options = item_options + '<div class="row"><div class="col-lg-1">' + op.key + ': ' + op.value + '</div></div>';
+							}
+						}
+
+
 						var item = '<div class="row"><div class="col-lg-11"><big>' + product.product_name +
-							'</big></div><div class="col-lg-1"><big>$' + product_price +
+							'</big></div><div class="col-lg-1"><big>$' + product_total_price +
 							'</big></div></div><div class="row"><div class="col-lg-4">quantity: ' + product_quantity +
-							'</div><div class="col-lg-4">price: ' + product_price + '</div></div><br /><br />';
+							'</div><div class="col-lg-4">price: ' + product_price + '</div></div>' + item_options + '<br /><br />';
 						$('#items').append(item);
 
 					}
@@ -84,6 +101,11 @@ $(function() {
 
 			}
 		});
+	}
+
+	function isJsonObject(obj) {
+		var isjson = typeof(obj) == "object" && Object.prototype.toString.call(obj).toLowerCase() == "[object object]" && !obj.length;
+		return isjson;
 	}
 
 
