@@ -248,7 +248,7 @@ expose_function('messages.sent',
                 "message_send_one",
                 array(
                         'subject' => array ('type' => 'string'),
-                        'body' => array ('type' => 'string'),
+                        'body' => array ('type' => 'string', 'required' => false, 'default'=>""),
                         'send_to' => array ('type' => 'string'),
                         'reply' => array ('type' => 'int', 'required' => false, 'default'=>0),
                     ),
