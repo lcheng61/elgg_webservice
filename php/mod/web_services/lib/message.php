@@ -235,6 +235,12 @@ expose_function('messages.sent',
         throw new InvalidParameterException($msg);
     }
     $result = messages_send($subject, $body, $recipient_guid, 0, $reply);
+
+    // send push notification
+    $push_msg  = "$user->username sent you a message.";
+    $push_link = "lovebeauty://message?username=$user->username";
+    $ret = push_notification($push_msg, $push_link, $recipient_guid);
+
     return $result;
 }
 

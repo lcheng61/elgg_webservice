@@ -492,11 +492,41 @@ function blog_post_comment($guid, $text, $rate, $type){
             if ($type == 1) {
                 $subject = "Your product ($entity->title) is reviewed by $user->username";
                 $body = "$text (Rate: $rate)";
+
+		notify_user($entity->owner_guid,
+                    $user->guid,
+                    elgg_echo('product_review:email:subject'),
+                    elgg_echo('product_review:email:body', array(
+                        $entity->title,
+                        $user->name,
+                        $comment['text'],
+                        $comment['rate']
+//                        $entity->getURL(),
+//                        $user->name
+//                        $user->getURL()
+                    ))
+                );
+
+
                 $push_msg = "Your product ($entity->title) is reviewed by $user->username.";
 		$push_link = "lovebeauty://product_review?productid=$entity->guid&username=$user->username";
             } else if ($type == 2) {
                 $subject = "Your idea ($entity->title) is commented by $user->username";
                 $body = "$text";
+		notify_user($entity->owner_guid,
+                    $user->guid,
+                    elgg_echo('idea_comment:email:subject'),
+                    elgg_echo('idea_comment:email:body', array(
+                        $entity->title,
+                        $user->name,
+                        $text,
+//                        $entity->getURL(),
+//                        $user->name
+//                        $user->getURL()
+                    ))
+                );
+
+
                 $push_msg = "Your idea ($entity->title) is commented by $user->username.";
 		$push_link = "lovebeauty://idea_comment?ideaid=$entity->guid&username=$user->username";
             } else {
@@ -509,20 +539,6 @@ function blog_post_comment($guid, $text, $rate, $type){
 	    $ret = push_notification($push_msg, $push_link, $entity->owner_guid);
             $return['success']['push_notification'] = $ret;
             
-/*
-            notify_user($entity->owner_guid,
-                    $user->guid,
-                    elgg_echo('generic_comment:email:subject'),
-                    elgg_echo('generic_comment:email:body', array(
-                        $entity->title,
-                        $user->name,
-                        $comment['text']
-//                        $entity->getURL(),
-//                        $user->name
-//                        $user->getURL()
-                ))
-            );
-*/
         }
         $return['success']['message'] = elgg_echo("$comment_type:posted");
     } else {
