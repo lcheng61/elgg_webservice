@@ -1112,12 +1112,12 @@ Once you have logged in, we highly recommend that you change your password.
 	'email:save:success' => "New email address saved.",
 	'email:save:fail' => "Your new email address could not be saved.",
 
-	'friend:newfriend:subject' => "%s has made you a friend!",
-	'friend:newfriend:body' => "%s has made you a friend!
+	'friend:newfriend:subject' => "%s followed you!",
+	'friend:newfriend:body' => "%s followed you!
 
 You cannot reply to this email.",
 
-	'friend:newfriend:body2' => "%s has made you a friend!
+	'friend:newfriend:body2' => "%s followed you!
 
 To view their profile, click here:
 
@@ -1203,7 +1203,6 @@ You cannot reply to this email.",
 
 
 You cannot reply to this email.",
-
 
 /**
  * Entities

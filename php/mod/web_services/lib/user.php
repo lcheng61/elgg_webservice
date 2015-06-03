@@ -735,12 +735,19 @@ function user_friend_add($friend, $username) {
 //        $return['message'] = elgg_echo('friends:add:successful' , array($friend_user->name));
         $return['message'] = "friends:add:successful";
         // send email
-        $subject = "$username followed you.";
-        $ret = message_send_one($subject, "", $friend, 0);
-        $return['email_sent'] = $ret;
+/*
+        $subject = "$user->name followed you.";
+        $email = "$user->name followed you.";
+//        $ret = message_send_one($subject, "", $friend, 0);
+//        $return['email_sent'] = $ret;
+
+        $return['email_sent'] = notify_user($friend_user->guid, elgg_get_site_entity()->guid,
+            $subject, $email, array(), 'email');
+*/
         // send push notification
-        $push_msg = "$username followed you. lovebeauty://follow?username=$username";
-        $ret = push_notification($push_msg, $friend_user->guid);
+        $push_msg  = "$user->name followed you.";
+        $push_link = "lovebeauty://follow?username=$username";
+        $ret = push_notification($push_msg, $push_link, $friend_user->guid);
         $return['notification_sent'] = $ret;
     } else {
         $msg = elgg_echo("friends:add:failure", array($friend_user->name));
