@@ -300,7 +300,8 @@ function test_title($title)
     $result = $client->get('product.get_detail', $params);
     lb_assert($result->tips_number == 1, "check number of tips linked to the product");
     lb_assert($result->ideas[0]->id == $thinker_idea_id, "check tip id");
-    $json_options = json_decode($result->product_options, true);
+//    $json_options = json_decode($result->product_options, true);
+    $json_options = $result->product_options;
 
     lb_assert($result->free_shipping_quantity_limit == 10, "check free shipping quantity limit");
     lb_assert($result->free_shipping_cost_limit == 30, "check free shipping cost limit");
@@ -492,7 +493,7 @@ function test_title($title)
     echo lb_assert($product_options_json[0]['value'] == "small", "check product option");
 
 // Delete 4 users
-
+/*
     // login as a seller
     test_title("login as a seller");
     $result = $client->obtainAuthToken($username1, $password1);
@@ -502,6 +503,7 @@ function test_title($title)
     $result = $client->post('user.delete', $params);
 
     // login as a seller b
+
     test_title("login as a seller b");
     $result = $client->obtainAuthToken($username1b, $password1b);
     lb_assert($result, "login as a seller b");
@@ -527,5 +529,5 @@ function test_title($title)
     $result = $client->post('user.delete', $params);
 
     echo $result."\n";
-
+*/
 ?>

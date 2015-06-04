@@ -214,9 +214,10 @@ function create_buyer_order_followup($from_email, $buyer_username, $buyer_email,
             $product_price = $product_value['product_price'];
             $shipping_cost = $product_value['shipping_cost'];
             $product_options = $product_value['product_options'];
-            $product_options_json = json_decode($product_options, true);
+//            $product_options_json = json_decode($product_options, true);
             $product_msg = $product_msg."    name: ".$product_value['product_name']."\n";
-            foreach($product_options_json as $opt_key => $opt_value) {
+//            foreach($product_options_json as $opt_key => $opt_value) {
+            foreach($product_options as $opt_key => $opt_value) {
                 $product_msg = $product_msg."        ".$opt_value['key'].": ".$opt_value['value']."\n";
             }
             $product_msg = $product_msg."    price: ".'$'.$product_price." x ".$product_value['item_number']."\n";
