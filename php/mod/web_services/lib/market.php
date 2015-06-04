@@ -259,6 +259,8 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                  $blog['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
                
                  $blog['is_recommend'] = $single->is_recommend;
+
+                 $blog['product_options'] = json_decode($single->options);
  
 //                $blog['container_guid'] = $single->container_guid;
 //                $blog['access_id'] = $single->access_id;
@@ -1166,7 +1168,6 @@ expose_function('product.recommend_set',
                 true);
 
 function recommend_list($category, $offset, $limit) {
-
 
     if ($category == "all") {
         $options = array(
