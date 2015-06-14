@@ -53,14 +53,15 @@ $(function() {
 						if (product.product_options != undefined) {
 
 							var options = product.product_options
-							if (!isJsonObject(options)) {
+							console.log("type : " + (typeof options));
+							if (typeof options == "string") {
 								options = JSON.parse(options);
 							}
 
 							//Display preview result.
 							for (j = 0; j < options.length; j++) {
 								op = options[j];
-								item_options = item_options + '<div class="row"><div class="col-lg-1">' + op.key + ': ' + op.value + '</div></div>';
+								item_options = item_options + '<div class="row"><div class="col-lg-12">' + op.key + ': ' + op.value + '</div></div>';
 							}
 						}
 
@@ -101,11 +102,6 @@ $(function() {
 
 			}
 		});
-	}
-
-	function isJsonObject(obj) {
-		var isjson = typeof(obj) == "object" && Object.prototype.toString.call(obj).toLowerCase() == "[object object]" && !obj.length;
-		return isjson;
 	}
 
 
