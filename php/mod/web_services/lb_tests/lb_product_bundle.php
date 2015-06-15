@@ -493,7 +493,7 @@ function test_title($title)
     echo lb_assert($product_options_json[0]['value'] == "small", "check product option");
 
 // Delete 4 users
-/*
+
     // login as a seller
     test_title("login as a seller");
     $result = $client->obtainAuthToken($username1, $password1);
@@ -529,5 +529,5 @@ function test_title($title)
     $result = $client->post('user.delete', $params);
 
     echo $result."\n";
-*/
+
 ?>

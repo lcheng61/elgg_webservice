@@ -315,7 +315,26 @@ function push_notification($msg, $link, $user_id) {
                 "Content-Type: application/json"));
 
     $response = curl_exec($rest);
-    return $response;
+
+    $return['push_response'] = $response;
+// save notification to the object
+    $news_obj = new ElggObject();
+    $news_obj->title = $msg;
+    $news_obj->content = $link;
+    $news_obj->subtype = "news_object";
+    $news_obj->access_id = ACCESS_LOGGED_IN;
+    $news_obj->recipient_guid = $user_id;
+    $date = date_create();
+    $news_obj->timestamp = date_format($date, 'U');
+    $news_obj->is_read = false;
+
+    if ($news_obj->save()) {
+        $return['save_news_obj'] = true;
+    } else {
+        throw new InvalidParameterException(elgg_echo("news:object:saveerror"));
+    }
+
+    return $return;
 }
 expose_function(
     "push.notification",
@@ -329,3 +348,91 @@ expose_function(
     true,
     true
 );
+
+function news_list($limit, $offset) {
+    $user = get_loggedin_user();
+    if (!$user) {
+        throw new InvalidParameterException('news_list:usernotloggedin');
+    }
+    if ($user->is_admin) {
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'news_object',
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+            );
+        $latest_blogs = elgg_get_entities($params);
+    } else {
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'news_object',
+            'limit' => $limit,
+            'offset' => $offset,
+            'metadata_name_value_pairs'=>array(
+                array('name' => 'recipient_guid', 
+                      'value' => $user->guid,
+                      'operand' => '=' )));
+        $latest_blogs = elgg_get_entities_from_metadata($params);
+    }
+    $return['offset'] = $offset;
+    if($latest_blogs) {
+        $display_number = 0;
+        $return['user_id'] = $user->guid;
+        foreach($latest_blogs as $single ) {
+            $item['news_id'] = $single->guid;
+            $item['title'] = $single->title;
+            $item['content'] = $single->content;
+            $item['timestamp'] = $single->timestamp;
+            $item['is_read'] = $single->is_read;
+
+            $display_number ++;
+            $return['news'][] = $item;
+        }
+	
+        $return['total_number'] = $display_number;
+    }
+    else {
+        $return['news'] = array();
+        $return['total_number'] = 0;
+    }
+    return $return;
+}
+expose_function(
+    "news.list",
+    "news_list",
+    array(
+        'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
+        'offset' => array ('type' => 'int', 'required' => false, 'default' => 0)
+    ),
+    'List user notification/news',
+    'GET',
+    true,
+    true
+);
+
+/*
+function create_user_token_same($username, $expire = 5256000) {
+        global $CONFIG;
+
+        $site_guid = $CONFIG->site_id;
+        $user = get_user_by_username($username);
+        $time = time();
+        $time += 60 * $expire;
+        $token = md5($username . $site_guid);
+
+        if (!$user) {
+                return false;
+        }
+
+        if (insert_data("INSERT into {$CONFIG->dbprefix}users_apisessions
+                                (user_guid, site_guid, token, expires) values
+                                ({$user->guid}, $site_guid, '$token', '$time')
+                                on duplicate key update token='$token', expires='$time'")) {
+                return $token;
+        }
+
+        return false;
+}
+
+*/
