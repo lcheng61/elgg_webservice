@@ -748,7 +748,7 @@ function user_friend_add($friend, $username) {
         $push_msg  = "$user->name followed you.";
         $push_link = "lovebeauty://follow?username=$username";
         $ret = push_notification($push_msg, $push_link, $friend_user->guid);
-        $return['notification_sent'] = $ret;
+        $return['notification_sent'] = "true";
     } else {
         $msg = elgg_echo("friends:add:failure", array($friend_user->name));
          throw new InvalidParameterException($msg);
