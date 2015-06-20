@@ -313,6 +313,7 @@ function push_notification($msg, $link, $user_id) {
         array("X-Parse-Application-Id: " . $appId,
                 "X-Parse-REST-API-Key: " . $restKey,
                 "Content-Type: application/json"));
+    curl_setopt($rest, CURLOPT_RETURNTRANSFER, true);
 
     $response = curl_exec($rest);
 
@@ -335,6 +336,7 @@ function push_notification($msg, $link, $user_id) {
     }
 
     return $return;
+
 }
 expose_function(
     "push.notification",
