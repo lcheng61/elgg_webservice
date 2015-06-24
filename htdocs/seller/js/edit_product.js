@@ -70,17 +70,9 @@ $(function() {
 					});
 				}
 
-
-				optStr = data.result.product_options;
-				if (optStr != undefined) {
-					try {
-						var options = JSON.parse(optStr);
-						displayOptionsItems(options);
-						displayOptionsPreview(options);
-					}catch(e) {						
-					}
-				}
-
+				var options = data.result.product_options;
+				displayOptionsItems(options);
+				displayOptionsPreview(options);
 			}
 		});
 	}
