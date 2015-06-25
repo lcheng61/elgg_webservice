@@ -219,7 +219,6 @@ function execute_method($method) {
 
 		throw new CallException($msg);
 	}
-
 	$parameters = get_parameters_for_method($method);
 
 	if (verify_parameters($method, $parameters) == false) {
@@ -552,10 +551,14 @@ function get_and_validate_api_headers() {
 	if (($result->method != "GET") && ($result->method != "POST")) {
 		throw new APIException(elgg_echo('APIException:NotGetOrPost'));
 	}
-
-	$result->api_key = $_SERVER['HTTP_X_ELGG_APIKEY'];
-	if ($result->api_key == "") {
-		throw new APIException(elgg_echo('APIException:MissingAPIKey'));
+        $result->api_key = null;
+        $result->hmac = null;
+        $result->hmac_algo = null;
+        $result->time = null;
+/* by cl to clean up debug log like this "DEBUG: 2015-06-25 18:26:36 (UTC): "Undefined property: stdClass::$api_key"
+        $result->api_key = $_SERVER['HTTP_X_ELGG_APIKEY'];
+        if ($result->api_key == "") {
+   	    throw new APIException(elgg_echo('APIException:MissingAPIKey'));
 	}
 
 	$result->hmac = $_SERVER['HTTP_X_ELGG_HMAC'];
@@ -586,7 +589,7 @@ function get_and_validate_api_headers() {
 	if ($result->nonce == "") {
 		throw new APIException(elgg_echo('APIException:MissingNonce'));
 	}
-
+*/
 	if ($result->method == "POST") {
 		$result->posthash = $_SERVER['HTTP_X_ELGG_POSTHASH'];
 		if ($result->posthash == "") {
@@ -855,7 +858,7 @@ function pam_auth_session() {
  *
  * @return bool
  */
-function create_user_token($username, $expire = 5256000 /*60*/) {
+function create_user_token($username, $expire = 5256000/*60*/) {
 	global $CONFIG;
 
 	$site_guid = $CONFIG->site_id;
