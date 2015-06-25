@@ -672,7 +672,7 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
     $return['email'] = $email;
     $return['name'] = $name;
     $return['profile_fields'] = user_get_profile_fields();
-    $return['token'] = create_user_token($username, 527040);
+    $return['token'] = create_user_token_same($username, 527040);
 
 // add sign up points
     login($user);
@@ -1647,7 +1647,7 @@ function user_register_facebook($msg) {
 
         $return['status'] = "facebook account already exist";
         $return['username'] = $username;
-        $token = create_user_token($username, 527040);
+        $token = create_user_token_same($username, 527040);
         $return['token'] = $token;
         return $return;
     }
@@ -1692,7 +1692,7 @@ function user_register_facebook($msg) {
 
             $return['status'] = "new facebook account is created";
             $return['username'] = $user->username;
-            $token = create_user_token($user->username, 527040);
+            $token = create_user_token_same($user->username, 527040);
             $return['token'] = $token;
 
         } else {
@@ -1701,7 +1701,7 @@ function user_register_facebook($msg) {
 
             $return['status'] = "email used before, won't copy facebook data";
             $return['username'] = $user->username;
-            $token = create_user_token($username, 527040);
+            $token = create_user_token_same($username, 527040);
             $return['token'] = $token;
         }
     }

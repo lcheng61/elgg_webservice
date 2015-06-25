@@ -186,7 +186,7 @@ function auth_gettoken2_old($username, $password, $expire=527040) {
         
         // validate username and password
         if (true === elgg_authenticate($username, $password)) {
-                $token = create_user_token($username, $expire);
+                $token = create_user_token_same($username, $expire);
                 if ($token) {
                         return $token;
                 }
@@ -234,7 +234,7 @@ function auth_gettoken2($username, $password, $expire=527040) {
         
         // validate username and password
         if (true === elgg_authenticate($username, $password)) {
-                $token = create_user_token($username, $expire);
+                $token = create_user_token_same($username, $expire);
                 if ($token) {
                     $return['token'] = $token;
                 } else {
@@ -413,7 +413,7 @@ expose_function(
     true
 );
 
-/*
+
 function create_user_token_same($username, $expire = 5256000) {
         global $CONFIG;
 
@@ -421,6 +421,7 @@ function create_user_token_same($username, $expire = 5256000) {
         $user = get_user_by_username($username);
         $time = time();
         $time += 60 * $expire;
+//	$token = md5(rand() . microtime() . $username . $time . $site_guid);
         $token = md5($username . $site_guid);
 
         if (!$user) {
@@ -436,5 +437,3 @@ function create_user_token_same($username, $expire = 5256000) {
 
         return false;
 }
-
-*/
