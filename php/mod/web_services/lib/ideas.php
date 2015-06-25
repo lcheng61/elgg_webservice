@@ -251,13 +251,15 @@ function tip_get_detail($tip_id) {
         $product_info['name'] = $item->title;
         $images = unserialize($item->images);
         $product_info['images'] = "";
-        foreach ($images as $key => $value) {
-            if ($value == 1) {
-//              $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
-                $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
-            } else {
-	        $product_info['images'][] = "";
-      	    }
+        if ($images) {
+            foreach ($images as $key => $value) {
+                if ($value == 1) {
+//                  $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
+                    $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
+                } else {
+	            $product_info['images'][] = "";
+      	        }
+            }
         }
         if ($item->is_affiliate) {
             $product_info['images'][] = $item->affiliate_image;
@@ -773,15 +775,17 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
 
         $images = unserialize($item->images);
         $product_info['images'] = "";
-        foreach ($images as $key => $value) {
-            if ($value == 1) {
-//              $product_info['images'][] =
+        if ($images) {
+            foreach ($images as $key => $value) {
+                if ($value == 1) {
+//                  $product_info['images'][] =
                      // elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
-                $product_info['images'][] =
-                        elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
-            } else {
-	        $product_info['images'][] = "";
-      	    }
+                    $product_info['images'][] =
+                            elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
+                } else {
+	            $product_info['images'][] = "";
+      	        }
+            }
         }
         if ($item->is_affiliate) {
             $product_info['images'][] = $item->affiliate_image;
