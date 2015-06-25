@@ -15,6 +15,10 @@ function stripe_pagesetup() {
 
 	$user = elgg_get_page_owner_entity();
 
+	if (!$user) {
+	    return;
+        }
+
 	elgg_register_menu_item('page', array(
 		'name' => 'stripe:cards',
 		'href' => "billing/$user->username/cards/all",

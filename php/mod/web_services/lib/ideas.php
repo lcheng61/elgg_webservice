@@ -30,7 +30,6 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             throw new InvalidParameterException('registration:usernamenotvalid');
 	}
     }
-
     if($context == "all"){
         $params = array(
             'types' => 'object',
@@ -142,7 +141,12 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $blog['tip_author']['user_name'] = $owner->username;
                  $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
                  $blog['tip_author']['is_seller'] = $owner->is_seller;
-                 $blog['tip_author']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
+
+		 if ($user) {
+                     $blog['tip_author']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
+                 } else {
+                     $blog['tip_author']['do_i_follow'] = false;
+		 }
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
