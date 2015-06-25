@@ -219,6 +219,12 @@ function tip_get_detail($tip_id) {
         $return['content'] = elgg_echo('blog:error:post_not_found');
         return $return;
     }
+    if (!$blog->view_times) {
+        $blog->view_times = 1;
+    } else {
+        $blog->view_times ++;
+    }
+    $blog->save();
 
     $return['tip_title'] = $blog->title;
     $return['tip_category'] = $blog->ideascategory;
@@ -227,6 +233,8 @@ function tip_get_detail($tip_id) {
 
     $return['tip_notes'] = $blog->tip_notes;
     $return['tip_tags'] = $blog->tip_tags;
+
+    $return['view_times'] = $blog->view_times;
 
     $return['tip_pages'] =             json_decode($blog->tip_pages, true);
 

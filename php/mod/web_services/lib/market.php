@@ -337,11 +337,19 @@ function product_get_detail($product_id) {
         $return['ideas'][] = $idea;
     }
 
+    if (!$blog->view_times) {
+        $blog->view_times = 1;
+    } else {
+        $blog->view_times ++;
+    }
+    $blog->save();
+
     $return['content'] = strip_tags($blog->description);
     $return['product_id'] = $product_id;
     $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
     $return['product_options'] = json_decode($blog->options);
+    $return['view_times'] = $blog->view_times;
 
     $return['category'] = $blog->marketcategory;
     if ($blog->quantity < 0) {
