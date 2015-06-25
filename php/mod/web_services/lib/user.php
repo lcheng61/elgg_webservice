@@ -210,7 +210,11 @@ function user_get_profile($username) {
 
     $profile_info['is_seller'] = $user->is_seller;
 
-    $profile_info['do_i_follow'] = user_is_friend($me->guid, $user->guid);
+    if ($me && $user) {
+        $profile_info['do_i_follow'] = user_is_friend($me->guid, $user->guid);
+    } else {
+        $profile_info['do_i_follow'] = false;
+    }
 
     return $profile_info;
 }

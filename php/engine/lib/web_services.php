@@ -555,6 +555,10 @@ function get_and_validate_api_headers() {
         $result->hmac = null;
         $result->hmac_algo = null;
         $result->time = null;
+	$result->posthash = null;
+	$result->posthash_algo = null;
+	$result->content_type = null;
+
 /* by cl to clean up debug log like this "DEBUG: 2015-06-25 18:26:36 (UTC): "Undefined property: stdClass::$api_key"
         $result->api_key = $_SERVER['HTTP_X_ELGG_APIKEY'];
         if ($result->api_key == "") {
@@ -589,7 +593,7 @@ function get_and_validate_api_headers() {
 	if ($result->nonce == "") {
 		throw new APIException(elgg_echo('APIException:MissingNonce'));
 	}
-*/
+
 	if ($result->method == "POST") {
 		$result->posthash = $_SERVER['HTTP_X_ELGG_POSTHASH'];
 		if ($result->posthash == "") {
@@ -606,7 +610,7 @@ function get_and_validate_api_headers() {
 			throw new APIException(elgg_echo('APIException:MissingContentType'));
 		}
 	}
-
+*/
 	return $result;
 }
 

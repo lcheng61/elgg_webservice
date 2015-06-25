@@ -82,7 +82,8 @@ function apiadmin_apikey_use($hook, $type, $returnvalue, $params) {
     global $CONFIG;
     $handler = sanitise_string($_GET['handler']);
     $request = sanitise_string($_GET['request']);
-    $method = sanitise_string($_GET['method']);
+//    $method = sanitise_string($_GET['method']);
+    $method = "NONE";
     $api_key = sanitise_string($params);
     $remote_address = sanitise_string($_SERVER['REMOTE_ADDR']);
     $user_agent = sanitise_string($_SERVER['HTTP_USER_AGENT']);
