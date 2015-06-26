@@ -189,9 +189,11 @@ function system_log($object, $event) {
 		$time = time();
 
 		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			$ip_address = array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
+                        $var = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+			$ip_address = array_pop($var);
 		} elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-			$ip_address = array_pop(explode(',', $_SERVER['HTTP_X_REAL_IP']));
+                        $var = explode(',', $_SERVER['HTTP_X_REAL_IP']);
+			$ip_address = array_pop($var);
 		} else {
 			$ip_address = $_SERVER['REMOTE_ADDR'];
 		}
