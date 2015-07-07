@@ -264,6 +264,11 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                  $blog['is_recommend'] = $single->is_recommend;
 
                  $blog['product_options'] = json_decode($single->options);
+		 if ($single->view_times) {
+                     $blog['view_times'] = $single->view_times;
+                 } else {
+                     $blog['view_times'] = 0;
+		 }
  
 //                $blog['container_guid'] = $single->container_guid;
 //                $blog['access_id'] = $single->access_id;
@@ -349,10 +354,21 @@ function product_get_detail($product_id) {
     }
     $blog->save();
 
+// get per seller setting
+    $owner_obj = get_entity($blog->owner_guid);
+    $per_seller_setting = $owner_obj->seller_setting;
+    $per_seller_setting = json_decode($per_seller_setting, true);
+    $return_policy = $per_seller_setting['return_policy'];
+
     $return['content'] = strip_tags($blog->description);
     $return['product_id'] = $product_id;
     $return['product_price'] = $blog->price; //floatval($blog->price);
-    $return['product_description'] = $blog->description;
+//    $return['product_description'] = $blog->description;
+    if ($return_policy) {
+        $return['product_description'] = $blog->description."<br><br><b>Return Policy</b>: $return_policy";
+    } else {
+        $return['product_description'] = $blog->description;
+    }
     $return['product_options'] = json_decode($blog->options);
     $return['view_times'] = $blog->view_times;
 
