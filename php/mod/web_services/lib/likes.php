@@ -266,7 +266,11 @@ function likes_getitems($username, $limit=10, $offset=0) {
                 $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
             }
         }
-
+	if ($single->is_affiliate) {
+              $blog['images'][] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
+	}
+        
+        $blog['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
         $blog['likes_number'] = intval(likes_count(get_entity($single->guid)));
         $blog['reviews_number'] = $num_comments;
 
