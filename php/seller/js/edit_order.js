@@ -94,9 +94,29 @@ $(function() {
 				//$('#billing_cardname').append(data.result.charge_card_name);
 				$('#billing_cardnumber').append(data.result.charge_card_info.substring(data.result.charge_card_info.length - 4));
 
-				var shippment_addr = '<address>' + data.result.shipping_address.addressline1 +
-					'<br/> ' + data.result.shipping_address.city + ', ' + data.result.shipping_address.state +
-					', ' + data.result.shipping_address.zipcode + '</adress>'
+
+//				var shippment_addr = '<address>' + data.result.shipping_address.addressline1 +
+//					'<br/> ' + data.result.shipping_address.city + ', ' + data.result.shipping_address.state +
+//					', ' + data.result.shipping_address.zipcode + '</adress>'
+
+				var shippment_addr = '<address>';
+				
+				if (data.result.shipping_address.name != undefined) {
+					shippment_addr += data.result.shipping_address.name + '<br/> ';
+				}
+				
+				if (data.result.shipping_address.addressline1 != undefined) {
+					shippment_addr += data.result.shipping_address.addressline1 + '<br/> ';
+				}
+				
+				if (data.result.shipping_address.addressline2 != undefined) {
+					shippment_addr += data.result.shipping_address.addressline2 + '<br/> ';
+				}
+				
+				
+				shippment_addr += data.result.shipping_address.city + ', ' + data.result.shipping_address.state +
+					', ' + data.result.shipping_address.zipcode + '</adress>';
+
 
 				$('#shipping_address').append(shippment_addr);
 
