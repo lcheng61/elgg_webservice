@@ -261,16 +261,24 @@ function likes_getitems($username, $limit=10, $offset=0) {
 
         $post_images = unserialize($single->images);
         $blog['images'] = null;
-        foreach ($post_images as $key => $value) {
-            if ($value == 1) {
-                $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
-            }
+        if ($post_images) {
+             foreach ($post_images as $key => $value) {
+                 if ($value == 1) {
+                     $blog['images'][] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/'.$key.'/'.'master/';
+                 }
+             }
         }
-	if ($single->is_affiliate) {
-              $blog['images'][] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
-	}
-        
-        $blog['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
+
+// affiliate attributes
+        $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
+        $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
+        $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
+        $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
+        $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
+        if ($blog['affiliate']['is_affiliate'] == 1) {
+            $blog['images'][] = $single->affiliate_image;
+        }
+
         $blog['likes_number'] = intval(likes_count(get_entity($single->guid)));
         $blog['reviews_number'] = $num_comments;
 
