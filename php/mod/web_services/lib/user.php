@@ -1501,9 +1501,8 @@ Dear $display_name,
 
 Thank you for registering for Lovebeauty! We will contact you shortly.
 
-Your username/password is:
-    username: $username
-    password: $password
+Your username is:
+    $username
 
 Regards,
 Lovebeauty Team
