@@ -8,6 +8,56 @@
  * @author Liang Cheng
  *
  */
+
+//////////////
+function product_get_posts_seller_affiliate($context, $limit = 10, $offset = 0, $from_seller_portal,
+    $group_guid, $category, $username) {
+
+    if (($from_seller_portal != 1) && ($limit != 0)) {
+        $seller_product_list = product_get_posts_common($context, $limit, $offset, 2/*seller*/, $from_seller_portal,
+                $group_guid, $category, $username);
+
+        if ($seller_product_list['total_number'] != 0) {
+            if ($seller_product_list['total_number'] < $limit) {
+                $affiliate_limit = $limit - $seller_product_list['total_number'];
+                $affiliate_offset = $seller_product_list['total_number'];
+                $affiliate_return = product_get_posts_common($context, $product_limit, 0, 1/*affiliate*/, $from_seller_portal,
+                        $group_guid, $category, $username);
+            }
+            if (is_array($affiliate_return['products'])) {
+                $seller_product_list['products'] = array_merge($seller_product_list['products'], $affliate_return['products']);
+            }
+            $seller_product_list['total_number'] = count($seller_product_list['products']);
+            return $seller_product_list;
+        }
+
+        $seller_product_list = product_get_posts_common($context, 0, 0, 2/*seller*/, $from_seller_portal,
+                $group_guid, $category, $username);
+
+        $total_number_seller = count($seller_product_list['products']);
+        if ($offset >= $total_number_seller) {
+            $offset -= $total_number_seller;
+        }
+    }
+    return product_get_posts_common($context, $limit, $offset, 1/*affiliate*/, $from_seller_portal,
+            $group_guid, $category, $username);
+}
+expose_function('product.get_posts_seller_affiliate',
+                "product_get_posts_seller_affiliate",
+                array(
+                      'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
+                      'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
+                      'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
+                      'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
+                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
+                    ),
+                "Get list of market posts, seller after affliate",
+                'GET',
+                false,
+                false);
+
 //////////////
 function product_get_posts_with_recommend($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
@@ -127,21 +177,21 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
     );
     $meta_pairs = array();
 
-/*
+
     if ($affiliate_opt > 0) { // affiliate only or seller only
         $meta_pairs[] = $seller_product_meta;
     }
-*/
+
     if ($category != "all") { // category
         $meta_pairs[] = $category_meta;
     }
-/*
-    if (!$from_seller_portal) { // IOS
-        $meta_pairs[] = $quantity_meta;   // this line caused long delay
-    }
-*/
+
+//    if (!$from_seller_portal) { // IOS
+//        $meta_pairs[] = $quantity_meta;   // this line caused long delay
+//    }
+
     $params['metadata_name_value_pairs'] = $meta_pairs;
-    $params['order_by_metadata'] = $view_times_sort_meta;
+//    $params['order_by_metadata'] = $view_times_sort_meta;
     if($context == "all"){ // For IOS product listing
     }
 
