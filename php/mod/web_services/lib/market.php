@@ -838,7 +838,7 @@ function product_post($product_id, $title, $category, $description,
     $price, $tags, $quantity, $delivery_time, $shipping_fee,
     $free_shipping_quantity_limit, $free_shipping_cost_limit,
     $is_affiliate, $affiliate_product_id, $affiliate_product_url,
-    $is_archived, $affiliate_syncon, $affiliate_image, $options)
+    $is_archived, $affiliate_syncon, $affiliate_image, $options, $affiliate_name)
 {
 
     $user = elgg_get_logged_in_user_entity();
@@ -903,6 +903,7 @@ function product_post($product_id, $title, $category, $description,
         'affiliate_syncon' => $affiliate_syncon,
         'affiliate_image' => $affiliate_image,
         'options' => $options,
+        'affiliate_name' => $affiliate_name,
     );
 
     // fail if a required entity isn't set
@@ -1006,6 +1007,7 @@ expose_function('product.post',
                        'affiliate_syncon' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'affiliate_image' => array('type' => 'string', 'required' => false, 'default' => ""),
                        'options' => array('type' => 'string', 'required' => false, 'default' => ""),
+                       'affiliate_name' => array('type' => 'string', 'required' => false, 'default' => ""),
                      ),
                 "Post a product by seller",
                 "POST",
