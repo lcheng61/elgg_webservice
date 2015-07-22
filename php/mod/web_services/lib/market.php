@@ -61,6 +61,7 @@ expose_function('product.get_posts_with_recommend',
  * @param string $context eg. all, friends, mine, groups
  * @param int $limit  (optional) default 10
  * @param int $offset (optional) default 0
+ * @param int affiliate_opt (optional) default 0(all), 1: affiliate only, 2: seller only
  * @param int $group_guid (optional)  the guid of a group, $context must be set to 'group'
  * @param string $category(optional) eg. fashion, gadget, etc
  * @param string $username (optional) the username of the user default loggedin user
@@ -68,7 +69,7 @@ expose_function('product.get_posts_with_recommend',
  * @return array $file Array of files uploaded
  */
 
-function product_get_posts_common($context, $limit = 10, $offset = 0, $from_seller_portal,
+function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate_opt = 2, $from_seller_portal,
     $group_guid, $category, $username) {
 
     if($context == "mine" && !get_loggedin_user()){
@@ -98,6 +99,25 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
                 'value' => 0,
                 'operand' => '>'
             );
+    if ($affiliate_opt == 1) {   // affiliate only
+       $affiliate_only = 1;
+    } else if ($affiliate_opt == 2) { // seller only
+       $affiliate_only = 0;
+    }
+
+    $seller_product_meta =
+            array(
+                'name' => 'is_affiliate',
+                'value' => $affiliate_only,
+                'operand' => '=',
+            );
+
+    $view_times_sort_meta =
+        array(
+            'name' => 'view_times',
+            'direction' => 'DESC',
+            'as' => 'integer'
+        );
     $params = array(
         'types' => 'object',
         'subtypes' => 'market',
@@ -106,14 +126,22 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
         'offset' => $offset,
     );
     $meta_pairs = array();
+
+/*
+    if ($affiliate_opt > 0) { // affiliate only or seller only
+        $meta_pairs[] = $seller_product_meta;
+    }
+*/
     if ($category != "all") { // category
         $meta_pairs[] = $category_meta;
     }
+/*
     if (!$from_seller_portal) { // IOS
-        $meta_pairs[] = $quantity_meta;
-        $params['metadata_name_value_pairs'] = $meta_pairs;
+        $meta_pairs[] = $quantity_meta;   // this line caused long delay
     }
-
+*/
+    $params['metadata_name_value_pairs'] = $meta_pairs;
+    $params['order_by_metadata'] = $view_times_sort_meta;
     if($context == "all"){ // For IOS product listing
     }
 
@@ -128,6 +156,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $from_sell
     } else {
         if (!$from_seller_portal) {
             $latest_blogs = elgg_get_entities_from_metadata($params);
+//            $latest_blogs = elgg_get_entities($params);
         } else { // hackhack, server loop to avoid database memory leak. This should be replaced by client pagination
             $tmp = array();
             $latest_blogs = array();
@@ -295,6 +324,7 @@ expose_function('product.get_posts',
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                      'affiliate_opt' => array ('type' => 'int', 'required' => false, 'default' => 2),
                       'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
                       'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
