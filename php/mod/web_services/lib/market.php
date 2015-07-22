@@ -13,7 +13,10 @@
 function product_get_posts_seller_affiliate($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
-    if (($from_seller_portal != 1) && ($limit != 0)) {
+    if (($from_seller_portal == 1) || ($limit == 0)) { // for seller portal only
+        return product_get_posts_common($context, $limit, $offset, 0, $from_seller_portal,
+                $group_guid, $category, $username);
+    } else { // for APP
         $seller_product_list = product_get_posts_common($context, $limit, $offset, 2/*seller*/, $from_seller_portal,
                 $group_guid, $category, $username);
 
@@ -38,9 +41,9 @@ function product_get_posts_seller_affiliate($context, $limit = 10, $offset = 0, 
         if ($offset >= $total_number_seller) {
             $offset -= $total_number_seller;
         }
+        return product_get_posts_common($context, $limit, $offset, 1/*affiliate*/, $from_seller_portal,
+                $group_guid, $category, $username);
     }
-    return product_get_posts_common($context, $limit, $offset, 1/*affiliate*/, $from_seller_portal,
-            $group_guid, $category, $username);
 }
 expose_function('product.get_posts_seller_affiliate',
                 "product_get_posts_seller_affiliate",
@@ -360,6 +363,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
         $return['total_number'] = $display_product_number;
     }
     else {
+        $return['category'] = $category;
         $return['total_number'] = 0;
         $return['products'] = array();
     }
