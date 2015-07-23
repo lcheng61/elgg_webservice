@@ -98,6 +98,14 @@ $(function() {
 		var formUrl = server + product_post + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
 		console.log(formUrl);
 
+		//handle delivery time before submit.
+		handleDeliveryTime();
+		
+		//clear the delivery time before submit when it is affiliate product.
+        if ($("#is_affiliate").is(':checked')) {
+        	$("#delivery_time").val("");
+        }
+
 		//update options field.
 		$("#options").val(JSON.stringify(getOptionsArray()));
 
@@ -223,6 +231,23 @@ $(function() {
 	}
 
 
+	$("#delivery_time").blur(function() {
+  		handleDeliveryTime();
+	});
+	
+	$('#is_affiliate').change(function() {
+
+		//When isAffiliate is checked, ignore the delivery time if it is null. 
+        if ($("#is_affiliate").is(':checked')) {
+        	
+        	if ($("#delivery_time").val() == undefined || $("#delivery_time").val() == "") {
+        		$("#delivery_time").val("-1");
+        	}        	
+        	
+        	console.log("delivery time : " + $("#delivery_time").val());
+        }
+
+	}); 
 
 	// add button click
 	$("#add").button().click(function() {
@@ -304,6 +329,27 @@ $(function() {
 		});
 
 		return options;
+	}
+
+	//判断是否为数字
+	function IsNum(s) {
+		if (s != null && s != "") {
+			return !isNaN(s);
+		}
+		return false;
+	}
+	
+	function handleDeliveryTime() {
+		var dtime = $("#delivery_time").val();
+		//console.log("delivery time :" + dtime);
+		if (IsNum(dtime)) {
+			if (dtime > 1) {
+				$("#delivery_time").val(dtime + " business days");
+			} else {
+				$("#delivery_time").val(dtime + " business day");
+			}
+		}
+		//console.log("delivery time :" + dtime);	
 	}
 
 })
