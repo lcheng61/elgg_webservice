@@ -8,7 +8,6 @@
  * @author Liang Cheng
  *
  */
-
 //////////////
 function product_get_posts_seller_affiliate($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
@@ -17,35 +16,38 @@ function product_get_posts_seller_affiliate($context, $limit = 10, $offset = 0, 
         return product_get_posts_common($context, $limit, $offset, 0, $from_seller_portal,
                 $group_guid, $category, $username);
     } else { // for APP
-        $seller_product_list = product_get_posts_common($context, $limit, $offset, 2/*seller*/, $from_seller_portal,
+        $seller_product_list = product_get_posts_common($context, $limit, $offset,2 /*seller*/, $from_seller_portal,
                 $group_guid, $category, $username);
 
-        if ($seller_product_list['total_number'] != 0) {
+        if ($seller_product_list['total_number'] != 0) { // has seller product
             if ($seller_product_list['total_number'] < $limit) {
                 $affiliate_limit = $limit - $seller_product_list['total_number'];
                 $affiliate_offset = $seller_product_list['total_number'];
-                $affiliate_return = product_get_posts_common($context, $product_limit, 0, 1/*affiliate*/, $from_seller_portal,
+                $affiliate_return = product_get_posts_common($context, $affiliate_limit, $affiliate_offset, 1/*affiliate*/, $from_seller_portal,
                         $group_guid, $category, $username);
             }
             if (is_array($affiliate_return['products'])) {
-                $seller_product_list['products'] = array_merge($seller_product_list['products'], $affliate_return['products']);
+                $seller_product_list['products'] = array_merge($seller_product_list['products'], $affiliate_return['products']);
             }
             $seller_product_list['total_number'] = count($seller_product_list['products']);
+
             return $seller_product_list;
-        }
+        } else { // no seller product
+    	    // Get total number of seller product
 
-        $seller_product_list = product_get_posts_common($context, 0, 0, 2/*seller*/, $from_seller_portal,
-                $group_guid, $category, $username);
+            $seller_product_list = product_get_posts_common($context, 0, 0, 2/*seller*/, $from_seller_portal,
+                    $group_guid, $category, $username);
+            $seller_product_number = count($seller_product_list['products']);
 
-        $total_number_seller = count($seller_product_list['products']);
-        if ($offset >= $total_number_seller) {
-            $offset -= $total_number_seller;
+            if ($offset >= $seller_product_number) {
+                $offset -= $seller_product_number;
+            }
+            return product_get_posts_common($context, $limit, $offset, 1/*affiliate*/, $from_seller_portal,
+                    $group_guid, $category, $username);
         }
-        return product_get_posts_common($context, $limit, $offset, 1/*affiliate*/, $from_seller_portal,
-                $group_guid, $category, $username);
     }
 }
-expose_function('product.get_posts_seller_affiliate',
+expose_function('product.get_posts',
                 "product_get_posts_seller_affiliate",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
@@ -56,7 +58,7 @@ expose_function('product.get_posts_seller_affiliate',
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
                     ),
-                "Get list of market posts, seller after affliate",
+                "Get list of market posts, seller after affiliate",
                 'GET',
                 false,
                 false);
@@ -372,7 +374,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
 }
 
 
-expose_function('product.get_posts',
+expose_function('product.get_posts_common',
                 "product_get_posts_common",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
@@ -974,7 +976,7 @@ function product_post($product_id, $title, $category, $description,
             $values['images'][] = "";
 	}        
 
-        //  affliate image upload
+        //  affiliate image upload
         if($is_affiliate) {
 	    $values['images'][] = $affiliate_image;
         }
