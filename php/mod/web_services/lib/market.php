@@ -74,7 +74,7 @@ function product_get_posts_with_recommend($context, $limit = 10, $offset = 0, $f
             if ($recommend_list['total_number'] < $limit) {
                 $product_limit = $limit - $recommend_list['total_number'];
                 $product_offset = $recommend_list['total_number'];
-                $product_return = product_get_posts_common($context, $product_limit, 0, $from_seller_portal,
+                $product_return = product_get_posts_common($context, $product_limit, 0, 0/*seller+affiliate*/, $from_seller_portal,
                         $group_guid, $category, $username);
             }
             if (is_array($product_return['products'])) {
@@ -90,7 +90,7 @@ function product_get_posts_with_recommend($context, $limit = 10, $offset = 0, $f
             $offset -= $total_number_recommend;
         }
     }
-    return product_get_posts_common($context, $limit, $offset, $from_seller_portal,
+    return product_get_posts_common($context, $limit, $offset, 0/*seller+affiliate*/, $from_seller_portal,
             $group_guid, $category, $username);
 }
 
@@ -708,7 +708,7 @@ function product_get_seller_other_posts($limit = 10,
     $owner = get_entity($product_post->owner_guid);
     $seller_username = $owner->username;
 
-    $return = product_get_posts_common($context, $limit, $offset, 0, 0, $category, $seller_username);
+    $return = product_get_posts_common($context, $limit, $offset, 0/*seller+affiliate*/, 0, 0, $category, $seller_username);
 
     return $return;
 
