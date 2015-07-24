@@ -177,25 +177,25 @@ $(function() {
 				var src = $(obj).attr("src");
 				console.log("src=" + src);
 				if (src.indexOf("data:image") == 0 || src.indexOf("blob:http") == 0) {
-					
+
 					//Local image.
 					page["tip_image_local"] = true;
 					console.log("image page has local file: " + $(obj).data("file"));
 					var file_obj = {
-						id: index,
-						file: $(obj).data("file")
-					}
-					//local_files.push($(obj).data("file"));
+							id: index,
+							file: $(obj).data("file")
+						}
+						//local_files.push($(obj).data("file"));
 					local_files.push(file_obj);
 
 
 					if (!update_thumbnail_image_url) {
 						update_thumbnail_image_url = true;
 						tip_image_local_cover = true;
-						tip_thumbnail_image_url=undefined;
+						tip_thumbnail_image_url = undefined;
 					}
 				} else {
-					
+
 					//Image url
 					page["tip_image_url"] = src;
 
@@ -232,10 +232,10 @@ $(function() {
 		formData.append("idea_id", idea_id);
 		for (var i = 0; i < local_files.length; i++) {
 			//formData.append("tip_image_local_" + (i + 1), local_files[i]);
-			formData.append("tip_image_local_" + (local_files[i].id+1), local_files[i].file);
+			formData.append("tip_image_local_" + (local_files[i].id + 1), local_files[i].file);
 		}
 
-		
+
 		//used by ajax form submit. It is not used for the moment.
 		//		for (var i = 0; i < filenames.length; i++) {
 		//			$("#submit_files").append('<input type="file" name="tip_image_local_' +
@@ -371,11 +371,16 @@ $(function() {
 	//		showUrlInputDialog($(this));
 	//	});
 
-	$(document).on('click', '.panel-body > .btn-block', function() {
-		showUrlInputDialog($(this));
+	$(document).on('click', '.panel-body > .row > .col-md-4 > .btn-xs', function() {
+		showUrlInputDialog($(this), $(".panel-body > .image_page_img"));
 	});
 
-	function showUrlInputDialog(button) {
+	//For video iput dialog
+	$(document).on('click', '.panel-body > .btn-primary', function() {
+		showUrlInputDialog($(this), null);
+	});
+
+	function showUrlInputDialog(button, imgContainer) {
 		BootstrapDialog.show({
 			title: 'Input URL',
 			//cssClass: "modal-dialog",
@@ -388,35 +393,46 @@ $(function() {
 				action: function(dialogItself) {
 					var url = $('#url').val();
 
-					//url = url.replace("watch?v=", "v/");
-					url = parsingVideoUrl(url);
-					console.log("url=" + url);
 
-					$(button).prevAll().each(function() {
-						//alert($(this).prop('outerHTML'));
-						//console.log("is object=" + $(this).is("object"));
+					if (imgContainer != null) {
+						console.log("this is a image page");
+						$(imgContainer).attr("src", url);
+						
+						//Clear file upload compoment.
+						$(imgContainer).parent().find(".row > .col-md-6 > .btn-default").val("");
+					} else {
+						console.log("this is a video page");
 
-						if ($(this).is("object")) {
-							console.log("It is object tag.");
-							$(this).attr("data", url);
-						}
+						//url = url.replace("watch?v=", "v/");
+						url = parsingVideoUrl(url);
+						console.log("url=" + url);
 
-						if ($(this).is("embed")) {
-							console.log("It is embed tag.");
-							$(this).attr("src", url);
-							console.log($(this).prop('outerHTML'));
-						}
+						$(button).prevAll().each(function() {
+							//alert($(this).prop('outerHTML'));
+							//console.log("is object=" + $(this).is("object"));
 
-						if ($(this).is("iframe")) {
-							console.log("It is iframe tag.");
-							$(this).attr("src", url);
-						}
+							if ($(this).is("object")) {
+								console.log("It is object tag.");
+								$(this).attr("data", url);
+							}
 
-						if ($(this).is("img")) {
-							console.log("It is img tag.");
-							$(this).attr("src", url);
-						}
-					});
+							if ($(this).is("embed")) {
+								console.log("It is embed tag.");
+								$(this).attr("src", url);
+								console.log($(this).prop('outerHTML'));
+							}
+
+							if ($(this).is("iframe")) {
+								console.log("It is iframe tag.");
+								$(this).attr("src", url);
+							}
+
+							if ($(this).is("img")) {
+								console.log("It is img tag.");
+								$(this).attr("src", url);
+							}
+						});
+					}
 
 
 					dialogItself.close();
@@ -587,7 +603,7 @@ $(function() {
 	$('#add_Image_page').click(function() {
 		//max 10 content pages.		
 		if ($('#multi2').children().length < 10) {
-			addImagePage("", "<p>Click to change caption.</p>");
+			addImagePage("", "");
 			$("html, body").animate({
 				scrollTop: $(document).height()
 			}, "slow");
@@ -620,8 +636,8 @@ $(function() {
 			//url = url.replace("youtu.be", "www.youtube.com/v");
 			url = url.replace("youtu.be", "www.youtube.com/embed");
 		}
-		
-		if (url.indexOf("?")>=0) {
+
+		if (url.indexOf("?") >= 0) {
 			url = url + "&wmode=opaque";
 		} else {
 			url = url + "?wmode=opaque";
@@ -705,9 +721,15 @@ $(function() {
 		$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
 			'<div>Image page <i class="js-remove">✖</i></div></div>' +
 			'<div class="panel-body">' +
-			'<img class="image_page_img" src="' + url + '"/><br/>' +
-			'<pre class="richeditor">' + text + '</pre>' +
-			'<button type="button" id="change" class="btn btn-primary btn-default btn-block">Add Url</button><br/><input type="file" onchange="fileUploadOnChange(this)">' +
+			'<img class="image_page_img" src="' + url + '"/>' +
+			' <br/><div class="row"> <div class="col-md-4">' +
+			'<button type="button" id="change" class="btn btn-primary btn-xs">Input Image Url</button></div>' +
+			'<div class="col-md-6"><input type="file" onchange="fileUploadOnChange(this)" class="btn-default">' +
+			'</div></div>' +
+			'<br/>click below to change image caption' +
+			'<br/><pre class="richeditor" style="height:40px">' + text + '</pre>' +
+
+
 			'</div></div>');
 	}
 
@@ -736,10 +758,10 @@ function fileUploadOnChange(upload) {
 	//console.log("Upload is changed: " + upload.files[0]);	
 	//console.log("upload is changed: " + $(upload).val());
 
-	var img = $(upload).siblings('.image_page_img');
+	var img = $(upload).parent().parent().siblings('.image_page_img');
 	if (img != undefined) {
 		readURL(upload, img);
-		console.log("the stored image file: " + img.data("file"));
+		//console.log("the stored image file: " + img.data("file"));
 	}
 }
 
@@ -758,11 +780,11 @@ function readURL(input, image) {
 
 
 function createObjectURL(file) {
-    if ( window.webkitURL ) {
-        return window.webkitURL.createObjectURL( file );
-    } else if ( window.URL && window.URL.createObjectURL ) {
-        return window.URL.createObjectURL( file );
-    } else {
-        return null;
-    }
+	if (window.webkitURL) {
+		return window.webkitURL.createObjectURL(file);
+	} else if (window.URL && window.URL.createObjectURL) {
+		return window.URL.createObjectURL(file);
+	} else {
+		return null;
+	}
 }
