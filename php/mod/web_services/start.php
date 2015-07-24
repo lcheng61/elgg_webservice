@@ -6,10 +6,53 @@
  * @author Mark Harding (based on work started by Saket Saurabh)
  *
  */
+
+function search_objects_my_hook($hook, $type, $value, $params) {
+
+	 $db_prefix = elgg_get_config('dbprefix');
+
+	 $join = "JOIN {$db_prefix}objects_entity oe ON e.guid = oe.guid";
+	 $params['joins'] = array($join);
+//  How to search title only. http://stackoverflow.com/questions/6715712/trying-to-understand-cant-find-fulltext-index-matching-the-column-list-error
+//	 $fields = array('title', 'description');
+//	 $where = search_get_where_sql('oe', $fields, $params);
+	 $fields = array('title');
+	 $where = search_get_where_sql('oe', $fields, $params, FALSE);
+
+	 $params['wheres'] = array($where);
+	 $params['count'] = TRUE;
+	 $count = elgg_get_entities($params);
+	 
+	 // no need to continue if nothing here.
+	 if (!$count) {
+	    return array('entities' => array(), 'count' => $count);
+	    }
+	    
+	    $params['count'] = FALSE;
+	    $params['order_by'] = search_get_order_by_sql('e', 'oe', $params['sort'], $params['order']);
+	    $params['preload_owners'] = true;
+	    $entities = elgg_get_entities($params);
+
+	    // add the volatile data for why these entities have been returned.
+	    foreach ($entities as $entity) {
+	    	    $title = search_get_highlighted_relevant_substrings($entity->title, $params['query']);
+		    	   $entity->setVolatileData('search_matched_title', $title);
+			   }
+
+			   return array(
+			   	  'entities' => $entities,
+				  	     'count' => $count,
+					     );
+}
+
 function web_services_init() {
 	$action_base = elgg_get_plugins_path() . 'web_services/actions';
 	elgg_register_action('web_services/settings/save', "$action_base/save.php", "admin");
 	elgg_register_action('web_services/run_tests', "$action_base/web_services/run_tests.php", "admin");
+
+        elgg_unregister_plugin_hook_handler('search', 'object', 'search_objects_hook');
+        elgg_register_plugin_hook_handler('search', 'object', 'search_objects_my_hook');
+
 
 	elgg_register_admin_menu_item('develop', 'web_services', 'utilities');
 
@@ -18,9 +61,9 @@ function web_services_init() {
 	elgg_register_admin_menu_item('administer', 'web_services', 'utilities');
 
         // set cdn images for develop site
-//        elgg_set_config('cdn_link', 'http://social.routzi.com');
+        elgg_set_config('cdn_link', 'http://social.routzi.com');
         // set cdn images for product site
-        elgg_set_config('cdn_link', 'http://cdn.lovebeauty.me');
+//        elgg_set_config('cdn_link', 'http://cdn.lovebeauty.me');
 }
 
 $enabled = unserialize(elgg_get_plugin_setting('enabled_webservices', 'web_services'));
