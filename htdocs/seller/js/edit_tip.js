@@ -372,7 +372,8 @@ $(function() {
 	//	});
 
 	$(document).on('click', '.panel-body > .row > .col-md-4 > .btn-xs', function() {
-		showUrlInputDialog($(this), $(".panel-body > .image_page_img"));
+		showUrlInputDialog($(this), $(this).parent().parent().parent().find(".image_page_img")); 
+//		$(".panel-body > .image_page_img"));
 	});
 
 	//For video iput dialog
