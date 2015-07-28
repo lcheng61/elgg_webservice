@@ -484,6 +484,7 @@ function product_get_detail($product_id) {
     if ($return['affiliate']['is_affiliate'] == 1) {
         $return['images'][] = $blog->affiliate_image;
         $return['affiliate']['affiliate_image'] = $blog->affiliate_image;
+        $return['affiliate']['affiliate_name'] = $blog->affiliate_name;
     }
 
 //~
