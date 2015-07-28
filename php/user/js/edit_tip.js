@@ -300,6 +300,99 @@ $(function() {
 	}
 
 
+
+	function getPages(pages, local_files, tip_image_local_cover) {
+		//The flag to show if the thumbnail image url is updated.
+		var update_thumbnail_image_url = false;
+
+		$('#multi2').find('.panel-body').each(function(index, body) {
+			var page = {};
+
+
+			//console.log("found the panel: " + $(body).html());
+			obj = $(body).children()[0];
+			//console.log("embedTag is div= " + $(embedTag).is("div"));
+			//console.log("embedTag is img= " + $(embedTag).is("img"));
+			//console.log("embedTag is embed= " + $(embedTag).is("embed"));
+
+			if ($(obj).is("div")) {
+				console.log("It is a text page");
+				page["tip_text"] = $(obj).html();
+				pages.push(page);
+			} else if ($(obj).is("iframe")) {
+				console.log("It is a video iframe page");
+				page["tip_video_url"] = $(obj).attr("src");
+				pages.push(page);
+
+				if (!update_thumbnail_image_url) {
+					update_thumbnail_image_url = true;
+					tip_thumbnail_image_url = getVideoThumbanil($(obj).attr("src"));
+				}
+
+			} else if ($(obj).is("embed")) {
+				console.log("It is a video embed page");
+				page["tip_video_url"] = $(obj).attr("src");
+				pages.push(page);
+
+				if (!update_thumbnail_image_url) {
+					update_thumbnail_image_url = true;
+					tip_thumbnail_image_url = getVideoThumbanil($(obj).attr("src"));
+				}
+
+			} else if ($(obj).is("object")) {
+				console.log("It is a video object page");
+
+				var video_url = $(obj).attr("data");
+				console.log("src=" + video_url);
+				page["tip_video_url"] = video_url;
+				pages.push(page);
+
+
+				if (!update_thumbnail_image_url) {
+					update_thumbnail_image_url = true;
+					tip_thumbnail_image_url = getVideoThumbanil(video_url);
+				}
+			} else if ($(obj).is("img")) {
+				console.log("It is a image page");
+				var src = $(obj).attr("src");
+				console.log("src=" + src);
+				if (src.indexOf("data:image") == 0 || src.indexOf("blob:http") == 0) {
+
+					//Local image.
+					page["tip_image_local"] = true;
+					console.log("image page has local file: " + $(obj).data("file"));
+					var file_obj = {
+							id: index,
+							file: $(obj).data("file")
+						}
+						//local_files.push($(obj).data("file"));
+					local_files.push(file_obj);
+
+
+					if (!update_thumbnail_image_url) {
+						update_thumbnail_image_url = true;
+						tip_image_local_cover = true;
+						tip_thumbnail_image_url = undefined;
+					}
+				} else {
+
+					//Image url
+					page["tip_image_url"] = src;
+
+					//Update thumbnail url.
+					if (!update_thumbnail_image_url) {
+						update_thumbnail_image_url = true;
+						tip_thumbnail_image_url = src;
+					}
+				}
+
+				page["tip_image_caption"] = $(body).children("pre").html();
+				pages.push(page);
+			}
+		});
+	}
+
+
 	var editableList = new Sortable(multi2, {
 		draggable: '.panel',
 		handle: '.tile__name',
@@ -372,8 +465,8 @@ $(function() {
 	//	});
 
 	$(document).on('click', '.panel-body > .row > .col-md-4 > .btn-xs', function() {
-		showUrlInputDialog($(this), $(this).parent().parent().parent().find(".image_page_img")); 
-//		$(".panel-body > .image_page_img"));
+		showUrlInputDialog($(this), $(this).parent().parent().parent().find(".image_page_img"));
+		//		$(".panel-body > .image_page_img"));
 	});
 
 	//For video iput dialog
@@ -398,7 +491,7 @@ $(function() {
 					if (imgContainer != null) {
 						console.log("this is a image page");
 						$(imgContainer).attr("src", url);
-						
+
 						//Clear file upload compoment.
 						$(imgContainer).parent().find(".row > .col-md-6 > .btn-default").val("");
 					} else {
@@ -722,7 +815,7 @@ $(function() {
 		if (text == undefined) {
 			text = "";
 		}
-				
+
 		$('#multi2').append('<div class="panel panel-primary tile" style="height: 400px;"><div class="tile__name" id="editable">' +
 			'<div>Image page <i class="js-remove">✖</i></div></div>' +
 			'<div class="panel-body">' +
@@ -757,6 +850,76 @@ $(function() {
 			el && el.parentNode.removeChild(el);
 		}
 	});
+
+
+	//Called when preview dialog is shown.
+	$(document).on('show.bs.modal', '#previewIdea', function() {
+		//console.log("preview modal is shown with idea id = " + idea_id);
+		var modal = $(this);
+
+		modal.find('.modal-title').text($("#title").val());
+
+
+		if (idea_id != undefined) {
+			$("#preview_idea_id").html("ID: " + idea_id);
+		}
+
+		$("#preview_idea_category").html("Category: " + $("#category :selected").text());
+		$("#preview_idea_tags").html("Tags: " + $("#allowSpacesTagsResult").val());
+
+		$("#preview_idea_content").empty();
+		//modal.find('.modal-body input').val(recipient)
+
+		var pages = [];
+		var local_files = [];
+		var tip_image_local_cover = false;
+
+
+		//Load all the pages and display.
+		getPages(pages, local_files, tip_image_local_cover);
+		for (i = 0; i < pages.length; i++) {
+			page = pages[i];
+
+			if (page.tip_text != undefined) {
+				$("#preview_idea_content").append('<br />' + page.tip_text);
+			} else if (page.tip_video_url != undefined) {
+				if (msieversion()) {
+					$("#preview_idea_content").append('<br /><br /><iframe width="360" height="240" border="1" class="embed-style" src="' + page.tip_video_url + ' />');
+				} else {
+					$("#preview_idea_content").append('<br /><br /><object width="360" height="240" border="1" class="embed-style" data="' + page.tip_video_url + '"></object>');
+				}
+
+			} else if (page.tip_image_url != undefined) {
+				$("#preview_idea_content").append('<br /><img class="image_page_img" src="' + page.tip_image_url + '"/>');
+
+				//Add image caption below as well.
+				if (page.tip_image_caption != undefined) {
+					$("#preview_idea_content").append('<br />' + page.tip_image_caption);
+				}
+
+			}
+		}
+
+
+		//Load products. data.result.products
+		$("#preview_idea_editableProductList").empty();
+
+		var lis = $("#editableProductList li");
+		console.log("length=" + lis.length);
+		
+		if (lis != undefined && lis.length > 0) {
+			$("#editableProductList" ).each(function( index ) {
+			  var txt =  $(this).html();
+			  txt = txt.replace(/\✖/g, "");
+			  $("#preview_idea_editableProductList").append(txt);
+			});
+		} else {
+			$("#preview_idea_products_panel").hide();
+		}
+
+	});
+
+
 })
 
 function fileUploadOnChange(upload) {
