@@ -22,6 +22,8 @@
  */
 
 function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
+                     $blog['tip_thumbnail_image_url'] = str_replace("\/large\/", "\/master\/", $single->tip_thumbnail_image_url);
+
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -128,9 +130,10 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $blog['tip_category'] = $single->ideascategory;
 //                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
                  if (!$single->tip_thumbnail_image_url) {
-                     $blog['tip_thumbnail_image_url'] = elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."large/";
+                     $blog['tip_thumbnail_image_url'] = elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."master/";
                  } else {
-                     $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+//                     $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+                     $blog['tip_thumbnail_image_url'] = str_replace('/large/', '/master/', $single->tip_thumbnail_image_url);
                  }
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
@@ -152,6 +155,11 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
                  $blog['comments_number'] = $num_comments;
 
                  $blog['products_number'] = $single->countEntitiesFromRelationship("sponsor", false);
+                 if ($single->view_times) {
+                     $blog['view_times'] = $single->view_times;
+                 } else {
+                     $blog['view_times'] = 0;
+		 }
 
                  $return['tips'][] = $blog;
             }
@@ -404,7 +412,7 @@ function ideas_post_tip($message, $idea_id)
             $imgdata = get_uploaded_file($file_name);
 	    ideas_add_image($post, $imgdata, "0");
 
-                $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/0/"."large/";
+                $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/0/"."master/";
 //                $image_link = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
 
             $json['tip_thumbnail_image_url'] = $image_link;
@@ -449,7 +457,7 @@ function ideas_post_tip($message, $idea_id)
 // check if thumbnail is still empty. If yes, assign it
                     // hack for the server
                     if (!$post->tip_thumbnail_image_url) {
-			$image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."large/";
+			$image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."master/";
                         $json['tip_thumbnail_image_url'] = $image_link;
                         $return['tip_thumbnail_image_url'] = $image_link;
                         $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
@@ -877,7 +885,6 @@ function ideas_search($query, $category, $offset, $limit,
                      'asc'   // 'asc' or 'desc' (default 'asc')
                  );
                  $num_comments = count($comments);
-
 
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
