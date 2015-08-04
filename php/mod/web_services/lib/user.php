@@ -1534,7 +1534,6 @@ Once your request is approved, you'll be able to use Lovebeauty's seller portal.
 
 Your username/password is:
     username: $username
-    password: $password
 
 Regards,
 Lovebeauty Team
