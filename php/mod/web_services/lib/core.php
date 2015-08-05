@@ -26,6 +26,20 @@ expose_function('site.test',
                 false,
                 false);
 
+function site_test_auth() {
+    $response['success'] = true;
+    $response['message'] = "Hello";
+    return $response;
+} 
+
+expose_function('site.test_auth',
+                "site_test_auth",
+                array(),
+                "Get site information, must be authorized",
+                'GET',
+                true,
+                true);
+
 /**
  * Web service to get site information
  *
