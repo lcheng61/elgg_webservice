@@ -208,7 +208,26 @@ function user_get_profile($username) {
     $profile_info['profile_fields'] = $profile_fields;
     $profile_info['avatar_url'] = get_entity_icon_url($user,'large');
 
-    $profile_info['is_seller'] = $user->is_seller;
+    if (!$user->is_seller) {
+        $profile_info['is_seller'] = "false";
+    } else {
+        $profile_info['is_seller'] = $user->is_seller;
+    }
+    if ($profile_info['is_seller'] == "true") {
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'market',
+            'owner_guid' => $user->guid,
+            'limit' => 0,
+            'full_view' => FALSE,
+	    'count' => TRUE,
+            );
+        $products_number = elgg_get_entities($params);
+        $profile_info['products_number'] = $products_number;
+    } else {
+        $profile_info['products_number'] = 0;
+    }
+
 
     if ($me && $user) {
         $profile_info['do_i_follow'] = user_is_friend($me->guid, $user->guid);
