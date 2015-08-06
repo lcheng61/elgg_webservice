@@ -655,10 +655,10 @@ function user_register($name="", $email="", $username="", $password="", $is_sell
     if (!$user) {
         $return['success'] = true;
         $return['guid'] = register_user($username, $password, $name, $email);
-        if ($is_seller == 0) {
-            user_send_register_mail($email, $name, $username, $password);
-        } else if ($is_seller == 1) {
+        if ($is_seller == 1) {
             user_send_seller_register_mail($email, $name, $username, $password);
+        } else {
+            user_send_register_mail($email, $name, $username, $password);
         }
         $return['email_sent'] = true;
         $user = get_user($return['guid']);
@@ -1551,8 +1551,8 @@ Thank you for registering for Lovebeauty as a seller! We will contact you shortl
 
 Once your request is approved, you'll be able to use Lovebeauty's seller portal. Now feel free to download an APP and have fun.
 
-Your username/password is:
-    username: $username
+Your username is:
+    $username
 
 Regards,
 Lovebeauty Team
