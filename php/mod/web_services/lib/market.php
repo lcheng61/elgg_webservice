@@ -449,11 +449,11 @@ function product_get_detail($product_id) {
     $return['content'] = strip_tags($blog->description);
     $return['product_id'] = $product_id;
     $return['product_price'] = $blog->price; //floatval($blog->price);
-//    $return['product_description'] = $blog->description;
+    $return['product_description'] = $blog->description;
+
+    $return['product_description'] = $return['product_description']."<br><br><b>Availability</b>: Ships to United States";
     if ($return_policy) {
-        $return['product_description'] = $blog->description."<br><br><b>Return Policy</b>: $return_policy";
-    } else {
-        $return['product_description'] = $blog->description;
+        $return['product_description'] = $return['product_description']."<br><br><b>Return Policy</b>: $return_policy";
     }
     $return['product_options'] = json_decode($blog->options);
     $return['view_times'] = $blog->view_times;

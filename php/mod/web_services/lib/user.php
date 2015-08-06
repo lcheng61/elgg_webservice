@@ -1518,7 +1518,7 @@ function user_send_register_mail($email, $name, $username, $password) {
     $message = "
 Dear $display_name,
 
-Thank you for registering for Lovebeauty! We will contact you shortly.
+Thank you for registering for Lovebeauty! Please enjoy the APP.
 
 Your username is:
     $username
@@ -1549,7 +1549,9 @@ Dear $name,
 
 Thank you for registering for Lovebeauty as a seller! We will contact you shortly.
 
-Once your request is approved, you'll be able to use Lovebeauty's seller portal. Now feel free to download an APP and have fun.
+Once your request is approved, you'll be able to use Lovebeauty's seller portal. Now feel free to download the APP and have fun.
+
+https://itunes.apple.com/us/app/lovebeauty/id955373916?mt=8
 
 Your username is:
     $username
