@@ -1398,3 +1398,26 @@ expose_function('product.recommend_list',
                 "GET",
                 false,
                 false);
+
+
+function product_get_search_keyword($mode) {
+    $keywords = array();
+    $return = array();
+    $return['keywords'][] = "ujena";    
+    $return['keywords'][] = "bonita";    
+    $return['keywords'][] = "cynobird";
+    $return['keywords'][] = "care";
+    $return['keywords'][] = "clothes";
+    $return['total_number'] = count($return['keywords']);
+
+    return $return;
+}
+expose_function('product.get_search_keyword',
+                "product_get_search_keyword",
+                array(
+                      'mode' => array ('type' => 'int', 'required' => false, 'default' => 0),
+                    ),
+                "Get list of search key word",
+                'GET',
+                true,
+                true);
