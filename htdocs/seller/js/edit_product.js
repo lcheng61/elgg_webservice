@@ -1,6 +1,9 @@
 // Sets the min-height of #page-wrapper to window size
 $(function() {
 	var product;
+	
+	$("#description").ckeditor();
+	
 	var product_id = getUrlParameter("product_id");
 	console.log("prodcut_id=" + product_id);
 	if (product_id != undefined && product_id != null) { //edit data for teh prodcut. get the prodcut detail first of all.
