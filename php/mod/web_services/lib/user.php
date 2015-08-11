@@ -213,8 +213,7 @@ function user_get_profile($username) {
     } else {
         $profile_info['is_seller'] = $user->is_seller;
     }
-    if ($profile_info['is_seller'] == "true") {
-        $params = array(
+    $params = array(
             'types' => 'object',
             'subtypes' => 'market',
             'owner_guid' => $user->guid,
@@ -222,11 +221,8 @@ function user_get_profile($username) {
             'full_view' => FALSE,
 	    'count' => TRUE,
             );
-        $products_number = elgg_get_entities($params);
-        $profile_info['products_number'] = $products_number;
-    } else {
-        $profile_info['products_number'] = 0;
-    }
+    $products_number = elgg_get_entities($params);
+    $profile_info['products_number'] = $products_number;
 
 
     if ($me && $user) {
