@@ -363,9 +363,8 @@ $(function() {
 					console.log("image page has local file: " + $(obj).data("file"));
 					var file_obj = {
 							id: index,
-							file: $(obj).data("file")
-						}
-						//local_files.push($(obj).data("file"));
+							url: src
+					}
 					local_files.push(file_obj);
 
 
@@ -877,7 +876,7 @@ $(function() {
 
 		//Load all the pages and display.
 		getPages(pages, local_files, tip_image_local_cover);
-		for (i = 0; i < pages.length; i++) {
+		for (var i = 0; i < pages.length; i++) {
 			page = pages[i];
 
 			if (page.tip_text != undefined) {
@@ -897,6 +896,17 @@ $(function() {
 					$("#preview_idea_content").append('<br />' + page.tip_image_caption);
 				}
 
+			} else if (page.tip_image_local != undefined && page.tip_image_local == true) {
+				for(var j=0;j<local_files.length;j++) {
+					if (local_files[i].id == i) {
+						$("#preview_idea_content").append('<br /><img class="image_page_img" src="' + local_files[i].url + '"/>');
+						break;
+					}
+				}
+				//Add image caption below as well.
+				if (page.tip_image_caption != undefined) {
+					$("#preview_idea_content").append('<br />' + page.tip_image_caption);
+				}	
 			}
 		}
 

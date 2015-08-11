@@ -49,6 +49,7 @@ var check_user_email_availability = 'services/api/rest/json/?method=user.check_e
 var statistics = 'services/api/rest/json/?method=payment.analyze.seller_order';
 var user_get_settings = 'services/api/rest/json/?method=user.get_seller_setting';
 var user_set_settings = 'services/api/rest/json/?method=user.set_seller_setting';
+is_user_login = 'services/api/rest/json/?method=site.test_auth';
 
 var username;
 var token;
@@ -97,6 +98,12 @@ $(function() {
 	if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0 && window.location.href.indexOf("reset_password.html") < 0 && (username == undefined || username == "")) {
 		window.location.href = "login.html"
 	}
+
+	isUserLogin(function(isLogin) {
+		if (window.location.href.indexOf("signup.html") < 0 && window.location.href.indexOf("login.html") < 0 && window.location.href.indexOf("reset_password.html") < 0 && !isLogin) {
+			window.location.href = "login.html"
+		}
+	});
 
 })
 
@@ -163,4 +170,19 @@ function getUrlParameter(sParam) {
 			return sParameterName[1];
 		}
 	}
+}
+
+
+function isUserLogin(callback) {
+	var get_user_auth_url = server + is_user_login + '&api_key=' + api_key + '&auth_token=' + getCookie('token');
+
+	$.getJSON(get_user_auth_url, function(data) {
+		console.log(JSON.stringify(data));
+		if (data.status == 0) { //read prodcut detail successfully.
+
+			callback(true);
+		} else {
+			callback(false);
+		}
+	});
 }
