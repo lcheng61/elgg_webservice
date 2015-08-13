@@ -1075,8 +1075,15 @@ function user_upload_avatar($display_name)
         throw new InvalidParameterException("cannot_upload_avatar2");
     }
 
-    $icon_sizes = elgg_get_config('icon_sizes');
-
+//    $icon_sizes = elgg_get_config('icon_sizes');
+    $icon_sizes = array(
+        'topbar' => array(16, 16, TRUE),
+        'tiny' => array(25, 25, TRUE),
+        'small' => array(40, 40, TRUE),
+        'medium' => array(100, 100, TRUE),
+        'large' => array(800, 800, FALSE),
+        'master' => array(1000, 1000, FALSE),
+    );
     // get the images and save their file handlers into an array
     // so we can do clean up if one fails.
     $files = array();
@@ -1612,8 +1619,8 @@ function facebook_import_avatar($user, $file_location) {
         'tiny' => array(25, 25, TRUE),
         'small' => array(40, 40, TRUE),
         'medium' => array(100, 100, TRUE),
-        'large' => array(200, 200, FALSE),
-        'master' => array(550, 550, FALSE),
+        'large' => array(800, 800, FALSE),
+        'master' => array(1000, 1000, FALSE),
     );
 
     $filehandler = new ElggFile();
