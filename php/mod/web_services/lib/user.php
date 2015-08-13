@@ -1075,7 +1075,20 @@ function user_upload_avatar($display_name)
         throw new InvalidParameterException("cannot_upload_avatar2");
     }
 
-//    $icon_sizes = elgg_get_config('icon_sizes');
+    $icon_sizes = elgg_get_config('icon_sizes');
+
+$icon_sizes = array(
+'topbar' => array('w' => 16, 'h' => 16, 'square' => TRUE, 'upscale' => TRUE),
+'tiny' => array('w' => 25, 'h' => 25, 'square' => TRUE, 'upscale' => TRUE),
+'small' => array('w' => 40, 'h' => 40, 'square' => TRUE, 'upscale' => TRUE),
+'medium' => array('w' => 100, 'h' => 100, 'square' => TRUE, 'upscale' => TRUE),
+'large' => array('w' => 800, 'h' => 800, 'square' => FALSE, 'upscale' => FALSE),
+'master' => array('w' => 1000, 'h' => 1000, 'square' => FALSE, 'upscale' => FALSE),
+);
+
+elgg_set_config('icon_sizes', $icon_sizes);
+
+/*
     $icon_sizes = array(
         'topbar' => array(16, 16, TRUE),
         'tiny' => array(25, 25, TRUE),
@@ -1084,6 +1097,7 @@ function user_upload_avatar($display_name)
         'large' => array(800, 800, FALSE),
         'master' => array(1000, 1000, FALSE),
     );
+*/
     // get the images and save their file handlers into an array
     // so we can do clean up if one fails.
     $files = array();
