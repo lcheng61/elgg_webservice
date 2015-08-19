@@ -95,6 +95,14 @@
         <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 
+
+	    <!-- jQuery Version 1.11.0 -->
+	    <script src="../seller/js/plugins/jquery-1.11.1.min.js"></script>
+	    <script> 
+		    $(function(){
+		      	$('#preview_container').load("preview_idea.html"); 
+		    });
+	    </script>  
 	</head>
 
 	<body>
@@ -253,7 +261,7 @@
 					<div class="col-lg-4">
 						<div class="panel panel-primary tile" style="height: 400px;">
 							<div class="tile__name" id="editable">
-								<div>Products</div>
+								<div>Products (up to 10)</div>
 							</div>
 							<div class="panel-body">
 								<div class="form-group input-group" style="border: 0px;">
@@ -343,6 +351,16 @@
 				<div class="row">
 					<!-- /.col-lg-2 -->
 					<div class="col-lg-2">
+						<button type="button" id="preview_idea" class="btn btn-warning btn-block" data-toggle="modal" data-target="#previewIdea">Preview</button>
+					</div>
+					
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
+						<button type="button" id="save_idea" class="btn btn-warning btn-block" data-toggle="modal">Save</button>
+					</div>
+					
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
 						<button type="button" id="submit_idea" class="btn btn-primary btn-success btn-block">Submit</button>
 					</div>
 				</div>
@@ -355,6 +373,8 @@
 								<h4 class="modal-title">Select products</h4>
 							</div>
 							<div class="modal-body">
+								<div class="message alert alert-info" role="alert">Select products below.</div>
+								
 								<div class="row">
 
 									<div class="col-lg-12">
@@ -395,6 +415,9 @@
 					</div>
 				</div>
 
+				<!--Preview idea modal-->
+				<div id="preview_container"></div>
+				
 				<br />
 				<br />
 
@@ -406,9 +429,6 @@
 
 		<!--//the form used to submit locale files to server.-->
 		<form name="files" id="submit_files" method="post" enctype="multipart/form-data"></form>
-
-		<!-- jQuery Version 1.11.0 -->
-		<script src="js/plugins/jquery-1.11.1.min.js"></script>
 
 		<!-- Bootstrap Core JavaScript -->
 		<script src="js/plugins/bootstrap.min.js"></script>
