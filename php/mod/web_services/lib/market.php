@@ -451,9 +451,8 @@ function product_get_detail($product_id) {
     $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
 
-    $return['product_description'] = $return['product_description']."<br><br><b>Availability</b>: Ships to United States";
-    if ($return_policy) {
-        $return['product_description'] = $return['product_description']."<br><br><b>Return Policy</b>: $return_policy";
+    if (strstr($return['product_description'], '<strong>Availability</strong>') == FALSE) {
+        $return['product_description'] = $return['product_description'].'<br><strong>Availability</strong>: Ships to United States';
     }
     $return['product_options'] = json_decode($blog->options);
     $return['view_times'] = $blog->view_times;
