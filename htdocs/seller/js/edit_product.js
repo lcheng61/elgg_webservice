@@ -1,9 +1,25 @@
 // Sets the min-height of #page-wrapper to window size
 $(function() {
 	var product;
-	
+
 	$("#description").ckeditor();
-	
+
+
+	// Add custom validation rule for product name.
+	$.formUtils.addValidator({
+		name: 'without_double_quota',
+		validatorFunction: function(value, $el, config, language, $form) {
+			console.log("value=" + value);
+			return value.indexOf('"') < 0; 
+		},
+		errorMessage: 'The product name could not contain " character.'
+	});
+
+	// Setup form validation
+	$.validate();
+
+
+
 	var product_id = getUrlParameter("product_id");
 	console.log("prodcut_id=" + product_id);
 	if (product_id != undefined && product_id != null) { //edit data for teh prodcut. get the prodcut detail first of all.
@@ -103,11 +119,11 @@ $(function() {
 
 		//handle delivery time before submit.
 		handleDeliveryTime();
-		
+
 		//clear the delivery time before submit when it is affiliate product.
-        if ($("#is_affiliate").is(':checked')) {
-        	$("#delivery_time").val("");
-        }
+		if ($("#is_affiliate").is(':checked')) {
+			$("#delivery_time").val("");
+		}
 
 		//update options field.
 		$("#options").val(JSON.stringify(getOptionsArray()));
@@ -235,22 +251,22 @@ $(function() {
 
 
 	$("#delivery_time").blur(function() {
-  		handleDeliveryTime();
+		handleDeliveryTime();
 	});
-	
+
 	$('#is_affiliate').change(function() {
 
 		//When isAffiliate is checked, ignore the delivery time if it is null. 
-        if ($("#is_affiliate").is(':checked')) {
-        	
-        	if ($("#delivery_time").val() == undefined || $("#delivery_time").val() == "") {
-        		$("#delivery_time").val("-1");
-        	}        	
-        	
-        	console.log("delivery time : " + $("#delivery_time").val());
-        }
+		if ($("#is_affiliate").is(':checked')) {
 
-	}); 
+			if ($("#delivery_time").val() == undefined || $("#delivery_time").val() == "") {
+				$("#delivery_time").val("-1");
+			}
+
+			console.log("delivery time : " + $("#delivery_time").val());
+		}
+
+	});
 
 	// add button click
 	$("#add").button().click(function() {
@@ -341,7 +357,7 @@ $(function() {
 		}
 		return false;
 	}
-	
+
 	function handleDeliveryTime() {
 		var dtime = $("#delivery_time").val();
 		//console.log("delivery time :" + dtime);

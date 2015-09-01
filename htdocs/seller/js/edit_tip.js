@@ -55,6 +55,8 @@ $(function() {
 
 		if (draftIdea == undefined) {
 			var draftIdeaStr = localStorage.getItem("idea");
+			console.log("loaded draft idea: " + draftIdeaStr);
+			
 			if (draftIdeaStr != undefined) {
 
 				draftIdea = JSON.parse(draftIdeaStr);
@@ -139,7 +141,19 @@ $(function() {
 				} else if (page.tip_image_url != undefined) {
 					//Add one image page
 					addImagePage(page.tip_image_url, page.tip_image_caption);
-				} else if (page.tip_video_url != undefined) {
+				} else if (page.tip_image_local_url != undefined) {
+					//Add one image page
+					addImagePage("", page.tip_image_caption);
+
+
+					console.log($('#multi2').last().html());
+					
+					$('#multi2').last().find("input").value = page.tip_thumbnail_image_url;
+					$('#multi2').last().find("input").val(page.tip_thumbnail_image_url);
+					console.log($('#multi2').last().html());
+
+					
+				}else if (page.tip_video_url != undefined) {
 					//Add one vedio page
 					addVideoPage(page.tip_video_url);
 				}
@@ -324,6 +338,10 @@ $(function() {
 				}
 			} else if ($(obj).is("img")) {
 				console.log("It is a image page");
+				
+				var filepath = $(obj).data("filename");
+				console.log("filename: " + filepath);
+				
 				var src = $(obj).attr("src");
 				console.log("src=" + src);
 				if (src.indexOf("data:image") == 0 || src.indexOf("blob:http") == 0 || 
@@ -331,6 +349,7 @@ $(function() {
 
 					//Local image.
 					page["tip_image_local"] = true;
+					page["tip_image_local_url"] = filepath;
 					console.log("image page has local file: " + $(obj).data("file"));
 					var file_obj = {
 						id: index,
@@ -536,7 +555,7 @@ $(function() {
 		var key = $('#input-search').val();
 		if (key.length > 0) {
 
-			var search_producturl = server + product_search + "&offset=0&limit=50&query=" + key +
+			var search_producturl = server + product_search + "&offset=0&limit=200&query=" + key +
 				'&api_key=' + api_key + '&auth_token=' + getCookie('token');
 			console.log(search_producturl);
 
@@ -792,6 +811,8 @@ $(function() {
 
 
 	function addImagePage(url, text) {
+		console.log("addImagePage, url=" + url);
+		
 		if (text == undefined) {
 			text = "";
 		}
@@ -980,6 +1001,21 @@ function readURL(input, image) {
 
 		image.data("file", input.files[0]);
 		image.data("filename", $(input).val());
+		//console.log("image file path = " + $(input).val());
+						
+				console.log("data url: " +  window.URL.createObjectURL(input.files[0]));
+				//console.log("data url: " +  input.files[0].getAsDataURL());
+				
+				
+				var fr = new FileReader;
+        fr.onloadend = function(event) {
+        	console.log("reader is ready:  " + event.target.result);
+        	
+        	image.data("image_data", event.target.result);
+        	
+        }
+        fr.readAsDataURL(input.files[0]);
+		
 	}
 }
 
