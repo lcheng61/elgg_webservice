@@ -308,6 +308,19 @@ function tip_get_detail($tip_id) {
             $like = $likes[0];
         }
     }
+// liked by whom
+        $liked_by_users = elgg_get_annotations(array(
+                'guid' => $tip_id,
+                'annotation_name' => 'likes',
+        ));
+        foreach ($liked_by_users as $single) {
+            $liked_by['name'] = get_user($single->owner_guid)->name;
+            $liked_by['icon'] = get_entity_icon_url(get_user($single->owner_guid),'large');
+            $liked_by_user['user'][] = $liked_by;
+        }
+        $return['liked_by'] = $liked_by_user;
+//~
+
     $return['liked'] = ($like && $like->canEdit());
 ////// done like checking
 
