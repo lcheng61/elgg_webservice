@@ -56,7 +56,7 @@ $(function() {
 		if (draftIdea == undefined) {
 			var draftIdeaStr = localStorage.getItem("idea");
 			console.log("loaded draft idea: " + draftIdeaStr);
-			
+
 			if (draftIdeaStr != undefined) {
 
 				draftIdea = JSON.parse(draftIdeaStr);
@@ -147,13 +147,13 @@ $(function() {
 
 
 					console.log($('#multi2').last().html());
-					
+
 					$('#multi2').last().find("input").value = page.tip_thumbnail_image_url;
 					$('#multi2').last().find("input").val(page.tip_thumbnail_image_url);
 					console.log($('#multi2').last().html());
 
-					
-				}else if (page.tip_video_url != undefined) {
+
+				} else if (page.tip_video_url != undefined) {
 					//Add one vedio page
 					addVideoPage(page.tip_video_url);
 				}
@@ -338,14 +338,14 @@ $(function() {
 				}
 			} else if ($(obj).is("img")) {
 				console.log("It is a image page");
-				
+
 				var filepath = $(obj).data("filename");
 				console.log("filename: " + filepath);
-				
+
 				var src = $(obj).attr("src");
 				console.log("src=" + src);
-				if (src.indexOf("data:image") == 0 || src.indexOf("blob:http") == 0 || 
-						(msieversion() && src.indexOf("blob:") == 0)) {
+				if (src.indexOf("data:image") == 0 || src.indexOf("blob:http") == 0 ||
+					(msieversion() && src.indexOf("blob:") == 0)) {
 
 					//Local image.
 					page["tip_image_local"] = true;
@@ -483,6 +483,9 @@ $(function() {
 						IsValidImageUrl(url, function(url, isValidImageUrl) {
 							if (isValidImageUrl) {
 								$(imgContainer).attr("src", url);
+								
+								//Resize the imag if it is too large.
+								resizeImage(url, $(imgContainer));
 							} else {
 								BootstrapDialog.alert('Url is not a valid image. \n\n' + url);
 							}
@@ -812,7 +815,7 @@ $(function() {
 
 	function addImagePage(url, text) {
 		console.log("addImagePage, url=" + url);
-		
+
 		if (text == undefined) {
 			text = "";
 		}
@@ -830,6 +833,10 @@ $(function() {
 
 
 			'</div></div>');
+			
+			$(".image_page_img").each(function(index){
+				resizeImage($(this).attr("src"), $(this));
+			});
 	}
 
 	function addTextPage(text) {
@@ -997,26 +1004,64 @@ function readURL(input, image) {
 
 		//var url = window.URL.createObjectURL(input.files[0]);
 		var url = createObjectURL(input.files[0]);
+
 		image.attr('src', url);
 
 		image.data("file", input.files[0]);
 		image.data("filename", $(input).val());
 		//console.log("image file path = " + $(input).val());
-						
-				console.log("data url: " +  window.URL.createObjectURL(input.files[0]));
-				//console.log("data url: " +  input.files[0].getAsDataURL());
-				
-				
-				var fr = new FileReader;
-        fr.onloadend = function(event) {
-        	console.log("reader is ready:  " + event.target.result);
-        	
-        	image.data("image_data", event.target.result);
-        	
-        }
-        fr.readAsDataURL(input.files[0]);
-		
+
+		console.log("data url: " + window.URL.createObjectURL(input.files[0]));
+		//console.log("data url: " +  input.files[0].getAsDataURL());
+
+
+		var fr = new FileReader();
+		fr.onloadend = function(event) {
+			console.log("reader is ready:  " + event.target.result);
+			image.data("image_data", event.target.result);
+
+			resizeImage(event.target.result, image);
+		}
+		fr.readAsDataURL(input.files[0]);
+
 	}
+}
+
+function resizeImage(url, image) {
+	var tempImage = new Image();
+
+	tempImage.onload = function() {
+		var width = this.width;
+		var height = this.height;
+		var maxWidth = 300; // Max width for the image
+		var maxHeight = 160; // Max height for the image
+		var ratio = 0; // Used for aspect ratio
+
+
+		console.log("Image onLoad: width " + width);
+		console.log("Image onLoad: height " + height);
+
+		// Check if the current width is larger than the max
+		if (width > maxWidth) {
+			ratio = maxWidth / width; // get ratio for scaling image
+			image.width(maxWidth); // Set new width
+			image.height(height * ratio); // Scale height based on ratio
+			height = height * ratio; // Reset height to match scaled image
+			width = width * ratio; // Reset width to match scaled image
+		} else if (height > maxHeight) {
+			// Check if current height is larger than max
+
+			ratio = maxHeight / height; // get ratio for scaling image
+			image.height(maxHeight); // Set new height
+			image.width(width * ratio); // Scale width based on ratio
+			width = width * ratio; // Reset width to match scaled image
+		} else {
+			image.width(width); //Smaller image,  Use image width and height
+			image.height(height); 
+		}
+
+	};
+	tempImage.src = url;
 }
 
 
