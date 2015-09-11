@@ -341,8 +341,10 @@ $(function() {
 
 				var filepath = $(obj).data("filename");
 				console.log("filename: " + filepath);
-				filepath = Base64.encode(filepath);
-				console.log("filename: " + filepath);
+				if (filepath) {
+					filepath = Base64.encode(filepath);
+					console.log("filename: " + filepath);
+				}
 				
 
 				var src = $(obj).attr("src");
