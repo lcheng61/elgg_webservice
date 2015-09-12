@@ -62,6 +62,7 @@ $(function() {
 				$('#category').val(data.result.category);
 				$('#description').val(data.result.product_description);
 				$('#price').val(data.result.product_price);
+				$('#sku').val(data.result.sku);
 				$('#quantity').val(data.result.quantity);
 				if (data.result.tags != undefined) {
 					$('#tags').val(data.result.tags);
