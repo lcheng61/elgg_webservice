@@ -300,7 +300,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
 
                      $blog['product_description'] = $single->description;
                  } // if (from_seller_portal)
-                 $blog['sku_number'] = $single->sku_number ? $single->sku_number : "n/a";
+                 $blog['sku'] = $single->sku ? $single->sku : "";
                  $blog['shipping_fee'] = $single->shipping_fee;
                  $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
                  $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
@@ -454,7 +454,7 @@ function product_get_detail($product_id) {
     $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
     if (strstr($return['product_description'], '<strong>SKU number</strong>') == FALSE) {
-        $return['product_description'] = $return['product_description'].'<br><strong>SKU number</strong>: '.$blog->sku_number;
+        $return['product_description'] = $return['product_description'].'<br><strong>SKU number</strong>: '.$blog->sku;
     }
     if (strstr($return['product_description'], '<strong>Availability</strong>') == FALSE) {
         $return['product_description'] = $return['product_description'].'<br><strong>Availability</strong>: Ships to United States';
@@ -492,7 +492,7 @@ function product_get_detail($product_id) {
     }
 
 //~
-    $return['sku_number'] = $blog->sku_number ? $blog->sku_number : "n/a";
+    $return['sku'] = $blog->sku ? $blog->sku : "";
 
     $return['sold_count'] = $blog->sold_count;
     $return['rate'] = $blog->rate;
@@ -847,7 +847,7 @@ function product_post($product_id, $title, $category, $description,
     $free_shipping_quantity_limit, $free_shipping_cost_limit,
     $is_affiliate, $affiliate_product_id, $affiliate_product_url,
     $is_archived, $affiliate_syncon, $affiliate_image, $options,
-    $affiliate_name, $sku_number)
+    $affiliate_name, $sku)
 {
 
     $user = elgg_get_logged_in_user_entity();
@@ -913,7 +913,7 @@ function product_post($product_id, $title, $category, $description,
         'affiliate_image' => $affiliate_image,
         'options' => $options,
         'affiliate_name' => $affiliate_name,
-        'sku_number' => $sku_number,
+        'sku' => $sku,
     );
 
     // fail if a required entity isn't set
@@ -1018,7 +1018,7 @@ expose_function('product.post',
                        'affiliate_image' => array('type' => 'string', 'required' => false, 'default' => ""),
                        'options' => array('type' => 'string', 'required' => false, 'default' => ""),
                        'affiliate_name' => array('type' => 'string', 'required' => false, 'default' => ""),
-                       'sku_number' => array('type' => 'string', 'required' => false, 'default' => "n/a"),
+                       'sku' => array('type' => 'string', 'required' => false, 'default' => ""),
                      ),
                 "Post a product by seller",
                 "POST",
