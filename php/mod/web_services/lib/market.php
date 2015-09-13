@@ -453,9 +453,11 @@ function product_get_detail($product_id) {
     $return['product_id'] = $product_id;
     $return['product_price'] = $blog->price; //floatval($blog->price);
     $return['product_description'] = $blog->description;
+/*
     if (strstr($return['product_description'], '<strong>SKU number</strong>') == FALSE) {
         $return['product_description'] = $return['product_description'].'<br><strong>SKU number</strong>: '.$blog->sku;
     }
+*/
     if (strstr($return['product_description'], '<strong>Availability</strong>') == FALSE) {
         $return['product_description'] = $return['product_description'].'<br><strong>Availability</strong>: Ships to United States';
     }
