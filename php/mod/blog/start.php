@@ -41,8 +41,8 @@ function blog_init() {
 	// override the default url to view a blog object
 	elgg_register_entity_url_handler('object', 'blog', 'blog_url_handler');
 
-	// notifications
-	register_notification_object('object', 'blog', elgg_echo('blog:newpost'));
+	// notifications - need to register for unique event because of draft/published status
+	elgg_register_event_handler('publish', 'object', 'object_notifications');
 	elgg_register_plugin_hook_handler('notify:entity:message', 'object', 'blog_notify_message');
 
 	// add blog link to
@@ -60,7 +60,7 @@ function blog_init() {
 	elgg_extend_view('groups/tool_latest', 'blog/group_module');
 
 	// add a blog widget
-	elgg_register_widget_type('blog', elgg_echo('blog'), elgg_echo('blog:widget:description'), 'profile');
+	elgg_register_widget_type('blog', elgg_echo('blog'), elgg_echo('blog:widget:description'));
 
 	// register actions
 	$action_path = elgg_get_plugins_path() . 'blog/actions/blog';
@@ -99,8 +99,7 @@ function blog_page_handler($page) {
 
 	elgg_load_library('elgg:blog');
 
-	// @todo remove the forwarder in 1.9
-	// forward to correct URL for blog pages pre-1.7.5
+	// forward to correct URL for blog pages pre-1.8
 	blog_url_forwarder($page);
 
 	// push all blogs breadcrumb
@@ -114,18 +113,31 @@ function blog_page_handler($page) {
 	switch ($page_type) {
 		case 'owner':
 			$user = get_user_by_username($page[1]);
+			if (!$user) {
+				forward('', '404');
+			}
 			$params = blog_get_page_content_list($user->guid);
 			break;
 		case 'friends':
 			$user = get_user_by_username($page[1]);
+			if (!$user) {
+				forward('', '404');
+			}
 			$params = blog_get_page_content_friends($user->guid);
 			break;
 		case 'archive':
 			$user = get_user_by_username($page[1]);
+			if (!$user) {
+				forward('', '404');
+			}
 			$params = blog_get_page_content_archive($user->guid, $page[2], $page[3]);
 			break;
 		case 'view':
 			$params = blog_get_page_content_read($page[1]);
+			break;
+		case 'read': // Elgg 1.7 compatibility
+			register_error(elgg_echo("changebookmark"));
+			forward("blog/view/{$page[1]}");
 			break;
 		case 'add':
 			gatekeeper();
@@ -136,7 +148,15 @@ function blog_page_handler($page) {
 			$params = blog_get_page_content_edit($page_type, $page[1], $page[2]);
 			break;
 		case 'group':
-			$params = blog_get_page_content_list($page[1]);
+			$group = get_entity($page[1]);
+			if (!elgg_instanceof($group, 'group')) {
+				forward('', '404');
+			}
+			if (!isset($page[2]) || $page[2] == 'all') {
+				$params = blog_get_page_content_list($page[1]);
+			} else {
+				$params = blog_get_page_content_archive($page[1], $page[3], $page[4]);
+			}
 			break;
 		case 'all':
 			$params = blog_get_page_content_list();
@@ -207,7 +227,14 @@ function blog_entity_menu_setup($hook, $type, $return, $params) {
 		return $return;
 	}
 
-	if ($entity->canEdit() && $entity->status != 'published') {
+	if ($entity->status != 'published') {
+		// draft status replaces access
+		foreach ($return as $index => $item) {
+			if ($item->getName() == 'access') {
+				unset($return[$index]);
+			}
+		}
+
 		$status_text = elgg_echo("blog:status:{$entity->status}");
 		$options = array(
 			'name' => 'published_status',
@@ -219,6 +246,33 @@ function blog_entity_menu_setup($hook, $type, $return, $params) {
 	}
 
 	return $return;
+}
+
+/**
+ * Set the notification message body
+ * 
+ * @param string $hook    Hook name
+ * @param string $type    Hook type
+ * @param string $message The current message body
+ * @param array  $params  Parameters about the blog posted
+ * @return string
+ */
+function blog_notify_message($hook, $type, $message, $params) {
+	$entity = $params['entity'];
+	$to_entity = $params['to_entity'];
+	$method = $params['method'];
+	if (elgg_instanceof($entity, 'object', 'blog')) {
+		$descr = $entity->excerpt;
+		$title = $entity->title;
+		$owner = $entity->getOwnerEntity();
+		return elgg_echo('blog:notification', array(
+			$owner->name,
+			$title,
+			$descr,
+			$entity->getURL()
+		));
+	}
+	return null;
 }
 
 /**
@@ -234,7 +288,7 @@ function blog_ecml_views_hook($hook, $entity_type, $return_value, $params) {
  * Upgrade from 1.7 to 1.8.
  */
 function blog_run_upgrades($event, $type, $details) {
-	$blog_upgrade_version = get_plugin_setting('upgrade_version', 'blogs');
+	$blog_upgrade_version = elgg_get_plugin_setting('upgrade_version', 'blogs');
 
 	if (!$blog_upgrade_version) {
 		 // When upgrading, check if the ElggBlog class has been registered as this
@@ -242,23 +296,6 @@ function blog_run_upgrades($event, $type, $details) {
 		if (!update_subtype('object', 'blog', 'ElggBlog')) {
 			add_subtype('object', 'blog', 'ElggBlog');
 		}
-
-		// only run this on the first migration to 1.8
-		// add excerpt to all blogs that don't have it.
-		$ia = elgg_set_ignore_access(true);
-		$options = array(
-			'type' => 'object',
-			'subtype' => 'blog'
-		);
-
-		$blogs = new ElggBatch('elgg_get_entities', $options);
-		foreach ($blogs as $blog) {
-			if (!$blog->excerpt) {
-				$blog->excerpt = elgg_get_excerpt($blog->description);
-			}
-		}
-
-		elgg_set_ignore_access($ia);
 
 		elgg_set_plugin_setting('upgrade_version', 1, 'blogs');
 	}

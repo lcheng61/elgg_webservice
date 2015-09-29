@@ -79,16 +79,34 @@ expose_function('messages.count',
  */
 function messages_inbox($limit = 10, $offset = 0) {    
 
-        $user = get_loggedin_user();
-        $params = array(
+    $user = get_loggedin_user();
+
+/*
+    $total_params = array(
             'type' => 'object',
             'subtype' => 'messages',
             'metadata_name' => 'toId',
             'metadata_value' => $user->guid,
             'owner_guid' => $user->guid,
+            'limit' => $limit,
+            'offset' => $offset,
+            'full_view' => false,
+                        );
+    $total_list = elgg_get_entities_from_metadata($total_params);
+*/
+    $params = array(
+            'type' => 'object',
+            'subtype' => 'messages',
+            'metadata_name' => 'toId',
+            'metadata_value' => $user->guid,
+            'owner_guid' => $user->guid,
+            'limit' => $limit,
+            'offset' => $offset,
             'full_view' => false,
                         );
     $list = elgg_get_entities_from_metadata($params);
+    $return['total_number'] = count($list);
+    $return['message'] = array();
     if($list) {
         foreach($list as $single ) {
             $message['guid'] = $single->guid;
@@ -109,13 +127,15 @@ function messages_inbox($limit = 10, $offset = 0) {
             }else{
                 $message['read'] = "no";
             }
-            $return[] = $message;
+            $return['message'][] = $message;
         }
     }
+/*
     else {
          $msg = elgg_echo('messages:nomessages');
         throw new InvalidParameterException($msg);
     }
+*/
     return $return;
 }
     
@@ -206,10 +226,21 @@ expose_function('messages.sent',
  */
  function message_send_one($subject,$body, $send_to, $reply = 0) {    
          
+    $user = get_loggedin_user();
     $recipient = get_user_by_username($send_to);
     $recipient_guid = $recipient->guid;
+
+    if ($user->guid == $recipient_guid) {
+        $msg = elgg_echo('messages:cannotsendtoself');
+        throw new InvalidParameterException($msg);
+    }
     $result = messages_send($subject, $body, $recipient_guid, 0, $reply);
-        
+
+    // send push notification
+    $push_msg  = "$user->username sent you a message.";
+    $push_link = "lovebeauty://message?username=$user->username";
+    $ret = push_notification($push_msg, $push_link, $recipient_guid);
+
     return $result;
 }
 
@@ -217,7 +248,7 @@ expose_function('messages.sent',
                 "message_send_one",
                 array(
                         'subject' => array ('type' => 'string'),
-                        'body' => array ('type' => 'string'),
+                        'body' => array ('type' => 'string', 'required' => false, 'default'=>""),
                         'send_to' => array ('type' => 'string'),
                         'reply' => array ('type' => 'int', 'required' => false, 'default'=>0),
                     ),

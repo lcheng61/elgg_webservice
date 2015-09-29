@@ -4,6 +4,12 @@
  *
  * @package    Elgg.Core
  * @subpackage Core
+ * 
+ * @property int    $id           The unique identifier (read-only)
+ * @property int    $guid_one     The GUID of the subject of the relationship
+ * @property string $relationship The name of the relationship
+ * @property int    $guid_two     The GUID of the object of the relationship
+ * @property int    $time_created A UNIX timestamp of when the relationship was created (read-only, set on first save)
  */
 class ElggRelationship extends ElggData implements
 	Importable
@@ -65,6 +71,7 @@ class ElggRelationship extends ElggData implements
 	 * Save the relationship
 	 *
 	 * @return int the relationship id
+	 * @throws IOException
 	 */
 	public function save() {
 		if ($this->id > 0) {
@@ -139,7 +146,7 @@ class ElggRelationship extends ElggData implements
 	 * @param ODD $data ODD data
 
 	 * @return bool
-	 * @throws ImportException
+	 * @throws ImportException|InvalidParameterException
 	 */
 	public function import(ODD $data) {
 		if (!($data instanceof ODDRelationship)) {
@@ -173,6 +180,8 @@ class ElggRelationship extends ElggData implements
 				return true;
 			}
 		}
+
+		return false;
 	}
 
 	// SYSTEM LOG INTERFACE ////////////////////////////////////////////////////////////

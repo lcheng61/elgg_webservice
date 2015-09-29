@@ -178,7 +178,7 @@ function authenticate_method($method) {
 	// check if user authentication is required
 	if ($API_METHODS[$method]["require_user_auth"] == true) {
 		if ($user_auth_result == false) {
-			throw new APIException($user_pam->getFailureMessage());
+			throw new APIException($user_pam->getFailureMessage(), ErrorResult::$RESULT_FAIL_AUTHTOKEN);
 		}
 	}
 
@@ -219,7 +219,6 @@ function execute_method($method) {
 
 		throw new CallException($msg);
 	}
-
 	$parameters = get_parameters_for_method($method);
 
 	if (verify_parameters($method, $parameters) == false) {
@@ -232,6 +231,7 @@ function execute_method($method) {
 	$function = $API_METHODS[$method]["function"];
 	$serialised_parameters = trim($serialised_parameters, ", ");
 
+	// @todo document why we cannot use call_user_func_array here
 	$result = eval("return $function($serialised_parameters);");
 
 	// Sanity check result
@@ -551,10 +551,18 @@ function get_and_validate_api_headers() {
 	if (($result->method != "GET") && ($result->method != "POST")) {
 		throw new APIException(elgg_echo('APIException:NotGetOrPost'));
 	}
+        $result->api_key = null;
+        $result->hmac = null;
+        $result->hmac_algo = null;
+        $result->time = null;
+	$result->posthash = null;
+	$result->posthash_algo = null;
+	$result->content_type = null;
 
-	$result->api_key = $_SERVER['HTTP_X_ELGG_APIKEY'];
-	if ($result->api_key == "") {
-		throw new APIException(elgg_echo('APIException:MissingAPIKey'));
+/* by cl to clean up debug log like this "DEBUG: 2015-06-25 18:26:36 (UTC): "Undefined property: stdClass::$api_key"
+        $result->api_key = $_SERVER['HTTP_X_ELGG_APIKEY'];
+        if ($result->api_key == "") {
+   	    throw new APIException(elgg_echo('APIException:MissingAPIKey'));
 	}
 
 	$result->hmac = $_SERVER['HTTP_X_ELGG_HMAC'];
@@ -602,7 +610,7 @@ function get_and_validate_api_headers() {
 			throw new APIException(elgg_echo('APIException:MissingContentType'));
 		}
 	}
-
+*/
 	return $result;
 }
 
@@ -854,7 +862,7 @@ function pam_auth_session() {
  *
  * @return bool
  */
-function create_user_token($username, $expire = 60) {
+function create_user_token($username, $expire = 5256000/*60*/) {
 	global $CONFIG;
 
 	$site_guid = $CONFIG->site_id;
@@ -1165,7 +1173,18 @@ function list_all_apis() {
  * @access private
  */
 function auth_gettoken($username, $password) {
-	if (authenticate($username, $password)) {
+	// check if username is an email address
+	if (is_email_address($username)) {
+		$users = get_user_by_email($username);
+			
+		// check if we have a unique user
+		if (is_array($users) && (count($users) == 1)) {
+			$username = $users[0]->username;
+		}
+	}
+	
+	// validate username and password
+	if (true === elgg_authenticate($username, $password)) {
 		$token = create_user_token($username);
 		if ($token) {
 			return $token;
@@ -1194,6 +1213,8 @@ $ERRORS = array();
  *
  * @return void
  * @access private
+ *
+ * @throws Exception
  */
 function _php_api_error_handler($errno, $errmsg, $filename, $linenum, $vars) {
 	global $ERRORS;
@@ -1264,25 +1285,23 @@ function service_handler($handler, $request) {
 	$request = explode('/', $request);
 
 	// after the handler, the first identifier is response format
-	// ex) http://example.org/services/api/rest/xml/?method=test
-	$reponse_format = array_shift($request);
+	// ex) http://example.org/services/api/rest/json/?method=test
+	$response_format = array_shift($request);
 	// Which view - xml, json, ...
-	if ($reponse_format) {
-		elgg_set_viewtype($reponse_format);
+	if ($response_format && elgg_is_valid_view_type($response_format)) {
+		elgg_set_viewtype($response_format);
 	} else {
-		// default to xml
-		elgg_set_viewtype("xml");
+		// default to json
+		elgg_set_viewtype("json");
 	}
 
 	if (!isset($CONFIG->servicehandler) || empty($handler)) {
 		// no handlers set or bad url
 		header("HTTP/1.0 404 Not Found");
 		exit;
-	} else if (isset($CONFIG->servicehandler[$handler])
-	&& is_callable($CONFIG->servicehandler[$handler])) {
-
+	} else if (isset($CONFIG->servicehandler[$handler]) && is_callable($CONFIG->servicehandler[$handler])) {
 		$function = $CONFIG->servicehandler[$handler];
-		$function($request, $handler);
+		call_user_func($function, $request, $handler);
 	} else {
 		// no handler for this web service
 		header("HTTP/1.0 404 Not Found");
@@ -1301,10 +1320,11 @@ function service_handler($handler, $request) {
  */
 function register_service_handler($handler, $function) {
 	global $CONFIG;
+
 	if (!isset($CONFIG->servicehandler)) {
 		$CONFIG->servicehandler = array();
 	}
-	if (is_callable($function)) {
+	if (is_callable($function, true)) {
 		$CONFIG->servicehandler[$handler] = $function;
 		return true;
 	}
@@ -1319,11 +1339,13 @@ function register_service_handler($handler, $function) {
  *
  * @param string $handler web services type
  *
- * @return 1.7.0
+ * @return void
+ * @since 1.7.0
  */
 function unregister_service_handler($handler) {
 	global $CONFIG;
-	if (isset($CONFIG->servicehandler) && isset($CONFIG->servicehandler[$handler])) {
+
+	if (isset($CONFIG->servicehandler, $CONFIG->servicehandler[$handler])) {
 		unset($CONFIG->servicehandler[$handler]);
 	}
 }
@@ -1333,6 +1355,8 @@ function unregister_service_handler($handler) {
  *
  * @return void
  * @access private
+ *
+ * @throws SecurityException|APIException
  */
 function rest_handler() {
 	global $CONFIG;
@@ -1387,7 +1411,7 @@ function rest_handler() {
 /**
  * Unit tests for API
  *
- * @param sting  $hook   unit_test
+ * @param string  $hook   unit_test
  * @param string $type   system
  * @param mixed  $value  Array of tests
  * @param mixed  $params Params
@@ -1397,6 +1421,7 @@ function rest_handler() {
  */
 function api_unit_test($hook, $type, $value, $params) {
 	global $CONFIG;
+
 	$value[] = $CONFIG->path . 'engine/tests/services/api.php';
 	return $value;
 }
@@ -1418,15 +1443,18 @@ function api_init() {
 	elgg_echo("system.api.list"), "GET", false, false);
 
 	// The authentication token api
-	expose_function("auth.gettoken",
-					"auth_gettoken", array(
-											'username' => array ('type' => 'string'),
-											'password' => array ('type' => 'string'),
-											),
-					elgg_echo('auth.gettoken'),
-					'POST',
-					false,
-					false);
+	expose_function(
+		"auth.gettoken",
+		"auth_gettoken",
+		array(
+			'username' => array ('type' => 'string'),
+			'password' => array ('type' => 'string'),
+		),
+		elgg_echo('auth.gettoken'),
+		'POST',
+		false,
+		false
+	);
 }
 
 

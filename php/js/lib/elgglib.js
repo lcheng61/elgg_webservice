@@ -283,7 +283,7 @@ elgg.normalize_url = function(url) {
 	}
 
 	// 'javascript:'
-	else if (url.indexOf('javascript:') === 0) {
+	else if (url.indexOf('javascript:') === 0 || url.indexOf('mailto:') === 0 ) {
 		return url;
 	}
 
@@ -347,8 +347,12 @@ elgg.system_messages = function(msgs, delay, type) {
 
 	msgs.forEach(appendMessage);
 
-	$(messages_html.join('')).appendTo(systemMessages)
-		.animate({opacity: '1.0'}, delay).fadeOut('slow');
+	if (type != 'error') {
+		$(messages_html.join('')).appendTo(systemMessages)
+			.animate({opacity: '1.0'}, delay).fadeOut('slow');
+	} else {
+		$(messages_html.join('')).appendTo(systemMessages);
+	}
 };
 
 /**
@@ -470,8 +474,8 @@ elgg.parse_str = function(string) {
 		re = /([^&=]+)=?([^&]*)/g;
 
 	while (result = re.exec(string)) {
-		key = decodeURIComponent(result[1])
-		value = decodeURIComponent(result[2])
+		key = decodeURIComponent(result[1].replace(/\+/g, ' '));
+		value = decodeURIComponent(result[2].replace(/\+/g, ' '));
 		params[key] = value;
 	}
 	

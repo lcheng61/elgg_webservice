@@ -13,6 +13,7 @@ if (empty($vars['title'])) {
 }
 
 global $autofeed;
+/*
 if (isset($autofeed) && $autofeed == true) {
 	$url = full_url();
 	if (substr_count($url,'?')) {
@@ -29,6 +30,9 @@ END;
 } else {
 	$feedref = "";
 }
+*/
+// remove rss feed from the homepage
+$autofeed = false;
 
 $js = elgg_get_loaded_js('head');
 $css = elgg_get_loaded_css();
@@ -66,7 +70,9 @@ $release = get_version(true);
 <?php } ?>
 
 <script type="text/javascript">
+// <![CDATA[
 	<?php echo elgg_view('js/initialize_elgg'); ?>
+// ]]>
 </script>
 
 <?php

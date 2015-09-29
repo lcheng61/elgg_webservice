@@ -107,7 +107,7 @@ $CONFIG->broken_mta = FALSE;
  *
  * Elgg stores each query and its results in a query cache.
  * On large sites or long-running scripts, this cache can grow to be
- * large.  To disable query caching, set this to FALSE.
+ * large.  To disable query caching, set this to TRUE.
  *
  * @global bool $CONFIG->db_disable_query_cache
  */
@@ -121,3 +121,20 @@ $CONFIG->db_disable_query_cache = FALSE;
  * @global int $CONFIG->min_password_length
  */
 $CONFIG->min_password_length = 6;
+
+/**
+ * This is an optional script used to override Elgg's default handling of
+ * uncaught exceptions.
+ * 
+ * This should be an absolute file path to a php script that will be called
+ * any time an uncaught exception is thrown.
+ * 
+ * The script will have access to the following variables as part of the scope
+ * global $CONFIG
+ * $exception - the unhandled exception
+ * 
+ * @warning - the database may not be available
+ * 
+ * @global string $CONFIG->exception_include
+ */
+$CONFIG->exception_include = '';

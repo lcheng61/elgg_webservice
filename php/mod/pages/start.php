@@ -28,10 +28,10 @@ function pages_init() {
 	elgg_register_annotation_url_handler('page', 'pages_revision_url');
 
 	// Register some actions
-	$action_base = elgg_get_plugins_path() . 'pages/actions/pages';
-	elgg_register_action("pages/edit", "$action_base/edit.php");
-	elgg_register_action("pages/editwelcome", "$action_base/editwelcome.php");
-	elgg_register_action("pages/delete", "$action_base/delete.php");
+	$action_base = elgg_get_plugins_path() . 'pages/actions';
+	elgg_register_action("pages/edit", "$action_base/pages/edit.php");
+	elgg_register_action("pages/delete", "$action_base/pages/delete.php");
+	elgg_register_action("annotations/page/delete", "$action_base/annotations/page/delete.php");
 
 	// Extend the main css view
 	elgg_extend_view('css/elgg', 'pages/css');
@@ -64,6 +64,7 @@ function pages_init() {
 		'title' => 'text',
 		'description' => 'longtext',
 		'tags' => 'tags',
+		'parent_guid' => 'parent',
 		'access_id' => 'access',
 		'write_access_id' => 'write_access',
 	));
@@ -80,8 +81,13 @@ function pages_init() {
 	// entity menu
 	elgg_register_plugin_hook_handler('register', 'menu:entity', 'pages_entity_menu_setup');
 
+	// hook into annotation menu
+	//elgg_register_plugin_hook_handler('register', 'menu:annotation', 'pages_annotation_menu_setup');
+
 	// register ecml views to parse
 	elgg_register_plugin_hook_handler('get_views', 'ecml', 'pages_ecml_views_hook');
+	
+	elgg_register_event_handler('upgrade', 'system', 'pages_run_upgrades');
 }
 
 /**
@@ -106,10 +112,6 @@ function pages_page_handler($page) {
 
 	elgg_load_library('elgg:pages');
 	
-	// add the jquery treeview files for navigation
-	elgg_load_js('jquery-treeview');
-	elgg_load_css('jquery-treeview');
-
 	if (!isset($page[0])) {
 		$page[0] = 'all';
 	}
@@ -189,10 +191,12 @@ function pages_icon_url_override($hook, $type, $returnvalue, $params) {
 	if (elgg_instanceof($entity, 'object', 'page_top') ||
 		elgg_instanceof($entity, 'object', 'page')) {
 		switch ($params['size']) {
+			case 'topbar':
+			case 'tiny':
 			case 'small':
 				return 'mod/pages/images/pages.gif';
 				break;
-			case 'medium':
+			default:
 				return 'mod/pages/images/pages_lrg.gif';
 				break;
 		}
@@ -264,13 +268,18 @@ function page_notify_message($hook, $entity_type, $returnvalue, $params) {
 	$entity = $params['entity'];
 	$to_entity = $params['to_entity'];
 	$method = $params['method'];
-	if (($entity instanceof ElggEntity) && (($entity->getSubtype() == 'page_top') || ($entity->getSubtype() == 'page'))) {
+
+	if (elgg_instanceof($entity, 'object', 'page') || elgg_instanceof($entity, 'object', 'page_top')) {
 		$descr = $entity->description;
 		$title = $entity->title;
-		//@todo why?
-		$url = elgg_get_site_url() . "view/" . $entity->guid;
 		$owner = $entity->getOwnerEntity();
-		return $owner->name . ' ' . elgg_echo("pages:via") . ': ' . $title . "\n\n" . $descr . "\n\n" . $entity->getURL();
+		
+		return elgg_echo('pages:notification', array(
+			$owner->name,
+			$title,
+			$descr,
+			$entity->getURL()
+		));
 	}
 	return null;
 }
@@ -278,25 +287,37 @@ function page_notify_message($hook, $entity_type, $returnvalue, $params) {
 /**
  * Extend permissions checking to extend can-edit for write users.
  *
- * @param unknown_type $hook
- * @param unknown_type $entity_type
- * @param unknown_type $returnvalue
- * @param unknown_type $params
+ * @param string $hook
+ * @param string $entity_type
+ * @param bool   $returnvalue
+ * @param array  $params
  */
-function pages_write_permission_check($hook, $entity_type, $returnvalue, $params)
-{
+function pages_write_permission_check($hook, $entity_type, $returnvalue, $params) {
 	if ($params['entity']->getSubtype() == 'page'
 		|| $params['entity']->getSubtype() == 'page_top') {
 
 		$write_permission = $params['entity']->write_access_id;
 		$user = $params['user'];
 
-		if (($write_permission) && ($user)) {
-			// $list = get_write_access_array($user->guid);
-			$list = get_access_array($user->guid); // get_access_list($user->guid);
-
-			if (($write_permission!=0) && (in_array($write_permission,$list))) {
-				return true;
+		if ($write_permission && $user) {
+			switch ($write_permission) {
+				case ACCESS_PRIVATE:
+					// Elgg's default decision is what we want
+					return;
+					break;
+				case ACCESS_FRIENDS:
+					$owner = $params['entity']->getOwnerEntity();
+					if ($owner && $owner->isFriendsWith($user->guid)) {
+						return true;
+					}
+					break;
+				default:
+					$list = get_access_array($user->guid);
+					if (in_array($write_permission, $list)) {
+						// user in the access collection
+						return true;
+					}
+					break;
 			}
 		}
 	}

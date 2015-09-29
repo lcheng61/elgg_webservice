@@ -12,7 +12,7 @@
  *
  * @param stdClass $row An object from the database
  *
- * @return stdClass or ElggMetadata
+ * @return stdClass|ElggMetadata
  * @access private
  */
 function row_to_elggmetadata($row) {
@@ -30,7 +30,7 @@ function row_to_elggmetadata($row) {
  *
  * @param int $id The id of the metadata object being retrieved.
  *
- * @return false|ElggMetadata
+ * @return ElggMetadata|false  FALSE if not found
  */
 function elgg_get_metadata_from_id($id) {
 	return elgg_get_metastring_based_object_from_id($id, 'metadata');
@@ -64,7 +64,7 @@ function elgg_delete_metadata_by_id($id) {
  * @param int    $access_id      Default is ACCESS_PRIVATE
  * @param bool   $allow_multiple Allow multiple values for one key. Default is FALSE
  *
- * @return int/bool id of metadata or FALSE if failure
+ * @return int|false id of metadata or FALSE if failure
  */
 function create_metadata($entity_guid, $name, $value, $value_type = '', $owner_guid = 0,
 	$access_id = ACCESS_PRIVATE, $allow_multiple = false) {
@@ -90,8 +90,6 @@ function create_metadata($entity_guid, $name, $value, $value_type = '', $owner_g
 
 	$access_id = (int)$access_id;
 
-	$id = false;
-
 	$query = "SELECT * from {$CONFIG->dbprefix}metadata"
 		. " WHERE entity_guid = $entity_guid and name_id=" . add_metastring($name) . " limit 1";
 
@@ -106,34 +104,33 @@ function create_metadata($entity_guid, $name, $value, $value_type = '', $owner_g
 	} else {
 		// Support boolean types
 		if (is_bool($value)) {
-			if ($value) {
-				$value = 1;
-			} else {
-				$value = 0;
-			}
+			$value = (int) $value;
 		}
 
 		// Add the metastrings
-		$value = add_metastring($value);
-		if (!$value) {
+		$value_id = add_metastring($value);
+		if (!$value_id) {
 			return false;
 		}
 
-		$name = add_metastring($name);
-		if (!$name) {
+		$name_id = add_metastring($name);
+		if (!$name_id) {
 			return false;
 		}
 
 		// If ok then add it
 		$query = "INSERT into {$CONFIG->dbprefix}metadata"
 			. " (entity_guid, name_id, value_id, value_type, owner_guid, time_created, access_id)"
-			. " VALUES ($entity_guid, '$name','$value','$value_type', $owner_guid, $time, $access_id)";
+			. " VALUES ($entity_guid, '$name_id','$value_id','$value_type', $owner_guid, $time, $access_id)";
 
 		$id = insert_data($query);
 
 		if ($id !== false) {
 			$obj = elgg_get_metadata_from_id($id);
 			if (elgg_trigger_event('create', 'metadata', $obj)) {
+
+				elgg_get_metadata_cache()->save($entity_guid, $name, $value, $allow_multiple);
+
 				return $id;
 			} else {
 				elgg_delete_metadata_by_id($id);
@@ -175,6 +172,7 @@ function update_metadata($id, $name, $value, $value_type, $owner_guid, $access_i
 	}
 
 	if ($metabyname_memcache) {
+		// @todo fix memcache (name_id is not a property of ElggMetadata)
 		$metabyname_memcache->delete("{$md->entity_guid}:{$md->name_id}");
 	}
 
@@ -187,41 +185,37 @@ function update_metadata($id, $name, $value, $value_type, $owner_guid, $access_i
 
 	$access_id = (int)$access_id;
 
-	$access = get_access_sql_suffix();
-
 	// Support boolean types (as integers)
 	if (is_bool($value)) {
-		if ($value) {
-			$value = 1;
-		} else {
-			$value = 0;
-		}
+		$value = (int) $value;
 	}
 
 	// Add the metastring
-	$value = add_metastring($value);
-	if (!$value) {
+	$value_id = add_metastring($value);
+	if (!$value_id) {
 		return false;
 	}
 
-	$name = add_metastring($name);
-	if (!$name) {
+	$name_id = add_metastring($name);
+	if (!$name_id) {
 		return false;
 	}
 
 	// If ok then add it
 	$query = "UPDATE {$CONFIG->dbprefix}metadata"
-		. " set name_id='$name', value_id='$value', value_type='$value_type', access_id=$access_id,"
+		. " set name_id='$name_id', value_id='$value_id', value_type='$value_type', access_id=$access_id,"
 		. " owner_guid=$owner_guid where id=$id";
 
 	$result = update_data($query);
 	if ($result !== false) {
+
+		elgg_get_metadata_cache()->save($md->entity_guid, $name, $value);
+
+		// @todo this event tells you the metadata has been updated, but does not
+		// let you do anything about it. What is needed is a plugin hook before
+		// the update that passes old and new values.
 		$obj = elgg_get_metadata_from_id($id);
-		if (elgg_trigger_event('update', 'metadata', $obj)) {
-			return true;
-		} else {
-			elgg_delete_metadata_by_id($id);
-		}
+		elgg_trigger_event('update', 'metadata', $obj);
 	}
 
 	return $result;
@@ -235,7 +229,7 @@ function update_metadata($id, $name, $value, $value_type, $owner_guid, $access_i
  * associative arrays and there is no guarantee on the ordering in the array.
  *
  * @param int    $entity_guid     The entity to attach the metadata to
- * @param string $name_and_values Associative array - a value can be a string, number, bool
+ * @param array  $name_and_values Associative array - a value can be a string, number, bool
  * @param string $value_type      'text', 'integer', or '' for automatic detection
  * @param int    $owner_guid      GUID of entity that owns the metadata
  * @param int    $access_id       Default is ACCESS_PRIVATE
@@ -270,26 +264,31 @@ $access_id = ACCESS_PRIVATE, $allow_multiple = false) {
  *
  * @param array $options Array in format:
  *
- * 	metadata_names => NULL|ARR metadata names
+ * metadata_names               => NULL|ARR metadata names
+ * metadata_values              => NULL|ARR metadata values
+ * metadata_ids                 => NULL|ARR metadata ids
+ * metadata_case_sensitive      => BOOL Overall Case sensitive
+ * metadata_owner_guids         => NULL|ARR guids for metadata owners
+ * metadata_created_time_lower  => INT Lower limit for created time.
+ * metadata_created_time_upper  => INT Upper limit for created time.
+ * metadata_calculation         => STR Perform the MySQL function on the metadata values returned.
+ *                                   The "metadata_calculation" option causes this function to
+ *                                   return the result of performing a mathematical calculation on
+ *                                   all metadata that match the query instead of returning
+ *                                   ElggMetadata objects.
  *
- * 	metadata_values => NULL|ARR metadata values
- *
-* 	metadata_ids => NULL|ARR metadata ids
- *
- * 	metadata_case_sensitive => BOOL Overall Case sensitive
- *
- *  metadata_owner_guids => NULL|ARR guids for metadata owners
- *
- *  metadata_created_time_lower => INT Lower limit for created time.
- *
- *  metadata_created_time_upper => INT Upper limit for created time.
- *
- *  metadata_calculation => STR Perform the MySQL function on the metadata values returned.
- *
- * @return mixed
+ * @return ElggMetadata[]|mixed
  * @since 1.8.0
  */
 function elgg_get_metadata(array $options = array()) {
+
+	// @todo remove support for count shortcut - see #4393
+	// support shortcut of 'count' => true for 'metadata_calculation' => 'count'
+	if (isset($options['count']) && $options['count']) {
+		$options['metadata_calculation'] = 'count';
+		unset($options['count']);
+	}
+
 	$options['metastring_type'] = 'metadata';
 	return elgg_get_metastring_based_objects($options);
 }
@@ -298,20 +297,25 @@ function elgg_get_metadata(array $options = array()) {
  * Deletes metadata based on $options.
  *
  * @warning Unlike elgg_get_metadata() this will not accept an empty options array!
- *          This requires some constraints: metadata_owner_guid(s),
- *          metadata_name(s), metadata_value(s), or limit must be set.
+ *          This requires at least one constraint: metadata_owner_guid(s),
+ *          metadata_name(s), metadata_value(s), or guid(s) must be set.
  *
- * @param array $options An options array. {@See elgg_get_metadata()}
- * @return mixed
+ * @param array $options An options array. {@see elgg_get_metadata()}
+ * @return bool|null true on success, false on failure, null if no metadata to delete.
  * @since 1.8.0
  */
 function elgg_delete_metadata(array $options) {
 	if (!elgg_is_valid_options_for_batch_operation($options, 'metadata')) {
 		return false;
 	}
-
 	$options['metastring_type'] = 'metadata';
-	return elgg_batch_metastring_based_objects($options, 'elgg_batch_delete_callback');
+	$result = elgg_batch_metastring_based_objects($options, 'elgg_batch_delete_callback', false);
+
+	// This moved last in case an object's constructor sets metadata. Currently the batch
+	// delete process has to create the entity to delete its metadata. See #5214
+	elgg_get_metadata_cache()->invalidateByOptions('delete', $options);
+
+	return $result;
 }
 
 /**
@@ -320,7 +324,7 @@ function elgg_delete_metadata(array $options) {
  * @warning Unlike elgg_get_metadata() this will not accept an empty options array!
  *
  * @param array $options An options array. {@See elgg_get_metadata()}
- * @return mixed
+ * @return bool|null true on success, false on failure, null if no metadata disabled.
  * @since 1.8.0
  */
 function elgg_disable_metadata(array $options) {
@@ -328,8 +332,14 @@ function elgg_disable_metadata(array $options) {
 		return false;
 	}
 
-	$options['metastrings_type'] = 'metadata';
-	return elgg_batch_metastring_based_objects($options, 'elgg_batch_disable_callback');
+	elgg_get_metadata_cache()->invalidateByOptions('disable', $options);
+	
+	// if we can see hidden (disabled) we need to use the offset
+	// otherwise we risk an infinite loop if there are more than 50
+	$inc_offset = access_get_show_hidden_status();
+
+	$options['metastring_type'] = 'metadata';
+	return elgg_batch_metastring_based_objects($options, 'elgg_batch_disable_callback', $inc_offset);
 }
 
 /**
@@ -337,14 +347,19 @@ function elgg_disable_metadata(array $options) {
  *
  * @warning Unlike elgg_get_metadata() this will not accept an empty options array!
  *
+ * @warning In order to enable metadata, you must first use
+ * {@link access_show_hidden_entities()}.
+ *
  * @param array $options An options array. {@See elgg_get_metadata()}
- * @return mixed
+ * @return bool|null true on success, false on failure, null if no metadata enabled.
  * @since 1.8.0
  */
 function elgg_enable_metadata(array $options) {
 	if (!$options || !is_array($options)) {
 		return false;
 	}
+
+	elgg_get_metadata_cache()->invalidateByOptions('enable', $options);
 
 	$options['metastring_type'] = 'metadata';
 	return elgg_batch_metastring_based_objects($options, 'elgg_batch_enable_callback');
@@ -359,12 +374,23 @@ function elgg_enable_metadata(array $options) {
  * options available to elgg_get_entities().  Supports
  * the singular option shortcut.
  *
- * NB: Using metadata_names and metadata_values results in a
+ * @note Using metadata_names and metadata_values results in a
  * "names IN (...) AND values IN (...)" clause.  This is subtly
  * differently than default multiple metadata_name_value_pairs, which use
  * "(name = value) AND (name = value)" clauses.
  *
  * When in doubt, use name_value_pairs.
+ *
+ * To ask for entities that do not have a metadata value, use a custom
+ * where clause like this:
+ *
+ * 	$options['wheres'][] = "NOT EXISTS (
+ *			SELECT 1 FROM {$dbprefix}metadata md
+ *			WHERE md.entity_guid = e.guid
+ *				AND md.name_id = $name_metastring_id
+ *				AND md.value_id = $value_metastring_id)";
+ *
+ * Note the metadata name and value has been denormalized in the above example.
  *
  * @see elgg_get_entities
  *
@@ -380,9 +406,11 @@ function elgg_enable_metadata(array $options) {
  *                                         'operand' => '=',
  *                                         'case_sensitive' => TRUE
  *                                        )
- * 	                             Currently if multiple values are sent via
+ *                               Currently if multiple values are sent via
  *                               an array (value => array('value1', 'value2')
  *                               the pair's operand will be forced to "IN".
+ *                               If passing "IN" as the operand and a string as the value, 
+ *                               the value must be a properly quoted and escaped string.
  *
  * 	metadata_name_value_pairs_operator => NULL|STR The operator to use for combining
  *                                        (name = value) OPERATOR (name = value); default AND
@@ -398,20 +426,20 @@ function elgg_enable_metadata(array $options) {
  *
  *  metadata_owner_guids => NULL|ARR guids for metadata owners
  *
- * @return mixed If count, int. If not count, array. false on errors.
+ * @return ElggEntity[]|mixed If count, int. If not count, array. false on errors.
  * @since 1.7.0
  */
 function elgg_get_entities_from_metadata(array $options = array()) {
 	$defaults = array(
-		'metadata_names'					=>	ELGG_ENTITIES_ANY_VALUE,
-		'metadata_values'					=>	ELGG_ENTITIES_ANY_VALUE,
-		'metadata_name_value_pairs'			=>	ELGG_ENTITIES_ANY_VALUE,
+		'metadata_names'                     => ELGG_ENTITIES_ANY_VALUE,
+		'metadata_values'                    => ELGG_ENTITIES_ANY_VALUE,
+		'metadata_name_value_pairs'          => ELGG_ENTITIES_ANY_VALUE,
 
-		'metadata_name_value_pairs_operator'=>	'AND',
-		'metadata_case_sensitive' 			=>	TRUE,
-		'order_by_metadata'					=>	array(),
+		'metadata_name_value_pairs_operator' => 'AND',
+		'metadata_case_sensitive'            => TRUE,
+		'order_by_metadata'                  => array(),
 
-		'metadata_owner_guids'				=>	ELGG_ENTITIES_ANY_VALUE,
+		'metadata_owner_guids'               => ELGG_ENTITIES_ANY_VALUE,
 	);
 
 	$options = array_merge($defaults, $options);
@@ -436,18 +464,18 @@ function elgg_get_entities_from_metadata(array $options = array()) {
  * This function is reused for annotations because the tables are
  * exactly the same.
  *
- * @param string   $e_table           Entities table name
- * @param string   $n_table           Normalized metastrings table name (Where entities,
+ * @param string     $e_table           Entities table name
+ * @param string     $n_table           Normalized metastrings table name (Where entities,
  *                                    values, and names are joined. annotations / metadata)
- * @param arr|null $names             Array of names
- * @param arr|null $values            Array of values
- * @param arr|null $pairs             Array of names / values / operands
- * @param and|or   $pair_operator     Operator to use to join the where clauses for pairs
- * @param bool     $case_sensitive    Case sensitive metadata names?
- * @param arr|null $order_by_metadata Array of names / direction
- * @param arr|null $owner_guids       Array of owner GUIDs
+ * @param array|null $names             Array of names
+ * @param array|null $values            Array of values
+ * @param array|null $pairs             Array of names / values / operands
+ * @param string     $pair_operator     ("AND" or "OR") Operator to use to join the where clauses for pairs
+ * @param bool       $case_sensitive    Case sensitive metadata names?
+ * @param array|null $order_by_metadata Array of names / direction
+ * @param array|null $owner_guids       Array of owner GUIDs
  *
- * @return FALSE|array False on fail, array('joins', 'wheres')
+ * @return false|array False on fail, array('joins', 'wheres')
  * @since 1.7.0
  * @access private
  */
@@ -594,6 +622,8 @@ $owner_guids = NULL) {
 			// if the operand is IN don't quote it because quoting should be done already.
 			if (is_numeric($pair['value'])) {
 				$value = sanitise_string($pair['value']);
+			} else if (is_bool($pair['value'])) {
+				$value = (int) $pair['value'];
 			} else if (is_array($pair['value'])) {
 				$values_array = array();
 
@@ -634,7 +664,7 @@ $owner_guids = NULL) {
 			$i++;
 		}
 
-		if ($where = implode (" $pair_operator ", $pair_wheres)) {
+		if ($where = implode(" $pair_operator ", $pair_wheres)) {
 			$wheres[] = "($where)";
 		}
 	}
@@ -719,6 +749,8 @@ function elgg_list_entities_from_metadata($options) {
  *
  * @return array
  * @access private
+ *
+ * @throws InvalidParameterException
  */
 function export_metadata_plugin_hook($hook, $entity_type, $returnvalue, $params) {
 	// Sanity check values
@@ -730,15 +762,13 @@ function export_metadata_plugin_hook($hook, $entity_type, $returnvalue, $params)
 		throw new InvalidParameterException(elgg_echo('InvalidParameterException:NonArrayReturnValue'));
 	}
 
-	$guid = (int)$params['guid'];
-	$name = $params['name'];
-
 	$result = elgg_get_metadata(array(
-		'guid' => $guid,
-		'limit' => 0
+		'guid' => (int)$params['guid'],
+		'limit' => 0,
 	));
 
 	if ($result) {
+		/* @var ElggMetadata[] $result */
 		foreach ($result as $r) {
 			$returnvalue[] = $r->export();
 		}
@@ -749,7 +779,7 @@ function export_metadata_plugin_hook($hook, $entity_type, $returnvalue, $params)
 
 /**
  * Takes in a comma-separated string and returns an array of tags
- * which have been trimmed and set to lower case
+ * which have been trimmed
  *
  * @param string $string Comma-separated tag string
  *
@@ -758,17 +788,12 @@ function export_metadata_plugin_hook($hook, $entity_type, $returnvalue, $params)
 function string_to_tag_array($string) {
 	if (is_string($string)) {
 		$ar = explode(",", $string);
-		// trim blank spaces
 		$ar = array_map('trim', $ar);
-		// make lower case : [Marcus Povey 20090605 - Using mb wrapper function
-		// using UTF8 safe function where available]
-		$ar = array_map('elgg_strtolower', $ar);
-		// Remove null values
 		$ar = array_filter($ar, 'is_not_null');
+		$ar = array_map('strip_tags', $ar);
 		return $ar;
 	}
 	return false;
-
 }
 
 /**
@@ -872,13 +897,57 @@ function metadata_update($event, $object_type, $object) {
 /**
  * Register a metadata url handler.
  *
- * @param string $function_name The function.
  * @param string $extender_name The name, default 'all'.
+ * @param string $function      The function name.
  *
  * @return bool
  */
 function elgg_register_metadata_url_handler($extender_name, $function) {
 	return elgg_register_extender_url_handler('metadata', $extender_name, $function);
+}
+
+/**
+ * Get the global metadata cache instance
+ *
+ * @return ElggVolatileMetadataCache
+ *
+ * @access private
+ */
+function elgg_get_metadata_cache() {
+	global $CONFIG;
+	if (empty($CONFIG->local_metadata_cache)) {
+		$CONFIG->local_metadata_cache = new ElggVolatileMetadataCache();
+	}
+	return $CONFIG->local_metadata_cache;
+}
+
+/**
+ * Invalidate the metadata cache based on options passed to various *_metadata functions
+ *
+ * @param string $action  Action performed on metadata. "delete", "disable", or "enable"
+ * @param array  $options Options passed to elgg_(delete|disable|enable)_metadata
+ * @return void
+ */
+function elgg_invalidate_metadata_cache($action, array $options) {
+	// remove as little as possible, optimizing for common cases
+	$cache = elgg_get_metadata_cache();
+	if (empty($options['guid'])) {
+		// safest to clear everything unless we want to make this even more complex :(
+		$cache->flush();
+	} else {
+		if (empty($options['metadata_name'])) {
+			// safest to clear the whole entity
+			$cache->clear($options['guid']);
+		} else {
+			switch ($action) {
+				case 'delete':
+					$cache->markEmpty($options['guid'], $options['metadata_name']);
+					break;
+				default:
+					$cache->markUnknown($options['guid'], $options['metadata_name']);
+			}
+		}
+	}
 }
 
 /** Register the hook */
@@ -904,5 +973,6 @@ elgg_register_plugin_hook_handler('unit_test', 'system', 'metadata_test');
 function metadata_test($hook, $type, $value, $params) {
 	global $CONFIG;
 	$value[] = $CONFIG->path . 'engine/tests/api/metadata.php';
+	$value[] = $CONFIG->path . 'engine/tests/api/metadata_cache.php';
 	return $value;
 }

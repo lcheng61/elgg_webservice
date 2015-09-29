@@ -12,7 +12,7 @@ function expages_init() {
 	elgg_register_page_handler('terms', 'expages_page_handler');
 	elgg_register_page_handler('privacy', 'expages_page_handler');
 	elgg_register_page_handler('expages', 'expages_page_handler');
-	
+
 	// Register public external pages
 	elgg_register_plugin_hook_handler('public_pages', 'walled_garden', 'expages_public');
 
@@ -43,8 +43,11 @@ function expages_setup_footer_menu() {
 	$pages = array('about', 'terms', 'privacy');
 	foreach ($pages as $page) {
 		$url = "$page";
-		$item = new ElggMenuItem($page, elgg_echo("expages:$page"), $url);
-		elgg_register_menu_item('walled_garden', $item);
+		$wg_item = new ElggMenuItem($page, elgg_echo("expages:$page"), $url);
+		elgg_register_menu_item('walled_garden', $wg_item);
+
+		$footer_item = clone $wg_item;
+		elgg_register_menu_item('footer', $footer_item);
 	}
 }
 
@@ -62,7 +65,7 @@ function expages_page_handler($page, $handler) {
 	$type = strtolower($handler);
 
 	$title = elgg_echo("expages:$type");
-	$content = elgg_view_title($title);
+	$header = elgg_view_title($title);
 
 	$object = elgg_get_entities(array(
 		'type' => 'object',
@@ -74,9 +77,16 @@ function expages_page_handler($page, $handler) {
 	} else {
 		$content .= elgg_echo("expages:notset");
 	}
+	$content = elgg_view('expages/wrapper', array('content' => $content));
 
-	$body = elgg_view_layout("one_sidebar", array('content' => $content));
-	echo elgg_view_page($title, $body);
+	if (elgg_is_logged_in() || !elgg_get_config('walled_garden')) {
+		$body = elgg_view_layout('one_sidebar', array('title' => $title, 'content' => $content));
+		echo elgg_view_page($title, $body);
+	} else {
+		elgg_load_css('elgg.walled_garden');
+		$body = elgg_view_layout('walled_garden', array('content' => $header . $content));
+		echo elgg_view_page($title, $body, 'walled_garden');
+	}
 	return true;
 }
 

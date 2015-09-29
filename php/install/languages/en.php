@@ -15,6 +15,9 @@ $english = array(
 	'install:admin' => 'Create admin account',
 	'install:complete' => 'Finished',
 
+	'install:next' => 'Next',
+	'install:refresh' => 'Refresh',
+
 	'install:welcome:instructions' => "Installing Elgg has 6 simple steps and reading this welcome is the first one!
 
 If you haven't already, read through the installation instructions included with Elgg (or click the instructions link at the bottom of the page).
@@ -64,7 +67,7 @@ If you are ready to proceed, click the Next button.",
 	'install:database:label:dbhost' => 'Database Host',
 	'install:database:label:dbprefix' => 'Database Table Prefix',
 
-	'install:database:help:dbuser' => 'User that has full priviledges to the MySQL database that you created for Elgg',
+	'install:database:help:dbuser' => 'User that has full privileges to the MySQL database that you created for Elgg',
 	'install:database:help:dbpassword' => 'Password for the above database user account',
 	'install:database:help:dbname' => 'Name of the Elgg database',
 	'install:database:help:dbhost' => 'Hostname of the MySQL server (usually localhost)',
@@ -85,7 +88,7 @@ If you are ready to proceed, click the Next button.",
 	'install:settings:help:siteemail' => 'Email address used by Elgg for communication with users',
 	'install:settings:help:wwwroot' => 'The address of the site (Elgg usually guesses this correctly)',
 	'install:settings:help:path' => 'The directory where you put the Elgg code (Elgg usually guesses this correctly)',
-	'install:settings:help:dataroot' => 'The directory that you created for Elgg to save files (the permissions on this directory are checked when you click Next)',
+	'install:settings:help:dataroot' => 'The directory that you created for Elgg to save files (the permissions on this directory are checked when you click Next). It must be an absolute path.',
 	'install:settings:help:dataroot:apache' => 'You have the option of Elgg creating the data directory or entering the directory that you already created for storing user files (the permissions on this directory are checked when you click Next)',
 	'install:settings:help:language' => 'The default language for the site',
 	'install:settings:help:siteaccess' => 'The default access level for new user created content',
@@ -121,6 +124,7 @@ If you are ready to proceed, click the Next button.",
 	'install:error:htaccess' => 'Unable to create an .htaccess',
 	'install:error:settings' => 'Unable to create the settings file',
 	'install:error:databasesettings' => 'Unable to connect to the database with these settings.',
+	'install:error:database_prefix' => 'Invalid characters in database prefix',
 	'install:error:oldmysql' => 'MySQL must be version 5.0 or above. Your server is using %s.',
 	'install:error:nodatabase' => 'Unable to use database %s. It may not exist.',
 	'install:error:cannotloadtables' => 'Cannot load the database tables',
@@ -128,6 +132,7 @@ If you are ready to proceed, click the Next button.",
 	'install:error:readsettingsphp' => 'Unable to read engine/settings.example.php',
 	'install:error:writesettingphp' => 'Unable to write engine/settings.php',
 	'install:error:requiredfield' => '%s is required',
+	'install:error:relative_path' => 'We don\'t think "%s" is an absolute path for your data directory',
 	'install:error:datadirectoryexists' => 'Your data directory %s does not exist.',
 	'install:error:writedatadirectory' => 'Your data directory %s is not writable by the web server.',
 	'install:error:locationdatadirectory' => 'Your data directory %s must be outside of your install path for security.',
@@ -150,7 +155,7 @@ If you are ready to proceed, click the Next button.",
 	'install:error:rewrite:htaccess:cannot_copy' => 'A unknown error occurred while creating the .htaccess file. You need to manually copy htaccess_dist to .htaccess in Elgg\'s directory.',
 	'install:error:rewrite:altserver' => 'The rewrite rules test failed. You need to configure your web server with Elgg\'s rewrite rules and try again.',
 	'install:error:rewrite:unknown' => 'Oof. We couldn\'t figure out what kind of web server is running on your server and it failed the rewrite rules. We cannot offer any specific advice. Please check the troubleshooting link.',
-	'install:warning:rewrite:unknown' => 'Your server does not support automatic testing of the rewrite rules. You can continue the installation, but you may experience problems with your site. You can manually test the rewrite rules by clicking this link: <a href="%s" target="_blank">test</a>. You will see the word success if the rules are working.',
+	'install:warning:rewrite:unknown' => 'Your server does not support automatic testing of the rewrite rules and your browser does not support checking via JavaScript. You can continue the installation, but you may experience problems with your site. You can manually test the rewrite rules by clicking this link: <a href="%s" target="_blank">test</a>. You will see the word success if the rules are working.',
 );
 
 add_translation("en", $english);

@@ -12,29 +12,34 @@
  *
  * @param string $text The input string
  *
- * @return string The output stirng with formatted links
- **/
+ * @return string The output string with formatted links
+ */
 function parse_urls($text) {
+
+	// URI specification: http://www.ietf.org/rfc/rfc3986.txt
+	// This varies from the specification in the following ways:
+	//  * Supports non-ascii characters
+	//  * Does not allow parentheses and single quotes
+	//  * Cuts off commas, exclamation points, and periods off as last character
+
 	// @todo this causes problems with <attr = "val">
-	// must be ing <attr="val"> format (no space).
+	// must be in <attr="val"> format (no space).
 	// By default htmlawed rewrites tags to this format.
 	// if PHP supported conditional negative lookbehinds we could use this:
 	// $r = preg_replace_callback('/(?<!=)(?<![ ])?(?<!["\'])((ht|f)tps?:\/\/[^\s\r\n\t<>"\'\!\(\),]+)/i',
-	//
-	// we can put , in the list of excluded char but need to keep . because of domain names.
-	// it is removed in the callback.
-	$r = preg_replace_callback('/(?<!=)(?<!["\'])((ht|f)tps?:\/\/[^\s\r\n\t<>"\'\!\(\),]+)/i',
+	$r = preg_replace_callback('/(?<![=\/"\'])((ht|f)tps?:\/\/[^\s\r\n\t<>"\']+)/i',
 	create_function(
 		'$matches',
 		'
 			$url = $matches[1];
-			$period = \'\';
-			if (substr($url, -1, 1) == \'.\') {
-				$period = \'.\';
-				$url = trim($url, \'.\');
+			$punc = "";
+			$last = substr($url, -1, 1);
+			if (in_array($last, array(".", "!", ",", "(", ")"))) {
+				$punc = $last;
+				$url = rtrim($url, ".!,()");
 			}
 			$urltext = str_replace("/", "/<wbr />", $url);
-			return "<a href=\"$url\">$urltext</a>$period";
+			return "<a href=\"$url\" rel=\"nofollow\">$urltext</a>$punc";
 		'
 	), $text);
 
@@ -43,51 +48,26 @@ function parse_urls($text) {
 
 /**
  * Create paragraphs from text with line spacing
- * Borrowed from Wordpress.
  *
  * @param string $pee The string
- * @param bool   $br  Add BRs?
+ * @deprecated Use elgg_autop instead
+ * @todo Add deprecation warning in 1.9
  *
- * @todo Rewrite
  * @return string
  **/
-function autop($pee, $br = 1) {
-	$pee = $pee . "\n"; // just to make things a little easier, pad the end
-	$pee = preg_replace('|<br />\s*<br />|', "\n\n", $pee);
-	// Space things out a little
-	$allblocks = '(?:table|thead|tfoot|caption|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|pre|select|form|map|area|blockquote|address|math|style|input|p|h[1-6]|hr)';
-	$pee = preg_replace('!(<' . $allblocks . '[^>]*>)!', "\n$1", $pee);
-	$pee = preg_replace('!(</' . $allblocks . '>)!', "$1\n\n", $pee);
-	$pee = str_replace(array("\r\n", "\r"), "\n", $pee); // cross-platform newlines
-	if (strpos($pee, '<object') !== false) {
-		$pee = preg_replace('|\s*<param([^>]*)>\s*|', "<param$1>", $pee); // no pee inside object/embed
-		$pee = preg_replace('|\s*</embed>\s*|', '</embed>', $pee);
-	}
-	$pee = preg_replace("/\n\n+/", "\n\n", $pee); // take care of duplicates
-	$pee = preg_replace('/\n?(.+?)(?:\n\s*\n|\z)/s', "<p>$1</p>\n", $pee); // make paragraphs, including one at the end
-	$pee = preg_replace('|<p>\s*?</p>|', '', $pee); // under certain strange conditions it could create a P of entirely whitespace
-	$pee = preg_replace('!<p>([^<]+)\s*?(</(?:div|address|form)[^>]*>)!', "<p>$1</p>$2", $pee);
-	$pee = preg_replace( '|<p>|', "$1<p>", $pee );
-	$pee = preg_replace('!<p>\s*(</?' . $allblocks . '[^>]*>)\s*</p>!', "$1", $pee); // don't pee all over a tag
-	$pee = preg_replace("|<p>(<li.+?)</p>|", "$1", $pee); // problem with nested lists
-	$pee = preg_replace('|<p><blockquote([^>]*)>|i', "<blockquote$1><p>", $pee);
-	$pee = str_replace('</blockquote></p>', '</p></blockquote>', $pee);
-	$pee = preg_replace('!<p>\s*(</?' . $allblocks . '[^>]*>)!', "$1", $pee);
-	$pee = preg_replace('!(</?' . $allblocks . '[^>]*>)\s*</p>!', "$1", $pee);
-	if ($br) {
-		$pee = preg_replace_callback('/<(script|style).*?<\/\\1>/s', create_function('$matches', 'return str_replace("\n", "<WPPreserveNewline />", $matches[0]);'), $pee);
-		$pee = preg_replace('|(?<!<br />)\s*\n|', "<br />\n", $pee); // optionally make line breaks
-		$pee = str_replace('<WPPreserveNewline />', "\n", $pee);
-	}
-	$pee = preg_replace('!(</?' . $allblocks . '[^>]*>)\s*<br />!', "$1", $pee);
-	$pee = preg_replace('!<br />(\s*</?(?:p|li|div|dl|dd|dt|th|pre|td|ul|ol)[^>]*>)!', '$1', $pee);
-//	if (strpos($pee, '<pre') !== false) {
-//		mind the space between the ? and >.  Only there because of the comment.
-//		$pee = preg_replace_callback('!(<pre.*? >)(.*?)</pre>!is', 'clean_pre', $pee );
-//	}
-	$pee = preg_replace( "|\n</p>$|", '</p>', $pee );
+function autop($pee) {
+	return elgg_autop($pee);
+}
 
-	return $pee;
+/**
+ * Create paragraphs from text with line spacing
+ *
+ * @param string $string The string
+ *
+ * @return string
+ **/
+function elgg_autop($string) {
+	return ElggAutoP::getInstance()->process($string);
 }
 
 /**
@@ -148,12 +128,17 @@ function elgg_format_url($url) {
  *
  * @return string HTML attributes to be inserted into a tag (e.g., <tag $attrs>)
  */
-function elgg_format_attributes(array $attrs) {
+function elgg_format_attributes(array $attrs = array()) {
+ 
+ 	if (!is_array($attrs) || !count($attrs)) {
+ 		return '';
+ 	}
+
 	$attrs = elgg_clean_vars($attrs);
 	$attributes = array();
 
 	if (isset($attrs['js'])) {
-		//@todo deprecated notice?
+		elgg_deprecated_notice('Use associative array of attr => val pairs instead of $vars[\'js\']', 1.8);
 
 		if (!empty($attrs['js'])) {
 			$attributes[] = $attrs['js'];
@@ -169,11 +154,18 @@ function elgg_format_attributes(array $attrs) {
 			$val = $attr; //e.g. checked => TRUE ==> checked="checked"
 		}
 
-		// ignore $vars['entity'] => ElggEntity stuff
+		/**
+		 * Ignore non-array values and allow attribute values to be an array
+		 *  <code>
+		 *  $attrs = array(
+		 *		'entity' => <ElggObject>, // will be ignored
+		 * 		'class' => array('elgg-input', 'elgg-input-text'), // will be imploded with spaces
+		 * 		'style' => array('margin-left:10px;', 'color: #666;'), // will be imploded with spaces
+		 *		'alt' => 'Alt text', // will be left as is
+		 *  );
+		 *  </code>
+		 */
 		if ($val !== NULL && $val !== false && (is_array($val) || !is_object($val))) {
-
-			// allow $vars['class'] => array('one', 'two');
-			// @todo what about $vars['style']? Needs to be semi-colon separated...
 			if (is_array($val)) {
 				$val = implode(' ', $val);
 			}
@@ -234,7 +226,7 @@ function elgg_clean_vars(array $vars = array()) {
  *
  * @example
  * elgg_normalize_url('');                   // 'http://my.site.com/'
- * elgg_normalize_url('dashboard');       // 'http://my.site.com/dashboard'
+ * elgg_normalize_url('dashboard');          // 'http://my.site.com/dashboard'
  * elgg_normalize_url('http://google.com/'); // no change
  * elgg_normalize_url('//google.com/');      // no change
  *
@@ -249,12 +241,16 @@ function elgg_normalize_url($url) {
 	$php_5_3_0_to_5_3_2 = version_compare(PHP_VERSION, '5.3.0', '>=') &&
 			version_compare(PHP_VERSION, '5.3.3', '<');
 
-	$validated = false;
 	if ($php_5_2_13_and_below || $php_5_3_0_to_5_3_2) {
 		$tmp_address = str_replace("-", "", $url);
 		$validated = filter_var($tmp_address, FILTER_VALIDATE_URL);
 	} else {
 		$validated = filter_var($url, FILTER_VALIDATE_URL);
+	}
+
+	// work around for handling absoluate IRIs (RFC 3987) - see #4190
+	if (!$validated && (strpos($url, 'http:') === 0) || (strpos($url, 'https:') === 0)) {
+		$validated = true;
 	}
 
 	if ($validated) {
@@ -266,8 +262,8 @@ function elgg_normalize_url($url) {
 		// '?query=test', #target
 		return $url;
 	
-	} elseif (stripos($url, 'javascript:') === 0) {
-		// 'javascript:'
+	} elseif (stripos($url, 'javascript:') === 0 || stripos($url, 'mailto:') === 0) {
+		// 'javascript:' and 'mailto:'
 		// Not covered in FILTER_VALIDATE_URL
 		return $url;
 
@@ -305,12 +301,11 @@ function elgg_get_friendly_title($title) {
 		return $result;
 	}
 
-	//$title = iconv('UTF-8', 'ASCII//TRANSLIT', $title);
-	$title = preg_replace("/[^\w ]/", "", $title);
-	$title = str_replace(" ", "-", $title);
-	$title = str_replace("--", "-", $title);
-	$title = trim($title);
-	$title = strtolower($title);
+	// titles are often stored HTML encoded
+	$title = html_entity_decode($title, ENT_QUOTES, 'UTF-8');
+	
+	$title = ElggTranslit::urlize($title);
+
 	return $title;
 }
 
@@ -380,7 +375,7 @@ function elgg_get_friendly_time($time) {
 /**
  * Strip tags and offer plugins the chance.
  * Plugins register for output:strip_tags plugin hook.
- * 	Original string included in $params['original_string']
+ * Original string included in $params['original_string']
  *
  * @param string $string Formatted string
  *
@@ -394,3 +389,93 @@ function elgg_strip_tags($string) {
 
 	return $string;
 }
+
+/**
+ * Apply html_entity_decode() to a string while re-entitising HTML
+ * special char entities to prevent them from being decoded back to their
+ * unsafe original forms.
+ *
+ * This relies on html_entity_decode() not translating entities when
+ * doing so leaves behind another entity, e.g. &amp;gt; if decoded would
+ * create &gt; which is another entity itself. This seems to escape the
+ * usual behaviour where any two paired entities creating a HTML tag are
+ * usually decoded, i.e. a lone &gt; is not decoded, but &lt;foo&gt; would
+ * be decoded to <foo> since it creates a full tag.
+ *
+ * Note: This function is poorly explained in the manual - which is really
+ * bad given its potential for misuse on user input already escaped elsewhere.
+ * Stackoverflow is littered with advice to use this function in the precise
+ * way that would lead to user input being capable of injecting arbitrary HTML.
+ *
+ * @param string $string
+ *
+ * @return string
+ *
+ * @author Pádraic Brady
+ * @copyright Copyright (c) 2010 Pádraic Brady (http://blog.astrumfutura.com)
+ * @license Released under dual-license GPL2/MIT by explicit permission of Pádraic Brady
+ *
+ * @access private
+ */
+function _elgg_html_decode($string) {
+	$string = str_replace(
+		array('&gt;', '&lt;', '&amp;', '&quot;', '&#039;'),
+		array('&amp;gt;', '&amp;lt;', '&amp;amp;', '&amp;quot;', '&amp;#039;'),
+		$string
+	);
+	$string = html_entity_decode($string, ENT_NOQUOTES, 'UTF-8');
+	$string = str_replace(
+		array('&amp;gt;', '&amp;lt;', '&amp;amp;', '&amp;quot;', '&amp;#039;'),
+		array('&gt;', '&lt;', '&amp;', '&quot;', '&#039;'),
+		$string
+	);
+	return $string;
+}
+
+/**
+ * Prepares query string for output to prevent CSRF attacks.
+ * 
+ * @param string $string
+ * @return string
+ *
+ * @access private
+ */
+function _elgg_get_display_query($string) {
+	//encode <,>,&, quotes and characters above 127
+	if (function_exists('mb_convert_encoding')) {
+		$display_query = mb_convert_encoding($string, 'HTML-ENTITIES', 'UTF-8');
+	} else {
+		// if no mbstring extension, we just strip characters
+		$display_query = preg_replace("/[^\x01-\x7F]/", "", $string);
+	}
+	return htmlspecialchars($display_query, ENT_QUOTES, 'UTF-8', false);
+}
+
+/**
+ * Unit tests for Output
+ *
+ * @param string  $hook   unit_test
+ * @param string $type   system
+ * @param mixed  $value  Array of tests
+ * @param mixed  $params Params
+ *
+ * @return array
+ * @access private
+ */
+function output_unit_test($hook, $type, $value, $params) {
+	global $CONFIG;
+	$value[] = $CONFIG->path . 'engine/tests/api/output.php';
+	return $value;
+}
+
+/**
+ * Initialise the Output subsystem.
+ *
+ * @return void
+ * @access private
+ */
+function output_init() {
+	elgg_register_plugin_hook_handler('unit_test', 'system', 'output_unit_test');
+}
+
+elgg_register_event_handler('init', 'system', 'output_init');

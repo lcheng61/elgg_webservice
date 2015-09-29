@@ -5,13 +5,13 @@
  * This is compared against the values stored in the database to determine
  * whether upgrades should be performed.
  *
- * @package Elgg
+ * @package    Elgg
  * @subpackage Core
  */
 
 // YYYYMMDD = Elgg Date
 // XX = Interim incrementer
-$version = 2011110700;
+$version = 2014090700;
 
 // Human-friendly version name
-$release = '1.8.1';
+$release = '1.8.20';

@@ -10,18 +10,18 @@
  * @subpackage Administration.Site
  */
 
-if (datalist_get('default_site')) {
-	$site = get_entity(datalist_get('default_site'));
+if ($site = elgg_get_site_entity()) {
 	if (!($site instanceof ElggSite)) {
 		throw new InstallationException(elgg_echo('InvalidParameterException:NonElggSite'));
 	}
 
 	$site->description = get_input('sitedescription');
-	$site->name = get_input('sitename');
+	$site->name = strip_tags(get_input('sitename'));
 	$site->email = get_input('siteemail');
 	$site->save();
 
 	set_config('language', get_input('language'), $site->getGUID());
 }
 
+system_message(elgg_echo('admin:configuration:success'));
 forward(REFERER);

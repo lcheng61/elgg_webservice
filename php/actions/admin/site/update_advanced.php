@@ -9,16 +9,32 @@
  * @subpackage Administration.Site
  */
 
-if (datalist_get('default_site')) {
-	$site = get_entity(datalist_get('default_site'));
+if ($site = elgg_get_site_entity()) {
 	if (!($site instanceof ElggSite)) {
 		throw new InstallationException(elgg_echo('InvalidParameterException:NonElggSite'));
 	}
 
-	$site->url = get_input('wwwroot');
+	$site->url = rtrim(get_input('wwwroot', '', false), '/') . '/';
 
-	datalist_set('path', sanitise_filepath(get_input('path')));
-	datalist_set('dataroot', sanitise_filepath(get_input('dataroot')));
+	datalist_set('path', sanitise_filepath(get_input('path', '', false)));
+	$dataroot = sanitise_filepath(get_input('dataroot', '', false));
+
+	// check for relative paths
+	if (stripos(PHP_OS, 'win') === 0) {
+		if (strpos($dataroot, ':') !== 1) {
+			$msg = elgg_echo('admin:configuration:dataroot:relative_path', array($dataroot));
+			register_error($msg);
+			forward(REFERER);
+		}
+	} else {
+		if (strpos($dataroot, '/') !== 0) {
+			$msg = elgg_echo('admin:configuration:dataroot:relative_path', array($dataroot));
+			register_error($msg);
+			forward(REFERER);
+		}
+	}
+
+	datalist_set('dataroot', $dataroot);
 
 	if (get_input('simplecache_enabled')) {
 		elgg_enable_simplecache();
@@ -26,18 +42,16 @@ if (datalist_get('default_site')) {
 		elgg_disable_simplecache();
 	}
 
-	if (get_input('viewpath_cache_enabled')) {
-		elgg_enable_filepath_cache();
+	if (get_input('system_cache_enabled')) {
+		elgg_enable_system_cache();
 	} else {
-		elgg_disable_filepath_cache();
+		elgg_disable_system_cache();
 	}
 
 	set_config('default_access', get_input('default_access', ACCESS_PRIVATE), $site->getGUID());
 
 	$user_default_access = (get_input('allow_user_default_access')) ? 1 : 0;
 	set_config('allow_user_default_access', $user_default_access, $site->getGUID());
-
-	set_config('view', get_input('view'), $site->getGUID());
 
 	$debug = get_input('debug');
 	if ($debug) {
@@ -72,6 +86,14 @@ if (datalist_get('default_site')) {
 		unset_config('disable_api', $site->getGUID());
 	} else {
 		set_config('disable_api', 'disabled', $site->getGUID());
+	}
+
+	$regenerate_site_secret = get_input('regenerate_site_secret', false);
+	if ($regenerate_site_secret) {
+		init_site_secret();
+		elgg_reset_system_cache();
+
+		system_message(elgg_echo('admin:site:secret_regenerated'));
 	}
 
 	if ($site->save()) {

@@ -10,7 +10,7 @@ group_gatekeeper();
 
 $owner = elgg_get_page_owner_entity();
 if (!$owner) {
-	forward('file/all');
+	forward('', '404');
 }
 
 elgg_push_breadcrumb(elgg_echo('file'), "file/all");
@@ -36,10 +36,9 @@ $title = elgg_echo("file:user", array($owner->name));
 
 // List files
 $content = elgg_list_entities(array(
-	'types' => 'object',
-	'subtypes' => 'file',
+	'type' => 'object',
+	'subtype' => 'file',
 	'container_guid' => $owner->guid,
-	'limit' => 10,
 	'full_view' => FALSE,
 ));
 if (!$content) {

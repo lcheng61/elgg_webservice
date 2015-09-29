@@ -38,7 +38,7 @@ $NOTIFICATION_HANDLERS = array();
 function register_notification_handler($method, $handler, $params = NULL) {
 	global $NOTIFICATION_HANDLERS;
 
-	if (is_callable($handler)) {
+	if (is_callable($handler, true)) {
 		$NOTIFICATION_HANDLERS[$method] = new stdClass;
 
 		$NOTIFICATION_HANDLERS[$method]->handler = $handler;
@@ -86,7 +86,7 @@ function unregister_notification_handler($method) {
  * @throws NotificationException
  */
 function notify_user($to, $from, $subject, $message, array $params = NULL, $methods_override = "") {
-	global $NOTIFICATION_HANDLERS, $CONFIG;
+	global $NOTIFICATION_HANDLERS;
 
 	// Sanitise
 	if (!is_array($to)) {
@@ -110,12 +110,15 @@ function notify_user($to, $from, $subject, $message, array $params = NULL, $meth
 			// Are we overriding delivery?
 			$methods = $methods_override;
 			if (!$methods) {
-				$tmp = (array)get_user_notification_settings($guid);
+				$tmp = get_user_notification_settings($guid);
 				$methods = array();
-				foreach ($tmp as $k => $v) {
-					// Add method if method is turned on for user!
-					if ($v) {
-						$methods[] = $k;
+				// $tmp may be false. don't cast
+				if (is_object($tmp)) {
+					foreach ($tmp as $k => $v) {
+						// Add method if method is turned on for user!
+						if ($v) {
+							$methods[] = $k;
+						}
 					}
 				}
 			}
@@ -131,8 +134,9 @@ function notify_user($to, $from, $subject, $message, array $params = NULL, $meth
 					// Extract method details from list
 					$details = $NOTIFICATION_HANDLERS[$method];
 					$handler = $details->handler;
+					/* @var callable $handler */
 
-					if ((!$NOTIFICATION_HANDLERS[$method]) || (!$handler)) {
+					if ((!$NOTIFICATION_HANDLERS[$method]) || (!$handler) || (!is_callable($handler))) {
 						error_log(elgg_echo('NotificationException:NoHandlerFound', array($method)));
 					}
 
@@ -140,7 +144,7 @@ function notify_user($to, $from, $subject, $message, array $params = NULL, $meth
 
 					// Trigger handler and retrieve result.
 					try {
-						$result[$guid][$method] = $handler(
+						$result[$guid][$method] = call_user_func($handler,
 							$from ? get_entity($from) : NULL, 	// From entity
 							get_entity($guid), 					// To entity
 							$subject,							// The subject
@@ -164,7 +168,7 @@ function notify_user($to, $from, $subject, $message, array $params = NULL, $meth
  *
  * @param int $user_guid The user id
  *
- * @return stdClass
+ * @return stdClass|false
  */
 function get_user_notification_settings($user_guid = 0) {
 	$user_guid = (int)$user_guid;
@@ -173,7 +177,8 @@ function get_user_notification_settings($user_guid = 0) {
 		$user_guid = elgg_get_logged_in_user_guid();
 	}
 
-	// @todo: holy crap, really?
+	// @todo: there should be a better way now that metadata is cached. E.g. just query for MD names, then
+	// query user object directly
 	$all_metadata = elgg_get_metadata(array(
 		'guid' => $user_guid,
 		'limit' => 0
@@ -236,6 +241,7 @@ function set_user_notification_setting($user_guid, $method, $value) {
  * @param array      $params  Optional parameters (none taken in this instance)
  *
  * @return bool
+ * @throws NotificationException
  * @access private
  */
 function email_notify_handler(ElggEntity $from, ElggUser $to, $subject, $message,
@@ -262,7 +268,7 @@ array $params = NULL) {
 	$to = $to->email;
 
 	// From
-	$site = get_entity($CONFIG->site_guid);
+	$site = elgg_get_site_entity();
 	// If there's an email address, use it - but only if its not from a user.
 	if (!($from instanceof ElggUser) && $from->email) {
 		$from = $from->email;
@@ -287,6 +293,7 @@ array $params = NULL) {
  * @param array  $params  Optional parameters (none used in this function)
  *
  * @return bool
+ * @throws NotificationException
  * @since 1.7.2
  */
 function elgg_send_email($from, $to, $subject, $body, array $params = NULL) {
@@ -343,6 +350,8 @@ function elgg_send_email($from, $to, $subject, $body, array $params = NULL) {
 
 	// Sanitise subject by stripping line endings
 	$subject = preg_replace("/(\r\n|\r|\n)/", " ", $subject);
+	// this is because Elgg encodes everything and matches what is done with body
+	$subject = html_entity_decode($subject, ENT_COMPAT, 'UTF-8'); // Decode any html entities
 	if (is_callable('mb_encode_mimeheader')) {
 		$subject = mb_encode_mimeheader($subject, "UTF-8", "B");
 	}
@@ -421,7 +430,7 @@ function register_notification_object($entity_type, $object_subtype, $language_n
  * @param int $user_guid   The GUID of the user who wants to follow a user's content
  * @param int $author_guid The GUID of the user whose content the user wants to follow
  *
- * @return true|false Depending on success
+ * @return bool Depending on success
  */
 function register_notification_interest($user_guid, $author_guid) {
 	return add_entity_relationship($user_guid, 'notify', $author_guid);
@@ -433,7 +442,7 @@ function register_notification_interest($user_guid, $author_guid) {
  * @param int $user_guid   The GUID of the user who is following a user's content
  * @param int $author_guid The GUID of the user whose content the user wants to unfollow
  *
- * @return true|false Depending on success
+ * @return bool Depending on success
  */
 function remove_notification_interest($user_guid, $author_guid) {
 	return remove_entity_relationship($user_guid, 'notify', $author_guid);
@@ -449,12 +458,13 @@ function remove_notification_interest($user_guid, $author_guid) {
  * @param string $object_type mixed
  * @param mixed  $object      The object created
  *
- * @return void
+ * @return bool
  * @access private
  */
 function object_notifications($event, $object_type, $object) {
 	// We only want to trigger notification events for ElggEntities
 	if ($object instanceof ElggEntity) {
+		/* @var ElggEntity $object */
 
 		// Get config data
 		global $CONFIG, $SESSION, $NOTIFICATION_HANDLERS;
@@ -480,35 +490,37 @@ function object_notifications($event, $object_type, $object) {
 		}
 
 		if (isset($CONFIG->register_objects[$object_type][$object_subtype])) {
-			$descr = $CONFIG->register_objects[$object_type][$object_subtype];
-			$string = $descr . ": " . $object->getURL();
+			$subject = $CONFIG->register_objects[$object_type][$object_subtype];
+			$string = $subject . ": " . $object->getURL();
 
 			// Get users interested in content from this person and notify them
 			// (Person defined by container_guid so we can also subscribe to groups if we want)
 			foreach ($NOTIFICATION_HANDLERS as $method => $foo) {
 				$interested_users = elgg_get_entities_from_relationship(array(
+					'site_guids' => ELGG_ENTITIES_ANY_VALUE,
 					'relationship' => 'notify' . $method,
 					'relationship_guid' => $object->container_guid,
 					'inverse_relationship' => TRUE,
-					'types' => 'user',
-					'limit' => 99999
+					'type' => 'user',
+					'limit' => false
 				));
+				/* @var ElggUser[] $interested_users */
 
 				if ($interested_users && is_array($interested_users)) {
 					foreach ($interested_users as $user) {
 						if ($user instanceof ElggUser && !$user->isBanned()) {
 							if (($user->guid != $SESSION['user']->guid) && has_access_to_entity($object, $user)
 							&& $object->access_id != ACCESS_PRIVATE) {
-								$methodstring = elgg_trigger_plugin_hook('notify:entity:message', $object->getType(), array(
+								$body = elgg_trigger_plugin_hook('notify:entity:message', $object->getType(), array(
 									'entity' => $object,
 									'to_entity' => $user,
 									'method' => $method), $string);
-								if (empty($methodstring) && $methodstring !== false) {
-									$methodstring = $string;
+								if (empty($body) && $body !== false) {
+									$body = $string;
 								}
-								if ($methodstring !== false) {
-									notify_user($user->guid, $object->container_guid, $descr, $methodstring,
-										NULL, array($method));
+								if ($body !== false) {
+									notify_user($user->guid, $object->container_guid, $subject, $body,
+										null, array($method));
 								}
 							}
 						}

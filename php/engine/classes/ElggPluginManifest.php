@@ -130,7 +130,7 @@ class ElggPluginManifest {
 		}
 
 		// see if we need to construct the xml object.
-		if ($manifest instanceof XmlElement) {
+		if ($manifest instanceof ElggXMLElement) {
 			$manifest_obj = $manifest;
 		} else {
 			if (substr(trim($manifest), 0, 1) == '<') {
@@ -264,7 +264,7 @@ class ElggPluginManifest {
 	/**
 	 * Returns the license
 	 *
-	 * @return sting
+	 * @return string
 	 */
 	public function getLicense() {
 		// license vs licence.  Use license.
@@ -276,6 +276,32 @@ class ElggPluginManifest {
 		}
 	}
 
+	/**
+	 * Returns the repository url
+	 *
+	 * @return string
+	 */
+	public function getRepositoryURL() {
+		return $this->parser->getAttribute('repository');
+	}
+
+	/**
+	 * Returns the bug tracker page
+	 *
+	 * @return string
+	 */
+	public function getBugTrackerURL() {
+		return $this->parser->getAttribute('bugtracker');
+	}
+
+	/**
+	 * Returns the donations page
+	 *
+	 * @return string
+	 */
+	public function getDonationsPageURL() {
+		return $this->parser->getAttribute('donations');
+	}
 
 	/**
 	 * Returns the version of the plugin.
@@ -319,10 +345,24 @@ class ElggPluginManifest {
 	 * @return array
 	 */
 	public function getCategories() {
+		$bundled_plugins = array('blog', 'bookmarks', 'categories',
+			'custom_index', 'dashboard', 'developers', 'diagnostics',
+			'embed', 'externalpages', 'file', 'garbagecollector',
+			'groups', 'htmlawed', 'invitefriends', 'likes',
+			'logbrowser', 'logrotate', 'members', 'messageboard',
+			'messages', 'notifications', 'oauth_api', 'pages', 'profile',
+			'reportedcontent', 'search', 'tagcloud', 'thewire', 'tinymce',
+			'twitter', 'twitter_api', 'uservalidationbyemail', 'zaudio',
+		);
+
 		$cats = $this->parser->getAttribute('category');
 
 		if (!$cats) {
 			$cats = array();
+		}
+
+		if (in_array('bundled', $cats) && !in_array($this->getPluginID(), $bundled_plugins)) {
+			unset($cats[array_search('bundled', $cats)]);
 		}
 
 		return $cats;
@@ -442,7 +482,7 @@ class ElggPluginManifest {
 	 * Normalizes a dependency array using the defined structs.
 	 * Can be used with either requires or suggests.
 	 *
-	 * @param array $dep An dependency array.
+	 * @param array $dep A dependency array.
 	 * @return array The normalized deps array.
 	 */
 	private function normalizeDep($dep) {
@@ -486,8 +526,10 @@ class ElggPluginManifest {
 							break;
 					}
 				}
-
 				break;
+			default:
+				// unrecognized so we just return the raw dependency
+				return $dep;
 		}
 
 		$normalized_dep = $this->buildStruct($struct, $dep);
@@ -553,7 +595,7 @@ class ElggPluginManifest {
 	}
 
 	/**
-	 * Returns the admin interface to use.
+	 * Should this plugin be activated when Elgg is installed
 	 *
 	 *  @return bool
 	 */
@@ -591,5 +633,24 @@ class ElggPluginManifest {
 		}
 
 		return $return;
+	}
+
+	/**
+	 * Returns a category's friendly name. This can be localized by
+	 * defining the string 'admin:plugins:category:<category>'. If no
+	 * localization is found, returns the category with _ and - converted to ' '
+	 * and then ucwords()'d.
+	 *
+	 * @param str $category The category as defined in the manifest.
+	 * @return str A human-readable category
+	 */
+	static public function getFriendlyCategory($category) {
+		$cat_raw_string = "admin:plugins:category:$category";
+		$cat_display_string = elgg_echo($cat_raw_string);
+		if ($cat_display_string == $cat_raw_string) {
+			$category = str_replace(array('-', '_'), ' ', $category);
+			$cat_display_string = ucwords($category);
+		}
+		return $cat_display_string;
 	}
 }

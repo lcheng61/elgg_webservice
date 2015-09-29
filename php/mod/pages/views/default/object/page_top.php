@@ -45,7 +45,6 @@ $editor_link = elgg_view('output/url', array(
 
 $date = elgg_view_friendly_time($annotation->time_created);
 $editor_text = elgg_echo('pages:strapline', array($date, $editor_link));
-$tags = elgg_view('output/tags', array('tags' => $page->tags));
 $categories = elgg_view('output/categories', $vars);
 
 $comments_count = $page->countComments();
@@ -61,18 +60,26 @@ if ($comments_count != 0 && !$revision) {
 	$comments_link = '';
 }
 
-$metadata = elgg_view_menu('entity', array(
-	'entity' => $vars['entity'],
-	'handler' => 'pages',
-	'sort_by' => 'priority',
-	'class' => 'elgg-menu-hz',
-));
-
 $subtitle = "$editor_text $comments_link $categories";
 
 // do not show the metadata and controls in widget view
-if (elgg_in_context('widgets') || $revision) {
-	$metadata = '';
+if (!elgg_in_context('widgets')) {
+	// If we're looking at a revision, display annotation menu
+	if ($revision) {
+		$metadata = elgg_view_menu('annotation', array(
+			'annotation' => $annotation,
+			'sort_by' => 'priority',
+			'class' => 'elgg-menu-hz float-alt',
+		));
+	} else {
+		// Regular entity menu
+		$metadata = elgg_view_menu('entity', array(
+			'entity' => $vars['entity'],
+			'handler' => 'pages',
+			'sort_by' => 'priority',
+			'class' => 'elgg-menu-hz',
+		));
+	}
 }
 
 if ($full) {
@@ -82,7 +89,6 @@ if ($full) {
 		'entity' => $page,
 		'metadata' => $metadata,
 		'subtitle' => $subtitle,
-		'tags' => $tags,
 	);
 	$params = $params + $vars;
 	$summary = elgg_view('object/elements/summary', $params);
@@ -104,7 +110,6 @@ if ($full) {
 		'entity' => $page,
 		'metadata' => $metadata,
 		'subtitle' => $subtitle,
-		'tags' => $tags,
 		'content' => $excerpt,
 	);
 	$params = $params + $vars;
