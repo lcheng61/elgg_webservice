@@ -24,7 +24,6 @@
 .elgg-menu-footer > li > a,
 .elgg-menu-footer li,
 .elgg-menu-general > li > a,
-.elgg-pagination li,
 .elgg-menu-general li {
 	display: inline;
 }
@@ -63,13 +62,4 @@
 .elgg-module-walledgarden > .elgg-head,
 .elgg-module-walledgarden > .elgg-foot {
 	width: 530px;
-}
-
-input, textarea {
-	width: 98%;
-}
-
-.elgg-tag a {
-	/* IE7 had a weird wrapping issue for tags */
-	word-wrap: normal;
 }

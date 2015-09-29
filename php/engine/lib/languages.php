@@ -8,65 +8,6 @@
  */
 
 /**
- * Given a message key, returns an appropriately translated full-text string
- *
- * @param string $message_key The short message code
- * @param array  $args        An array of arguments to pass through vsprintf().
- * @param string $language    Optionally, the standard language code
- *                            (defaults to site/user default, then English)
- *
- * @return string Either the translated string, the English string,
- * or the original language string.
- */
-function elgg_echo($message_key, $args = array(), $language = "") {
-	global $CONFIG;
-
-	static $CURRENT_LANGUAGE;
-
-	// old param order is deprecated
-	if (!is_array($args)) {
-		elgg_deprecated_notice(
-			'As of Elgg 1.8, the 2nd arg to elgg_echo() is an array of string replacements and the 3rd arg is the language.',
-			1.8
-		);
-
-		$language = $args;
-		$args = array();
-	}
-
-	if (!isset($CONFIG->translations)) {
-		// this means we probably had an exception before translations were initialized
-		register_translations(dirname(dirname(dirname(__FILE__))) . "/languages/");
-	}
-
-	if (!$CURRENT_LANGUAGE) {
-		$CURRENT_LANGUAGE = get_language();
-	}
-	if (!$language) {
-		$language = $CURRENT_LANGUAGE;
-	}
-
-	if (isset($CONFIG->translations[$language][$message_key])) {
-		$string = $CONFIG->translations[$language][$message_key];
-	} else if (isset($CONFIG->translations["en"][$message_key])) {
-		$string = $CONFIG->translations["en"][$message_key];
-		$lang = $CONFIG->translations["en"][$language];
-		elgg_log(sprintf('Missing %s translation for "%s" language key', $lang, $message_key), 'NOTICE');
-	} else {
-		$string = $message_key;
-		elgg_log(sprintf('Missing English translation for "%s" language key', $message_key), 'NOTICE');
-	}
-
-	// only pass through if we have arguments to allow backward compatibility
-	// with manual sprintf() calls.
-	if ($args) {
-		$string = vsprintf($string, $args);
-	}
-
-	return $string;
-}
-
-/**
  * Add a translation.
  *
  * Translations are arrays in the Zend Translation array format, eg:
@@ -77,7 +18,7 @@ function elgg_echo($message_key, $args = array(), $language = "") {
  * @param string $country_code   Standard country code (eg 'en', 'nl', 'es')
  * @param array  $language_array Formatted array of strings
  *
- * @return bool Depending on success
+ * @return true|false Depending on success
  */
 function add_translation($country_code, $language_array) {
 	global $CONFIG;
@@ -104,6 +45,8 @@ function add_translation($country_code, $language_array) {
  * @return string The language code for the site/user or "en" if not set
  */
 function get_current_language() {
+	global $CONFIG;
+
 	$language = get_language();
 
 	if (!$language) {
@@ -140,36 +83,55 @@ function get_language() {
 }
 
 /**
- * @access private
+ * Given a message shortcode, returns an appropriately translated full-text string
+ *
+ * @param string $message_key The short message code
+ * @param array  $args        An array of arguments to pass through vsprintf().
+ * @param string $language    Optionally, the standard language code
+ *                            (defaults to site/user default, then English)
+ *
+ * @return string Either the translated string, the English string,
+ * or the original language string.
  */
-function _elgg_load_translations() {
+function elgg_echo($message_key, $args = array(), $language = "") {
 	global $CONFIG;
 
-	if ($CONFIG->system_cache_enabled) {
-		$loaded = true;
-		$languages = array_unique(array('en', get_current_language()));
-		foreach ($languages as $language) {
-			$data = elgg_load_system_cache("$language.lang");
-			if ($data) {
-				add_translation($language, unserialize($data));
-			} else {
-				$loaded = false;
-			}
-		}
+	static $CURRENT_LANGUAGE;
 
-		if ($loaded) {
-			$CONFIG->i18n_loaded_from_cache = true;
-			// this is here to force 
-			$CONFIG->language_paths[dirname(dirname(dirname(__FILE__))) . "/languages/"] = true;
-			return;
-		}
+	// old param order is deprecated
+	if (!is_array($args)) {
+		elgg_deprecated_notice(
+			'As of Elgg 1.8, the 2nd arg to elgg_echo() is an array of string replacements and the 3rd arg is the language.',
+			1.8
+		);
+
+		$language = $args;
+		$args = array();
 	}
 
-	// load core translations from languages directory
-	register_translations(dirname(dirname(dirname(__FILE__))) . "/languages/");
+	if (!$CURRENT_LANGUAGE) {
+		$CURRENT_LANGUAGE = get_language();
+	}
+	if (!$language) {
+		$language = $CURRENT_LANGUAGE;
+	}
+
+	if (isset($CONFIG->translations[$language][$message_key])) {
+		$string = $CONFIG->translations[$language][$message_key];
+	} else if (isset($CONFIG->translations["en"][$message_key])) {
+		$string = $CONFIG->translations["en"][$message_key];
+	} else {
+		$string = $message_key;
+	}
+
+	// only pass through if we have arguments to allow backward compatibility
+	// with manual sprintf() calls.
+	if ($args) {
+		$string = vsprintf($string, $args);
+	}
+
+	return $string;
 }
-
-
 
 /**
  * When given a full path, finds translation files and loads them
@@ -178,7 +140,7 @@ function _elgg_load_translations() {
  * @param bool   $load_all If true all languages are loaded, if
  *                         false only the current language + en are loaded
  *
- * @return bool success
+ * @return void
  */
 function register_translations($path, $load_all = false) {
 	global $CONFIG;
@@ -230,40 +192,23 @@ function register_translations($path, $load_all = false) {
 /**
  * Reload all translations from all registered paths.
  *
- * This is only called by functions which need to know all possible translations.
+ * This is only called by functions which need to know all possible translations, namely the
+ * statistic gathering ones.
  *
  * @todo Better on demand loading based on language_paths array
  *
- * @return void
+ * @return bool
  */
 function reload_all_translations() {
 	global $CONFIG;
 
 	static $LANG_RELOAD_ALL_RUN;
 	if ($LANG_RELOAD_ALL_RUN) {
-		return;
+		return null;
 	}
 
-	if ($CONFIG->i18n_loaded_from_cache) {
-		$cache = elgg_get_system_cache();
-		$cache_dir = $cache->getVariable("cache_path");
-		$filenames = elgg_get_file_list($cache_dir, array(), array(), array(".lang"));
-		foreach ($filenames as $filename) {
-			// Look for files matching for example 'en.lang', 'cmn.lang' or 'pt_br.lang'.
-			// Note that this regex is just for the system cache. The original language
-			// files are allowed to have uppercase letters (e.g. pt_BR.php).
-			if (preg_match('/(([a-z]{2,3})(_[a-z]{2})?)\.lang$/', $filename, $matches)) {
-				$language = $matches[1];
-				$data = elgg_load_system_cache("$language.lang");
-				if ($data) {
-					add_translation($language, unserialize($data));
-				}
-			}
-		}
-	} else {
-		foreach ($CONFIG->language_paths as $path => $dummy) {
-			register_translations($path, true);
-		}
+	foreach ($CONFIG->language_paths as $path => $dummy) {
+		register_translations($path, true);
 	}
 
 	$LANG_RELOAD_ALL_RUN = true;
@@ -355,3 +300,5 @@ function get_missing_language_keys($language) {
 
 	return false;
 }
+
+register_translations(dirname(dirname(dirname(__FILE__))) . "/languages/");

@@ -22,12 +22,11 @@ function blog_get_page_content_read($guid = NULL) {
 	$return['filter'] = '';
 
 	if (!elgg_instanceof($blog, 'object', 'blog')) {
-		register_error(elgg_echo('noaccess'));
-		$_SESSION['last_forward_from'] = current_page_url();
-		forward('');
+		$return['content'] = elgg_echo('blog:error:post_not_found');
+		return $return;
 	}
 
-	$return['title'] = $blog->title;
+	$return['title'] = htmlspecialchars($blog->title);
 
 	$container = $blog->getContainerEntity();
 	$crumbs_title = $container->name;
@@ -39,8 +38,8 @@ function blog_get_page_content_read($guid = NULL) {
 
 	elgg_push_breadcrumb($blog->title);
 	$return['content'] = elgg_view_entity($blog, array('full_view' => true));
-	// check to see if we should allow comments
-	if ($blog->comments_on != 'Off' && $blog->status == 'published') {
+	//check to see if comment are on
+	if ($blog->comments_on != 'Off') {
 		$return['content'] .= elgg_view_comments($blog);
 	}
 
@@ -50,7 +49,7 @@ function blog_get_page_content_read($guid = NULL) {
 /**
  * Get page components to list a user's or all blogs.
  *
- * @param int $container_guid The GUID of the page owner or NULL for all blogs
+ * @param int $owner_guid The GUID of the page owner or NULL for all blogs
  * @return array
  */
 function blog_get_page_content_list($container_guid = NULL) {
@@ -62,11 +61,10 @@ function blog_get_page_content_list($container_guid = NULL) {
 	$options = array(
 		'type' => 'object',
 		'subtype' => 'blog',
-		'full_view' => false,
+		'full_view' => FALSE,
 	);
 
-	$current_user = elgg_get_logged_in_user_entity();
-
+	$loggedin_userid = elgg_get_logged_in_user_guid();
 	if ($container_guid) {
 		// access check for closed groups
 		group_gatekeeper();
@@ -81,7 +79,7 @@ function blog_get_page_content_list($container_guid = NULL) {
 		$crumbs_title = $container->name;
 		elgg_push_breadcrumb($crumbs_title);
 
-		if ($current_user && ($container_guid == $current_user->guid)) {
+		if ($container_guid == $loggedin_userid) {
 			$return['filter_context'] = 'mine';
 		} else if (elgg_instanceof($container, 'group')) {
 			$return['filter'] = false;
@@ -100,13 +98,7 @@ function blog_get_page_content_list($container_guid = NULL) {
 
 	// show all posts for admin or users looking at their own blogs
 	// show only published posts for other users.
-	$show_only_published = true;
-	if ($current_user) {
-		if (($current_user->guid == $container_guid) || $current_user->isAdmin()) {
-			$show_only_published = false;
-		}
-	}
-	if ($show_only_published) {
+	if (!(elgg_is_admin_logged_in() || (elgg_is_logged_in() && $container_guid == $loggedin_userid))) {
 		$options['metadata_name_value_pairs'] = array(
 			array('name' => 'status', 'value' => 'published'),
 		);
@@ -162,14 +154,11 @@ function blog_get_page_content_friends($user_guid) {
 
 		// admin / owners can see any posts
 		// everyone else can only see published posts
-		$show_only_published = true;
-		$current_user = elgg_get_logged_in_user_entity();
-		if ($current_user) {
-			if (($user_guid == $current_user->guid) || $current_user->isAdmin()) {
-				$show_only_published = false;
+		if (!(elgg_is_admin_logged_in() || (elgg_is_logged_in() && $owner_guid == elgg_get_logged_in_user_guid()))) {
+			if ($upper > $now) {
+				$upper = $now;
 			}
-		}
-		if ($show_only_published) {
+
 			$options['metadata_name_value_pairs'][] = array(
 				array('name' => 'status', 'value' => 'published')
 			);
@@ -198,16 +187,11 @@ function blog_get_page_content_archive($owner_guid, $lower = 0, $upper = 0) {
 
 	$now = time();
 
-	$owner = get_entity($owner_guid);
+	$user = get_user($owner_guid);
 	elgg_set_page_owner_guid($owner_guid);
 
-	$crumbs_title = $owner->name;
-	if (elgg_instanceof($owner, 'user')) {
-		$url = "blog/owner/{$owner->username}";
-	} else {
-		$url = "blog/group/$owner->guid/all";
-	}
-	elgg_push_breadcrumb($crumbs_title, $url);
+	$crumbs_title = $user->name;
+	elgg_push_breadcrumb($crumbs_title, "blog/owner/{$user->username}");
 	elgg_push_breadcrumb(elgg_echo('blog:archives'));
 
 	if ($lower) {
@@ -225,7 +209,7 @@ function blog_get_page_content_archive($owner_guid, $lower = 0, $upper = 0) {
 	);
 
 	if ($owner_guid) {
-		$options['container_guid'] = $owner_guid;
+		$options['owner_guid'] = $owner_guid;
 	}
 
 	// admin / owners can see any posts
@@ -250,9 +234,9 @@ function blog_get_page_content_archive($owner_guid, $lower = 0, $upper = 0) {
 
 	$list = elgg_list_entities_from_metadata($options);
 	if (!$list) {
-		$content = elgg_echo('blog:none');
+		$content .= elgg_echo('blog:none');
 	} else {
-		$content = $list;
+		$content .= $list;
 	}
 
 	$title = elgg_echo('date:month:' . date('m', $lower), array(date('Y', $lower)));
@@ -282,9 +266,9 @@ function blog_get_page_content_edit($page, $guid = 0, $revision = NULL) {
 
 	$vars = array();
 	$vars['id'] = 'blog-post-edit';
+	$vars['name'] = 'blog_post';
 	$vars['class'] = 'elgg-form-alt';
 
-	$sidebar = '';
 	if ($page == 'edit') {
 		$blog = get_entity((int)$guid);
 
@@ -321,8 +305,14 @@ function blog_get_page_content_edit($page, $guid = 0, $revision = NULL) {
 			$content = elgg_echo('blog:error:cannot_edit_post');
 		}
 	} else {
+		if (!$guid) {
+			$container = elgg_get_logged_in_user_entity();
+		} else {
+			$container = get_entity($guid);
+		}
+
 		elgg_push_breadcrumb(elgg_echo('blog:add'));
-		$body_vars = blog_prepare_form_vars(null);
+		$body_vars = blog_prepare_form_vars($blog);
 
 		$title = elgg_echo('blog:add');
 		$content = elgg_view_form('blog/save', $vars, $body_vars);
@@ -363,10 +353,6 @@ function blog_prepare_form_vars($post = NULL, $revision = NULL) {
 				$values[$field] = $post->$field;
 			}
 		}
-
-		if ($post->status == 'draft') {
-			$values['access_id'] = $post->future_access;
-		}
 	}
 
 	if (elgg_is_sticky_form('blog')) {
@@ -393,7 +379,7 @@ function blog_prepare_form_vars($post = NULL, $revision = NULL) {
 	if ($auto_save_annotations = $post->getAnnotations('blog_auto_save', 1)) {
 		$auto_save = $auto_save_annotations[0];
 	} else {
-		$auto_save = false;
+		$auto_save == FALSE;
 	}
 
 	if ($auto_save && $auto_save->id != $revision->id) {
@@ -405,44 +391,22 @@ function blog_prepare_form_vars($post = NULL, $revision = NULL) {
 
 /**
  * Forward to the new style of URLs
- * 
- * Pre-1.7.5
- * Group blogs page: /blog/group:<container_guid>/
- * Group blog view:  /blog/group:<container_guid>/read/<guid>/<title>
- * 1.7.5-1.8
- * Group blogs page: /blog/owner/group:<container_guid>/
- * Group blog view:  /blog/read/<guid>
- * 
  *
  * @param string $page
  */
 function blog_url_forwarder($page) {
-
-	$viewtype = elgg_get_viewtype();
-	$qs = ($viewtype === 'default') ? "" : "?view=$viewtype";
-
-	$url = "blog/all";
-
-	// easier to work with & no notices
-	$page = array_pad($page, 4, "");
+	global $CONFIG;
 
 	// group usernames
-	if (preg_match('~/group\:([0-9]+)/~', "/{$page[0]}/{$page[1]}/", $matches)) {
+	if (substr_count($page[0], 'group:')) {
+		preg_match('/group\:([0-9]+)/i', $page[0], $matches);
 		$guid = $matches[1];
 		$entity = get_entity($guid);
-		if (elgg_instanceof($entity, 'group')) {
-			if (!empty($page[2])) {
-				$url = "blog/view/$page[2]/";
-			} else {
-				$url = "blog/group/$guid/all";
-			}
+		if ($entity) {
+			$url = "{$CONFIG->wwwroot}blog/group/$guid/all";
 			register_error(elgg_echo("changebookmark"));
-			forward($url . $qs);
+			forward($url);
 		}
-	}
-
-	if (empty($page[0])) {
-		return;
 	}
 
 	// user usernames
@@ -451,28 +415,28 @@ function blog_url_forwarder($page) {
 		return;
 	}
 
-	if (empty($page[1])) {
+	if (!isset($page[1])) {
 		$page[1] = 'owner';
 	}
 
 	switch ($page[1]) {
 		case "read":
-			$url = "blog/view/{$page[2]}/{$page[3]}";
+			$url = "{$CONFIG->wwwroot}blog/view/{$page[2]}/{$page[3]}";
 			break;
 		case "archive":
-			$url = "blog/archive/{$page[0]}/{$page[2]}/{$page[3]}";
+			$url = "{$CONFIG->wwwroot}blog/archive/{$page[0]}/{$page[2]}/{$page[3]}";
 			break;
 		case "friends":
-			$url = "blog/friends/{$page[0]}";
+			$url = "{$CONFIG->wwwroot}blog/friends/{$page[0]}";
 			break;
 		case "new":
-			$url = "blog/add/$user->guid";
+			$url = "{$CONFIG->wwwroot}blog/add/$user->guid";
 			break;
 		case "owner":
-			$url = "blog/owner/{$page[0]}";
+			$url = "{$CONFIG->wwwroot}blog/owner/{$page[0]}";
 			break;
 	}
 
 	register_error(elgg_echo("changebookmark"));
-	forward($url . $qs);
+	forward($url);
 }

@@ -30,9 +30,7 @@ $_PAM_HANDLERS = array();
  * failure, return false or throw an exception. Returning nothing indicates that
  * the handler wants to be skipped.
  *
- * Note, $handler must be string callback (not an array/Closure).
- *
- * @param string $handler    Callable global handler function in the format ()
+ * @param string $handler    The handler function in the format
  * 		                     pam_handler($credentials = NULL);
  * @param string $importance The importance - "sufficient" (default) or "required"
  * @param string $policy     The policy type, default is "user"
@@ -47,8 +45,7 @@ function register_pam_handler($handler, $importance = "sufficient", $policy = "u
 		$_PAM_HANDLERS[$policy] = array();
 	}
 
-	// @todo remove requirement that $handle be a global function
-	if (is_string($handler) && is_callable($handler, true)) {
+	if (is_callable($handler)) {
 		$_PAM_HANDLERS[$policy][$handler] = new stdClass;
 
 		$_PAM_HANDLERS[$policy][$handler]->handler = $handler;

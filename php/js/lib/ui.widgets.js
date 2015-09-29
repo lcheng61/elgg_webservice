@@ -15,7 +15,7 @@ elgg.ui.widgets.init = function() {
 	$(".elgg-widgets").sortable({
 		items:                'div.elgg-module-widget.elgg-state-draggable',
 		connectWith:          '.elgg-widgets',
-		handle:               '.elgg-widget-handle',
+		handle:               'div.elgg-head',
 		forcePlaceholderSize: true,
 		placeholder:          'elgg-widget-placeholder',
 		opacity:              0.8,
@@ -29,7 +29,7 @@ elgg.ui.widgets.init = function() {
 	$('.elgg-widget-edit > form ').live('submit', elgg.ui.widgets.saveSettings);
 	$('a.elgg-widget-collapse-button').live('click', elgg.ui.widgets.collapseToggle);
 
-	elgg.ui.widgets.setMinHeight(".elgg-widgets");
+	elgg.ui.widgets.equalHeight(".elgg-widgets");
 };
 
 /**
@@ -58,7 +58,6 @@ elgg.ui.widgets.add = function(event) {
 			handler: type,
 			owner_guid: elgg.get_page_owner_guid(),
 			context: $("input[name='widget_context']").val(),
-			show_access: $("input[name='show_access']").val(),
 			default_widgets: $("input[name='default_widgets']").val() || 0
 		},
 		success: function(json) {
@@ -108,12 +107,7 @@ elgg.ui.widgets.move = function(event, ui) {
  * @return void
  */
 elgg.ui.widgets.remove = function(event) {
-	if (confirm(elgg.echo('deleteconfirm')) == false) {
-		event.preventDefault();
-		return;
-	}
-	
-	var $widget = $(this).closest('.elgg-module-widget');
+	var $widget = $(this).parent().parent();
 
 	// if widget type is single instance type, enable the add buton
 	var type = $widget.attr('class');
@@ -130,9 +124,15 @@ elgg.ui.widgets.remove = function(event) {
 
 	$widget.remove();
 
-	// delete the widget through ajax
-	elgg.action($(this).attr('href'));
+	// elgg-widget-delete-button-<guid>
+	var id = $(this).attr('id');
+	id = id.substr(id.indexOf('elgg-widget-delete-button-') + "elgg-widget-delete-button-".length);
 
+	elgg.action('widgets/delete', {
+		data: {
+			widget_guid: id
+		}
+	});
 	event.preventDefault();
 };
 
@@ -181,29 +181,22 @@ elgg.ui.widgets.saveSettings = function(event) {
 };
 
 /**
- * Set the min-height so that all widget column bottoms are the same
+ * Make all elements have the same min-height
  *
  * This addresses the issue of trying to drag a widget into a column that does
- * not have any widgets or many fewer widgets than other columns.
+ * not have any widgets.
  *
  * @param {String} selector
  * @return void
  */
-elgg.ui.widgets.setMinHeight = function(selector) {
-	var maxBottom = 0;
+elgg.ui.widgets.equalHeight = function(selector) {
+	var maxHeight = 0;
 	$(selector).each(function() {
-		var bottom = parseInt($(this).offset().top + $(this).height());
-		if (bottom > maxBottom) {
-			maxBottom = bottom;
+		if ($(this).height() > maxHeight) {
+			maxHeight = $(this).height();
 		}
 	})
-	$(selector).each(function() {
-		var bottom = parseInt($(this).offset().top + $(this).height());
-		if (bottom < maxBottom) {
-			var newMinHeight = parseInt($(this).height() + (maxBottom - bottom));
-			$(this).css('min-height', newMinHeight + 'px');
-		}
-	})
+	$(selector).css('min-height', maxHeight);
 };
 
 elgg.register_hook_handler('init', 'system', elgg.ui.widgets.init);

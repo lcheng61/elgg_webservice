@@ -13,8 +13,8 @@ elgg_push_breadcrumb(elgg_echo('pages'));
 elgg_register_title_button();
 
 $content = elgg_list_entities(array(
-	'type' => 'object',
-	'subtype' => 'page_top',
+	'types' => 'object',
+	'subtypes' => 'page_top',
 	'full_view' => false,
 ));
 if (!$content) {

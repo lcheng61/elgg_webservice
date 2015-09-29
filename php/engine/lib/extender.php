@@ -86,7 +86,6 @@ function oddmetadata_to_elggextender(ElggEntity $entity, ODDMetaData $element) {
  * @return null
  * @elgg_plugin_hook_handler volatile metadata
  * @todo investigate more.
- * @throws ImportException
  * @access private
  */
 function import_extender_plugin_hook($hook, $entity_type, $returnvalue, $params) {
@@ -95,7 +94,6 @@ function import_extender_plugin_hook($hook, $entity_type, $returnvalue, $params)
 	$tmp = NULL;
 
 	if ($element instanceof ODDMetaData) {
-		/* @var ODDMetaData $element */
 		// Recall entity
 		$entity_uuid = $element->getAttribute('entity_uuid');
 		$entity = get_entity_from_uuid($entity_uuid);
@@ -107,7 +105,6 @@ function import_extender_plugin_hook($hook, $entity_type, $returnvalue, $params)
 
 		// Save
 		if (!$entity->save()) {
-			$attr_name = $element->getAttribute('name');
 			$msg = elgg_echo('ImportException:ProblemUpdatingMeta', array($attr_name, $entity_uuid));
 			throw new ImportException($msg);
 		}
@@ -123,49 +120,42 @@ function import_extender_plugin_hook($hook, $entity_type, $returnvalue, $params)
  * @param string $type        'metadata' or 'annotation'
  * @param int    $user_guid   The GUID of the user
  *
- * @return bool
+ * @return true|false
  */
 function can_edit_extender($extender_id, $type, $user_guid = 0) {
-	// @todo Since Elgg 1.0, Elgg has returned false from can_edit_extender()
-	// if no user was logged in. This breaks the access override. This is a
-	// temporary work around. This function needs to be rewritten in Elgg 1.9 
-	if (!elgg_check_access_overrides($user_guid)) {
-		if (!elgg_is_logged_in()) {
-			return false;
-		}
+	if (!elgg_is_logged_in()) {
+		return false;
 	}
 
 	$user_guid = (int)$user_guid;
-	$user = get_user($user_guid);
+	$user = get_entity($user_guid);
 	if (!$user) {
 		$user = elgg_get_logged_in_user_entity();
-		$user_guid = elgg_get_logged_in_user_guid();
 	}
 
 	$functionname = "elgg_get_{$type}_from_id";
 	if (is_callable($functionname)) {
-		$extender = call_user_func($functionname, $extender_id);
+		$extender = $functionname($extender_id);
 	} else {
 		return false;
 	}
 
-	if (!($extender instanceof ElggExtender)) {
+	if (!is_a($extender, "ElggExtender")) {
 		return false;
 	}
-	/* @var ElggExtender $extender */
 
 	// If the owner is the specified user, great! They can edit.
-	if ($extender->getOwnerGUID() == $user_guid) {
+	if ($extender->getOwnerGUID() == $user->getGUID()) {
 		return true;
 	}
 
 	// If the user can edit the entity this is attached to, great! They can edit.
-	if (can_edit_entity($extender->entity_guid, $user_guid)) {
+	if (can_edit_entity($extender->entity_guid, $user->getGUID())) {
 		return true;
 	}
 
-	// Trigger plugin hook - note that $user may be null
-	$params = array('entity' => $extender->getEntity(), 'user' => $user);
+	// Trigger plugin hooks
+	$params = array('entity' => $entity, 'user' => $user);
 	return elgg_trigger_plugin_hook('permissions_check', $type, $params, false);
 }
 
@@ -174,9 +164,9 @@ function can_edit_extender($extender_id, $type, $user_guid = 0) {
  * It is recommended that you do not call this directly, instead use
  * one of the wrapper functions such as elgg_register_annotation_url_handler().
  *
+ * @param string $function_name The function to register
  * @param string $extender_type Extender type ('annotation', 'metadata')
  * @param string $extender_name The name of the extender
- * @param string $function_name The function to register
  *
  * @return bool
  */
@@ -184,7 +174,7 @@ function elgg_register_extender_url_handler($extender_type, $extender_name, $fun
 
 	global $CONFIG;
 
-	if (!is_callable($function_name, true)) {
+	if (!is_callable($function_name)) {
 		return false;
 	}
 
@@ -237,7 +227,7 @@ function get_extender_url(ElggExtender $extender) {
 	if ($url == "") {
 		$nameid = $extender->id;
 		if ($type == 'volatile') {
-			$nameid = $extender->name;
+			$nameid == $extender->name;
 		}
 		$url = "export/$view/$guid/$type/$nameid/";
 	}

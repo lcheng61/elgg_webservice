@@ -14,7 +14,7 @@ if ($vars['num_failures'] != 0) {
 	$instruct_text = elgg_echo('install:requirements:instructions:success');
 }
 
-echo elgg_autop($instruct_text);
+echo autop($instruct_text);
 
 $report = $vars['report'];
 foreach ($report as $category => $checks) {
@@ -23,17 +23,17 @@ foreach ($report as $category => $checks) {
 	echo "<ul class=\"elgg-require-$category\">";
 	foreach ($checks as $check) {
 		echo "<li class=\"{$check['severity']}\">";
-		echo elgg_autop($check['message']);
+		echo autop($check['message']);
 		echo "</li>";
 	}
 	echo "</ul>";
 }
 
-$vars['refresh'] = true;
+$vars['refresh'] = TRUE;
 
 // cannot advance to next step with a failure
 if ($vars['num_failures'] != 0) {
-	$vars['advance'] = false;
+	$vars['advance'] = FALSE;
 }
 
 echo elgg_view('install/nav', $vars);

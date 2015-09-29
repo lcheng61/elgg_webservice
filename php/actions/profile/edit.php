@@ -4,8 +4,6 @@
  *
  */
 
-elgg_make_sticky_form('profile:edit');
-
 $guid = get_input('guid');
 $owner = get_entity($guid);
 
@@ -27,7 +25,7 @@ if (!is_array($accesslevel)) {
  * wrapper for recursive array walk decoding
  */
 function profile_array_decoder(&$v) {
-	$v = _elgg_html_decode($v);
+	$v = html_entity_decode($v, ENT_COMPAT, 'UTF-8');
 }
 
 $profile_fields = elgg_get_config('profile_fields');
@@ -39,7 +37,7 @@ foreach ($profile_fields as $shortname => $valuetype) {
 	if (is_array($value)) {
 		array_walk_recursive($value, 'profile_array_decoder');
 	} else {
-		$value = _elgg_html_decode($value);
+		$value = html_entity_decode($value, ENT_COMPAT, 'UTF-8');
 	}
 
 	// limit to reasonable sizes
@@ -50,14 +48,10 @@ foreach ($profile_fields as $shortname => $valuetype) {
 		forward(REFERER);
 	}
 
-	if ($value && $valuetype == 'url' && !preg_match('~^https?\://~i', $value)) {
-		$value = "http://$value";
-	}
-
 	if ($valuetype == 'tags') {
 		$value = string_to_tag_array($value);
 	}
-	
+
 	$input[$shortname] = $value;
 }
 
@@ -68,7 +62,12 @@ if ($name) {
 		register_error(elgg_echo('user:name:fail'));
 	} elseif ($owner->name != $name) {
 		$owner->name = $name;
-		$owner->save();
+		// @todo this is weird...giving two notifications?
+		if ($owner->save()) {
+			system_message(elgg_echo('user:name:success'));
+		} else {
+			register_error(elgg_echo('user:name:fail'));
+		}
 	}
 }
 
@@ -77,30 +76,24 @@ if (sizeof($input) > 0) {
 	foreach ($input as $shortname => $value) {
 		$options = array(
 			'guid' => $owner->guid,
-			'metadata_name' => $shortname,
-			'limit' => false
+			'metadata_name' => $shortname
 		);
 		elgg_delete_metadata($options);
-		
-		if (!is_null($value) && ($value !== '')) {
-			// only create metadata for non empty values (0 is allowed) to prevent metadata records with empty string values #4858
-			
-			if (isset($accesslevel[$shortname])) {
-				$access_id = (int) $accesslevel[$shortname];
-			} else {
-				// this should never be executed since the access level should always be set
-				$access_id = ACCESS_DEFAULT;
+		if (isset($accesslevel[$shortname])) {
+			$access_id = (int) $accesslevel[$shortname];
+		} else {
+			// this should never be executed since the access level should always be set
+			$access_id = ACCESS_DEFAULT;
+		}
+		if (is_array($value)) {
+			$i = 0;
+			foreach ($value as $interval) {
+				$i++;
+				$multiple = ($i > 1) ? TRUE : FALSE;
+				create_metadata($owner->guid, $shortname, $interval, 'text', $owner->guid, $access_id, $multiple);
 			}
-			if (is_array($value)) {
-				$i = 0;
-				foreach ($value as $interval) {
-					$i++;
-					$multiple = ($i > 1) ? TRUE : FALSE;
-					create_metadata($owner->guid, $shortname, $interval, 'text', $owner->guid, $access_id, $multiple);
-				}
-			} else {
-				create_metadata($owner->getGUID(), $shortname, $value, 'text', $owner->getGUID(), $access_id);
-			}
+		} else {
+			create_metadata($owner->getGUID(), $shortname, $value, 'text', $owner->getGUID(), $access_id);
 		}
 	}
 
@@ -109,7 +102,6 @@ if (sizeof($input) > 0) {
 	// Notify of profile update
 	elgg_trigger_event('profileupdate', $owner->type, $owner);
 
-	elgg_clear_sticky_form('profile:edit');
 	system_message(elgg_echo("profile:saved"));
 }
 

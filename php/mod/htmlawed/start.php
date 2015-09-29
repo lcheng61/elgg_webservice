@@ -18,8 +18,6 @@ function htmlawed_init() {
 
 	$lib = elgg_get_plugins_path() . "htmlawed/vendors/htmLawed/htmLawed.php";
 	elgg_register_library('htmlawed', $lib);
-	
-	elgg_register_plugin_hook_handler('unit_test', 'system', 'htmlawed_test');
 }
 
 /**
@@ -92,13 +90,7 @@ function htmLawedArray(&$v, $k, $htmlawed_config) {
  * @param array  $attributes An array of attributes
  * @return string
  */
-function htmlawed_tag_post_processor($element, $attributes = false) {
-    if ($attributes === false) {
-        // This is a closing tag. Prevent further processing to avoid inserting a duplicate tag
-
-        return "</${element}>";
-    }
-
+function htmlawed_tag_post_processor($element, $attributes) {
 	// these are the default styles used by tinymce.
 	$allowed_styles = array(
 		'color', 'cursor', 'text-align', 'vertical-align', 'font-size',
@@ -150,14 +142,4 @@ function htmlawed_tag_post_processor($element, $attributes = false) {
 
 	$r = "<$element$string>";
 	return $r;
-}
-
-/**
- * Runs unit tests for htmlawed
- *
- * @return array
- */
-function htmlawed_test($hook, $type, $value, $params) {
-    $value[] = dirname(__FILE__) . '/tests/tags.php';
-    return $value;
 }

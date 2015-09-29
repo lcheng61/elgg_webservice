@@ -1,6 +1,6 @@
 <?php
 
-echo elgg_autop(elgg_echo('install:settings:instructions'));
+echo autop(elgg_echo('install:settings:instructions'));
 
 $vars['type'] = 'settings';
 

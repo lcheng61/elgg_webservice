@@ -1,12 +1,12 @@
 <?php
 /**
- * Bootstraps the Elgg engine.
+ * Bootstraps and starts the Elgg engine.
  *
  * This file loads the full Elgg engine, checks the installation
- * state, and triggers a series of events to finish booting Elgg:
+ * state, then emits a series of events to finish booting Elgg:
  * 	- {@elgg_event boot system}
+ * 	- {@elgg_event plugins_boot system}
  * 	- {@elgg_event init system}
- * 	- {@elgg_event ready system}
  *
  * If Elgg is fully uninstalled, the browser will be redirected to an
  * installation page.
@@ -36,12 +36,13 @@ $START_MICROTIME = microtime(true);
  * Configuration values.
  *
  * The $CONFIG global contains configuration values required
- * for running Elgg as defined in the settings.php file.
+ * for running Elgg as defined in the settings.php file.  The following
+ * array keys are defined by core Elgg:
  *
- * Plugin authors are encouraged to use elgg_get_config() instead of accessing
- * the global directly.
+ * Plugin authors are encouraged to use get_config() instead of accessing the
+ * global directly.
  *
- * @see elgg_get_config()
+ * @see get_config()
  * @see engine/settings.php
  * @global stdClass $CONFIG
  */
@@ -49,39 +50,59 @@ global $CONFIG;
 if (!isset($CONFIG)) {
 	$CONFIG = new stdClass;
 }
-$CONFIG->boot_complete = false;
 
 $lib_dir = dirname(__FILE__) . '/lib/';
 
-// Load the bootstrapping library
-$path = $lib_dir . 'elgglib.php';
-if (!include_once($path)) {
-	echo "Could not load file '$path'. Please check your Elgg installation for all required files.";
-	exit;
+/**
+ * The minimum required libs to bootstrap an Elgg installation.
+ *
+ * @var array
+ */
+$required_files = array(
+	'elgglib.php', 'views.php', 'access.php', 'system_log.php', 'export.php',
+	'sessions.php', 'languages.php', 'pageowner.php', 'input.php', 'cache.php',
+	'output.php'
+);
+
+// include bootstraping libs
+foreach ($required_files as $file) {
+	$path = $lib_dir . $file;
+	if (!include($path)) {
+		echo "Could not load file '$path'. "
+		. 'Please check your Elgg installation for all required files.';
+		exit;
+	}
 }
 
-// Load the system settings
+// Register the error handler
+set_error_handler('_elgg_php_error_handler');
+set_exception_handler('_elgg_php_exception_handler');
+
+/**
+ * Load the system settings
+ */
 if (!include_once(dirname(__FILE__) . "/settings.php")) {
-	$msg = 'Elgg could not load the settings file. It does not exist or there is a file permissions issue.';
+	$msg = elgg_echo('InstallationException:CannotLoadSettings');
 	throw new InstallationException($msg);
 }
 
 
 // load the rest of the library files from engine/lib/
 $lib_files = array(
-	'access.php', 'actions.php', 'admin.php', 'annotations.php', 'cache.php',
-	'calendar.php', 'configuration.php', 'cron.php', 'database.php',
-	'entities.php', 'export.php', 'extender.php', 'filestore.php', 'group.php',
-	'input.php', 'languages.php', 'location.php', 'mb_wrapper.php',
-	'memcache.php', 'metadata.php', 'metastrings.php', 'navigation.php',
-	'notification.php', 'objects.php', 'opendd.php', 'output.php',
-	'pagehandler.php', 'pageowner.php', 'pam.php', 'plugins.php',
-	'private_settings.php', 'relationships.php', 'river.php', 'sessions.php',
-	'sites.php', 'statistics.php', 'system_log.php', 'tags.php',
-	'user_settings.php', 'users.php', 'upgrade.php', 'views.php',
-	'web_services.php', 'widgets.php', 'xml.php', 'xml-rpc.php',
+	// these need to be loaded first.
+	'database.php', 'actions.php',
+
+	'admin.php', 'annotations.php', 'calendar.php',
+	'configuration.php', 'cron.php', 'entities.php', 'export.php',
+	'extender.php', 'filestore.php', 'group.php', 
+	'location.php', 'mb_wrapper.php', 'memcache.php', 'metadata.php',
+	'metastrings.php', 'navigation.php', 'notification.php', 'objects.php',
+	'opendd.php', 'pagehandler.php', 'pam.php', 'plugins.php',
+	'private_settings.php', 'relationships.php', 'river.php', 'sites.php',
+	'statistics.php', 'tags.php', 'user_settings.php', 'users.php',
+	'upgrade.php', 'web_services.php', 'widgets.php', 'xml.php', 'xml-rpc.php',
 	
-	// backward compatibility
+	//backwards compatibility
 	'deprecated-1.7.php', 'deprecated-1.8.php',
 );
 
@@ -89,33 +110,48 @@ foreach ($lib_files as $file) {
 	$file = $lib_dir . $file;
 	elgg_log("Loading $file...");
 	if (!include_once($file)) {
-		$msg = "Could not load $file";
+		$msg = sprintf(elgg_echo('InstallationException:MissingLibrary'), $file);
 		throw new InstallationException($msg);
 	}
 }
 
-// Connect to database, load language files, load configuration, init session
-// Plugins can't use this event because they haven't been loaded yet.
+// connect to db
+setup_db_connections();
+
+// confirm that the installation completed successfully
+verify_installation();
+
+// Autodetect some default configuration settings
+set_default_config();
+
+// needs to be set for links in html head
+$viewtype = get_input('view', 'default');
+$lastcached = datalist_get("simplecache_lastcached_$viewtype");
+$CONFIG->lastcache = $lastcached;
+
+// Trigger boot events for core. Plugins can't hook
+// into this because they haven't been loaded yet.
 elgg_trigger_event('boot', 'system');
 
 // Load the plugins that are active
 elgg_load_plugins();
-
-// @todo move loading plugins into a single boot function that replaces 'boot', 'system' event
-// and then move this code in there.
-// This validates the view type - first opportunity to do it is after plugins load.
-$view_type = elgg_get_viewtype();
-if (!elgg_is_valid_view_type($view_type)) {
-	elgg_set_viewtype('default');
-}
-
-// @todo deprecate as plugins can use 'init', 'system' event
 elgg_trigger_event('plugins_boot', 'system');
 
-// Complete the boot process for both engine and plugins
+// Trigger system init event for plugins
 elgg_trigger_event('init', 'system');
 
-$CONFIG->boot_complete = true;
+// Regenerate the simple cache if expired.
+// Don't do it on upgrade because upgrade does it itself.
+// @todo - move into function and perhaps run off init system event
+if (!defined('UPGRADING')) {
+	$lastupdate = datalist_get("simplecache_lastupdate_$viewtype");
+	$lastcached = datalist_get("simplecache_lastcached_$viewtype");
+	if ($lastupdate == 0 || $lastcached < $lastupdate) {
+		elgg_regenerate_simplecache($viewtype);
+		$lastcached = datalist_get("simplecache_lastcached_$viewtype");
+	}
+	$CONFIG->lastcache = $lastcached;
+}
 
 // System loaded and ready
 elgg_trigger_event('ready', 'system');

@@ -18,7 +18,7 @@ if ($vars['page'] == 'all') {
 }
 
 // only users can have archives at present
-if ($vars['page'] == 'owner' || $vars['page'] == 'group') {
+if (elgg_instanceof(elgg_get_page_owner_entity(), 'user')) {
 	echo elgg_view('blog/sidebar/archives', $vars);
 }
 

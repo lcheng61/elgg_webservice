@@ -3,20 +3,15 @@
  * Elgg notifications groups subscription form
  *
  * @package ElggNotifications
- *
- * @uses $vars['user'] ElggUser
  */
-
-/* @var ElggUser $user */
-$user = $vars['user'];
 
 global $NOTIFICATION_HANDLERS;
 foreach ($NOTIFICATION_HANDLERS as $method => $foo) {
 	$subsbig[$method] = elgg_get_entities_from_relationship(array(
 		'relationship' => 'notify' . $method,
-		'relationship_guid' => $user->guid,
-		'type' => 'group',
-		'limit' => false,
+		'relationship_guid' => elgg_get_logged_in_user_guid(),
+		'types' => 'group',
+		'limit' => 99999,
 	));
 	$tmparray = array();
 	if ($subsbig[$method]) {
@@ -102,7 +97,6 @@ END;
 <?php
 }
 	echo '<div class="elgg-foot mtm">';
-	echo elgg_view('input/hidden', array('name' => 'guid', 'value' => $user->guid));
 	echo elgg_view('input/submit', array('value' => elgg_echo('save')));
 	echo '</div>';
 	

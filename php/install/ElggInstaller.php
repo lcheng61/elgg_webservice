@@ -157,7 +157,7 @@ class ElggInstaller {
 			'password',
 		);
 		foreach ($requiredParams as $key) {
-			if (empty($params[$key])) {
+			if (!array_key_exists($key, $params)) {
 				$msg = elgg_echo('install:error:requiredfield', array($key));
 				throw new InstallationException($msg);
 			}
@@ -391,7 +391,7 @@ class ElggInstaller {
 		$formVars = array(
 			'sitename' => array(
 				'type' => 'text',
-				'value' => 'My New Community',
+				'value' => 'New Elgg site',
 				'required' => TRUE,
 				),
 			'siteemail' => array(
@@ -534,6 +534,8 @@ class ElggInstaller {
 		} else {
 			$params['destination'] = 'index.php';
 		}
+
+		elgg_invalidate_simplecache();
 
 		$this->render('complete', $params);
 	}
@@ -752,7 +754,6 @@ class ElggInstaller {
 	protected function finishBootstraping($step) {
 
 		$dbIndex = array_search('database', $this->getSteps());
-		$settingsIndex = array_search('settings', $this->getSteps());
 		$adminIndex = array_search('admin', $this->getSteps());
 		$completeIndex = array_search('complete', $this->getSteps());
 		$stepIndex = array_search($step, $this->getSteps());
@@ -789,8 +790,8 @@ class ElggInstaller {
 				'private_settings.php', 'relationships.php', 'river.php',
 				'sites.php', 'statistics.php', 'tags.php', 'user_settings.php',
 				'users.php', 'upgrade.php', 'web_services.php',
-				'widgets.php', 'xml.php', 'xml-rpc.php',
-				'deprecated-1.7.php', 'deprecated-1.8.php',
+				'widgets.php', 'xml.php', 'xml-rpc.php', 'deprecated-1.7.php',
+				'deprecated-1.8.php',
 			);
 
 			foreach ($lib_files as $file) {
@@ -801,17 +802,9 @@ class ElggInstaller {
 				}
 			}
 
-			setup_db_connections();
-			register_translations(dirname(dirname(__FILE__)) . "/languages/");
+			set_default_config();
 
-			if ($stepIndex > $settingsIndex) {
-				$CONFIG->site_guid = (int) datalist_get('default_site');
-				$CONFIG->site_id = $CONFIG->site_guid;
-				$CONFIG->site = get_entity($CONFIG->site_guid);
-				$CONFIG->dataroot = datalist_get('dataroot');
-				_elgg_session_boot(NULL, NULL, NULL);
-			}
-
+			elgg_trigger_event('boot', 'system');
 			elgg_trigger_event('init', 'system');
 		}
 	}
@@ -830,10 +823,8 @@ class ElggInstaller {
 		$CONFIG->wwwroot = $this->getBaseUrl();
 		$CONFIG->url = $CONFIG->wwwroot;
 		$CONFIG->path = dirname(dirname(__FILE__)) . '/';
-		$CONFIG->viewpath =	$CONFIG->path . 'views/';
-		$CONFIG->pluginspath = $CONFIG->path . 'mod/';
+		$CONFIG->lastcache = 0;
 		$CONFIG->context = array();
-		$CONFIG->entity_types = array('group', 'object', 'site', 'user');
 	}
 
 	/**
@@ -1148,19 +1139,9 @@ class ElggInstaller {
 		foreach ($formVars as $field => $info) {
 			if ($info['required'] == TRUE && !$submissionVars[$field]) {
 				$name = elgg_echo("install:database:label:$field");
-				register_error(elgg_echo('install:error:requiredfield', array($name)));
+				register_error("$name is required");
 				return FALSE;
 			}
-		}
-
-		// according to postgres documentation: SQL identifiers and key words must
-		// begin with a letter (a-z, but also letters with diacritical marks and
-		// non-Latin letters) or an underscore (_). Subsequent characters in an
-		// identifier or key word can be letters, underscores, digits (0-9), or dollar signs ($).
-		// Refs #4994
-		if (!preg_match("/^[a-zA-Z_][\w]*$/", $submissionVars['dbprefix'])) {
-			register_error(elgg_echo('install:error:database_prefix'));
-			return FALSE;
 		}
 
 		return $this->checkDatabaseSettings(
@@ -1347,21 +1328,6 @@ class ElggInstaller {
 			}
 		}
 
-		// check that data root is absolute path
-		if (stripos(PHP_OS, 'win') === 0) {
-			if (strpos($submissionVars['dataroot'], ':') !== 1) {
-				$msg = elgg_echo('install:error:relative_path', array($submissionVars['dataroot']));
-				register_error($msg);
-				return FALSE;
-			}
-		} else {
-			if (strpos($submissionVars['dataroot'], '/') !== 0) {
-				$msg = elgg_echo('install:error:relative_path', array($submissionVars['dataroot']));
-				register_error($msg);
-				return FALSE;
-			}
-		}
-
 		// check that data root exists
 		if (!file_exists($submissionVars['dataroot'])) {
 			$msg = elgg_echo('install:error:datadirectoryexists', array($submissionVars['dataroot']));
@@ -1414,11 +1380,11 @@ class ElggInstaller {
 		$submissionVars['wwwroot'] = sanitise_filepath($submissionVars['wwwroot']);
 
 		$site = new ElggSite();
-		$site->name = strip_tags($submissionVars['sitename']);
-		$site->url = $submissionVars['wwwroot'];
+		$site->name      = $submissionVars['sitename'];
+		$site->url       = $submissionVars['wwwroot'];
 		$site->access_id = ACCESS_PUBLIC;
-		$site->email = $submissionVars['siteemail'];
-		$guid = $site->save();
+		$site->email     = $submissionVars['siteemail'];
+		$guid            = $site->save();
 
 		if (!$guid) {
 			register_error(elgg_echo('install:error:createsite'));
@@ -1435,7 +1401,7 @@ class ElggInstaller {
 		datalist_set('default_site', $site->getGUID());
 		datalist_set('version', get_version());
 		datalist_set('simplecache_enabled', 1);
-		datalist_set('system_cache_enabled', 1);
+		datalist_set('viewpath_cache_enabled', 1);
 
 		// new installations have run all the upgrades
 		$upgrades = elgg_get_upgrade_files($submissionVars['path'] . 'engine/lib/upgrades/');
@@ -1449,6 +1415,12 @@ class ElggInstaller {
 		set_config('allow_user_default_access', '', $site->getGUID());
 
 		$this->enablePlugins();
+
+		// reset the views path in case of installing over an old data dir.
+		$dataroot = $submissionVars['dataroot'];
+		$CONFIG->dataroot = $dataroot;
+		$cache = new ElggFileCache($dataroot);
+		$cache->delete('view_paths');
 
 		return TRUE;
 	}
@@ -1529,27 +1501,22 @@ class ElggInstaller {
 	protected function createAdminAccount($submissionVars, $login = FALSE) {
 		global $CONFIG;
 
-		try {
-			$guid = register_user(
-					$submissionVars['username'],
-					$submissionVars['password1'],
-					$submissionVars['displayname'],
-					$submissionVars['email']
-					);
-		} catch (Exception $e) {
-			register_error($e->getMessage());
-			return false;
-		}
+		$guid = register_user(
+				$submissionVars['username'],
+				$submissionVars['password1'],
+				$submissionVars['displayname'],
+				$submissionVars['email']
+				);
 
 		if (!$guid) {
 			register_error(elgg_echo('install:admin:cannot_create'));
-			return false;
+			return FALSE;
 		}
 
 		$user = get_entity($guid);
 		if (!$user) {
 			register_error(elgg_echo('install:error:loadadmin'));
-			return false;
+			return FALSE;
 		}
 
 		elgg_set_ignore_access(TRUE);
@@ -1558,7 +1525,7 @@ class ElggInstaller {
 		} else {
 			datalist_set('admin_registered', 1);
 		}
-		elgg_set_ignore_access(false);
+		elgg_set_ignore_access(FALSE);
 
 		// add validation data to satisfy user validation plugins
 		create_metadata($guid, 'validated', TRUE, '', 0, ACCESS_PUBLIC);

@@ -16,7 +16,7 @@
 	text-align: center;
 }
 .elgg-pagination li {
-	display: inline-block;
+	display: inline;
 	margin: 0 6px 0 0;
 	text-align: center;
 }
@@ -24,8 +24,7 @@
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
-
-	display: block;
+	
 	padding: 2px 6px;
 	color: #4690d6;
 	border: 1px solid #4690d6;
@@ -131,9 +130,9 @@
 }
 
 .elgg-menu-topbar > li > a {
-	padding-top: 2px;
+	padding: 2px 15px 0;
 	color: #eee;
-	margin: 1px 15px 0;
+	margin-top: 1px;
 }
 
 .elgg-menu-topbar > li > a:hover {
@@ -373,10 +372,7 @@
 	position: absolute;
 	z-index: 10000;
 
-	overflow: hidden;
-
-	min-width: 165px;
-	max-width: 250px;
+	width: 165px;
 	border: solid 1px;
 	border-color: #E5E5E5 #999 #999 #E5E5E5;
 	background-color: #FFF;
@@ -450,7 +446,7 @@
 	ENTITY AND ANNOTATION
 *************************************** */
 <?php // height depends on line height/font size ?>
-.elgg-menu-entity, .elgg-menu-annotation {
+.elgg-menu-entity, elgg-menu-annotation {
 	float: right;
 	margin-left: 15px;
 	font-size: 90%;
@@ -535,26 +531,4 @@
 *************************************** */
 .elgg-menu-extras {
 	margin-bottom: 15px;
-}
-
-/* ***************************************
-	WIDGET MENU
-*************************************** */
-.elgg-menu-widget > li {
-	position: absolute;
-	top: 4px;
-	display: inline-block;
-	width: 18px;
-	height: 18px;
-	padding: 2px 2px 0 0;
-}
-
-.elgg-menu-widget > .elgg-menu-item-collapse {
-	left: 5px;
-}
-.elgg-menu-widget > .elgg-menu-item-delete {
-	right: 5px;
-}
-.elgg-menu-widget > .elgg-menu-item-settings {
-	right: 25px;
 }

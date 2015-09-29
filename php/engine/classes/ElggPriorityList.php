@@ -89,7 +89,7 @@
  *	return true;
  * }
  *
- * @package    Elgg.Core
+ * @package Elgg.Core
  * @subpackage Helpers
  */
 class ElggPriorityList
@@ -126,9 +126,7 @@ class ElggPriorityList
 	 *                        maintains its priority and the new element is to the next available
 	 *                        slot, taking into consideration all previously registered elements.
 	 *                        Negative elements are accepted.
-	 * @param bool  $exact    unused
 	 * @return int            The priority of the added element.
-	 * @todo remove $exact or implement it. Note we use variable name strict below.
 	 */
 	public function add($element, $priority = null, $exact = false) {
 		if ($priority !== null && !is_numeric($priority)) {
@@ -148,8 +146,7 @@ class ElggPriorityList
 	 * @warning The element must have the same attributes / values. If using $strict, it must have
 	 *          the same types. array(10) will fail in strict against array('10') (str vs int).
 	 *
-	 * @param mixed $element The element to remove from the list
-	 * @param bool  $strict  Whether to check the type of the element match
+	 * @param type $element
 	 * @return bool
 	 */
 	public function remove($element, $strict = false) {
@@ -165,10 +162,10 @@ class ElggPriorityList
 	/**
 	 * Move an existing element to a new priority.
 	 *
-	 * @param mixed $element      The element to move
-	 * @param int   $new_priority The new priority for the element
-	 * @param bool  $strict       Whether to check the type of the element match
-	 * @return bool
+	 * @param mixed  $current_priority
+	 * @param int    $new_priority
+	 *
+	 * @return int The new priority.
 	 */
 	public function move($element, $new_priority, $strict = false) {
 		$new_priority = (int) $new_priority;
@@ -203,12 +200,12 @@ class ElggPriorityList
 	 *
 	 * If no user function is provided the elements are sorted by priority registered.
 	 *
-	 * The callback function should accept the array of elements as the first 
-	 * argument and should return a sorted array.
+	 * The callback function should accept the array of elements as the first argument and should
+	 * return a sorted array.
 	 *
 	 * This function can be called multiple times.
 	 *
-	 * @param callback $callback The callback for sorting. Numeric sorting is the default.
+	 * @param type $callback
 	 * @return bool
 	 */
 	public function sort($callback = null) {
@@ -271,7 +268,7 @@ class ElggPriorityList
 	/**
 	 * Returns the element at $priority.
 	 *
-	 * @param int $priority The priority
+	 * @param int $priority
 	 * @return mixed The element or false on fail.
 	 */
 	public function getElement($priority) {
@@ -354,12 +351,7 @@ class ElggPriorityList
 		return ($key !== NULL && $key !== FALSE);
 	}
 
-	/**
-	 * Countable interface
-	 *
-	 * @see Countable::count()
-	 * @return int
-	 */
+	// Countable
 	public function count() {
 		return count($this->elements);
 	}

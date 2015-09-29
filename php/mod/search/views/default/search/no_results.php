@@ -3,4 +3,4 @@
  * No results from search
  */
 
-echo elgg_autop(elgg_echo('search:no_results'));
+echo autop(elgg_echo('search:no_results'));

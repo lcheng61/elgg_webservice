@@ -21,12 +21,9 @@ if ($object) {
 	$url = elgg_normalize_url('activity');
 }
 
-$site_url = parse_url(elgg_get_site_url());
-$domain = htmlspecialchars($site_url['host'], ENT_NOQUOTES, 'UTF-8');
-
 $html = <<<__HTML
 <item>
-	<guid isPermaLink="false">$domain::river::$item->id</guid>
+	<guid>$item->id</guid>
 	<pubDate>$timestamp</pubDate>
 	<link>$url</link>
 	<title><![CDATA[$title]]></title>

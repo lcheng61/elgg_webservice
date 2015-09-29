@@ -7,6 +7,7 @@ $options = array();
 
 $page_type = preg_replace('[\W]', '', get_input('page_type', 'all'));
 $type = preg_replace('[\W]', '', get_input('type', 'all'));
+$active_section =
 $subtype = preg_replace('[\W]', '', get_input('subtype', ''));
 if ($subtype) {
 	$selector = "type=$type&subtype=$subtype";
@@ -40,16 +41,12 @@ switch ($page_type) {
 }
 
 $activity = elgg_list_river($options);
-if (!$activity) {
-	$activity = elgg_echo('river:none');
-}
 
 $content = elgg_view('core/river/filter', array('selector' => $selector));
 
 $sidebar = elgg_view('core/river/sidebar');
 
 $params = array(
-	'title' => $title,
 	'content' =>  $content . $activity,
 	'sidebar' => $sidebar,
 	'filter_context' => $page_filter,

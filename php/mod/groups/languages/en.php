@@ -12,7 +12,6 @@ $english = array(
 	 */
 	'groups' => "Groups",
 	'groups:owned' => "Groups I own",
-	'groups:owned:user' => 'Groups %s owns',
 	'groups:yours' => "My groups",
 	'groups:user' => "%s's groups",
 	'groups:all' => "All groups",
@@ -20,9 +19,7 @@ $english = array(
 	'groups:edit' => "Edit group",
 	'groups:delete' => 'Delete group',
 	'groups:membershiprequests' => 'Manage join requests',
-	'groups:membershiprequests:pending' => 'Manage join requests (%s)',
 	'groups:invitations' => 'Group invitations',
-	'groups:invitations:pending' => 'Group invitations (%s)',
 
 	'groups:icon' => 'Group icon (leave blank to leave unchanged)',
 	'groups:name' => 'Group name',
@@ -32,25 +29,17 @@ $english = array(
 	'groups:interests' => 'Tags',
 	'groups:website' => 'Website',
 	'groups:members' => 'Group members',
-	'groups:my_status' => 'My status',
-	'groups:my_status:group_owner' => 'You own this group',
-	'groups:my_status:group_member' => 'You are in this group',
-	'groups:subscribed' => 'Group notifications on',
-	'groups:unsubscribed' => 'Group notifications off',
-
 	'groups:members:title' => 'Members of %s',
 	'groups:members:more' => "View all members",
 	'groups:membership' => "Group membership permissions",
 	'groups:access' => "Access permissions",
 	'groups:owner' => "Owner",
-	'groups:owner:warning' => "Warning: if you change this value, you will no longer be the owner of this group.",
 	'groups:widget:num_display' => 'Number of groups to display',
 	'groups:widget:membership' => 'Group membership',
 	'groups:widgets:description' => 'Display the groups you are a member of on your profile',
 	'groups:noaccess' => 'No access to group',
 	'groups:permissions:error' => 'You do not have the permissions for this',
 	'groups:ingroup' => 'in the group',
-	'groups:cantcreate' => 'You can not create a group. Only admins can.',
 	'groups:cantedit' => 'You can not edit this group',
 	'groups:saved' => 'Group saved',
 	'groups:featured' => 'Featured groups',
@@ -72,28 +61,6 @@ $english = array(
 	'groups:search:tags' => "tag",
 	'groups:search:title' => "Search for groups tagged with '%s'",
 	'groups:search:none' => "No matching groups were found",
-	'groups:search_in_group' => "Search in this group",
-	'groups:acl' => "Group: %s",
-
-	'discussion:notification:topic:subject' => 'New group discussion post',
-	'groups:notification' =>
-'%s added a new discussion topic to %s:
-
-%s
-%s
-
-View and reply to the discussion:
-%s
-',
-
-	'discussion:notification:reply:body' =>
-'%s replied to the discussion topic %s in the group %s:
-
-%s
-
-View and reply to the discussion:
-%s
-',
 
 	'groups:activity' => "Group activity",
 	'groups:enableactivity' => 'Enable group activity',
@@ -219,7 +186,7 @@ View and reply to the discussion:
 	'groups:updated' => "Last reply by %s %s",
 	'groups:started' => "Started by %s",
 	'groups:joinrequest:remove:check' => 'Are you sure you want to remove this join request?',
-	'groups:invite:remove:check' => 'Are you sure you want to remove this invitation?',
+	'groups:invite:remove:check' => 'Are you sure you want to remove this invite?',
 	'groups:invite:body' => "Hi %s,
 
 %s invited you to join the '%s' group. Click below to view your invitations:
@@ -269,7 +236,6 @@ or click below to view the group's join requests:
 	'groups:forumtopic:edited' => 'Forum topic successfully edited.',
 
 	'groups:allowhiddengroups' => 'Do you want to allow private (invisible) groups?',
-	'groups:whocancreate' => 'Who can create new groups?',
 
 	/**
 	 * Action messages

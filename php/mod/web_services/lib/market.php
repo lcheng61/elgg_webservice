@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Elgg Webservices plugin 
  * market product
@@ -8,115 +7,13 @@
  * @author Liang Cheng
  *
  */
-//////////////
-function product_get_posts_seller_affiliate($context, $limit = 10, $offset = 0, $from_seller_portal,
-    $group_guid, $category, $username) {
-
-    if (($from_seller_portal == 1) || ($limit == 0)) { // for seller portal only
-        return product_get_posts_common($context, $limit, $offset, 0, $from_seller_portal,
-                $group_guid, $category, $username);
-    } else { // for APP
-        $seller_product_list = product_get_posts_common($context, $limit, $offset,2 /*seller*/, $from_seller_portal,
-                $group_guid, $category, $username);
-
-        if ($seller_product_list['total_number'] != 0) { // has seller product
-            if ($seller_product_list['total_number'] < $limit) {
-                $affiliate_limit = $limit - $seller_product_list['total_number'];
-                $affiliate_offset = $seller_product_list['total_number'];
-                $affiliate_return = product_get_posts_common($context, $affiliate_limit, $affiliate_offset, 1/*affiliate*/, $from_seller_portal,
-                        $group_guid, $category, $username);
-            }
-            if (is_array($affiliate_return['products'])) {
-                $seller_product_list['products'] = array_merge($seller_product_list['products'], $affiliate_return['products']);
-            }
-            $seller_product_list['total_number'] = count($seller_product_list['products']);
-
-            return $seller_product_list;
-        } else { // no seller product
-    	    // Get total number of seller product
-
-            $seller_product_list = product_get_posts_common($context, 0, 0, 2/*seller*/, $from_seller_portal,
-                    $group_guid, $category, $username);
-            $seller_product_number = count($seller_product_list['products']);
-
-            if ($offset >= $seller_product_number) {
-                $offset -= $seller_product_number;
-            }
-            return product_get_posts_common($context, $limit, $offset, 1/*affiliate*/, $from_seller_portal,
-                    $group_guid, $category, $username);
-        }
-    }
-}
-expose_function('product.get_posts',
-                "product_get_posts_seller_affiliate",
-                array(
-                      'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
-                      'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                      'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                      'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
-                      'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
-                    ),
-                "Get list of market posts, seller after affiliate",
-                'GET',
-                false,
-                false);
-
-//////////////
-function product_get_posts_with_recommend($context, $limit = 10, $offset = 0, $from_seller_portal,
-    $group_guid, $category, $username) {
-
-    if (($from_seller_portal != 1) && ($limit != 0)) {
-        $recommend_list = recommend_list($category, $offset, $limit);
-
-        if ($recommend_list['total_number'] != 0) {
-            if ($recommend_list['total_number'] < $limit) {
-                $product_limit = $limit - $recommend_list['total_number'];
-                $product_offset = $recommend_list['total_number'];
-                $product_return = product_get_posts_common($context, $product_limit, 0, 0/*seller+affiliate*/, $from_seller_portal,
-                        $group_guid, $category, $username);
-            }
-            if (is_array($product_return['products'])) {
-                $recommend_list['products'] = array_merge($recommend_list['products'], $product_return['products']);
-            }
-            $recommend_list['total_number'] = count($recommend_list['products']);
-            return $recommend_list;
-        }
-
-        $recommend_list = recommend_list($category, 0, 0);
-        $total_number_recommend = count($recommend_list['products']);
-        if ($offset >= $total_number_recommend) {
-            $offset -= $total_number_recommend;
-        }
-    }
-    return product_get_posts_common($context, $limit, $offset, 0/*seller+affiliate*/, $from_seller_portal,
-            $group_guid, $category, $username);
-}
-
-expose_function('product.get_posts_with_recommend',
-                "product_get_posts_with_recommend",
-                array(
-                      'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
-                      'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                      'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                      'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
-                      'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
-                    ),
-                "Get list of market posts",
-                'GET',
-                false,
-                false);
-
+ 
  /**
  * Web service to get market product list by all users
  *
  * @param string $context eg. all, friends, mine, groups
  * @param int $limit  (optional) default 10
  * @param int $offset (optional) default 0
- * @param int affiliate_opt (optional) default 0(all), 1: affiliate only, 2: seller only
  * @param int $group_guid (optional)  the guid of a group, $context must be set to 'group'
  * @param string $category(optional) eg. fashion, gadget, etc
  * @param string $username (optional) the username of the user default loggedin user
@@ -124,7 +21,7 @@ expose_function('product.get_posts_with_recommend',
  * @return array $file Array of files uploaded
  */
 
-function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate_opt = 2, $from_seller_portal,
+function product_get_posts($context, $limit = 10, $offset = 0, $from_seller_portal,
     $group_guid, $category, $username) {
 
     if($context == "mine" && !get_loggedin_user()){
@@ -134,6 +31,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
     if($context == "user" && $username == ""){
         throw new InvalidParameterException('registration:usernamenotvalid');
     }
+
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -142,131 +40,66 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
             throw new InvalidParameterException('registration:usernamenotvalid');
 	}
     }
-    $category_meta = 
-            array(
-                'name' => 'marketcategory',
-                'value' => $category,
-                'case_sensitive' => false
+
+    if($context == "all"){
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'market',
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
             );
-    $quantity_meta =
-            array(
-                'name' => 'quantity',
-                'value' => 0,
-                'operand' => '>'
-            );
-
-    if ($affiliate_opt == 1) {   // affiliate only
-       $affiliate_only = 1;
-    } else if ($affiliate_opt == 2) { // seller only
-       $affiliate_only = 0;
     }
-
-    $seller_product_meta =
-            array(
-                'name' => 'is_affiliate',
-                'value' => $affiliate_only,
-                'operand' => '=',
-            );
-
-    $view_times_sort_meta =
-        array(
-            'name' => 'view_times',
-            'direction' => 'DESC',
-            'as' => 'integer'
-        );
-    $params = array(
-        'types' => 'object',
-        'subtypes' => 'market',
-        'full_view' => FALSE,
-        'limit' => $limit,
-        'offset' => $offset,
-    );
-    $meta_pairs = array();
-
-
-    if ($affiliate_opt > 0) { // affiliate only or seller only
-        $meta_pairs[] = $seller_product_meta;
-    }
-
-    if ($category != "all") { // category
-        $meta_pairs[] = $category_meta;
-    }
-/*
-    if (!$from_seller_portal) { // IOS
-        $meta_pairs[] = $quantity_meta;   // this line caused long delay
-    }
-*/
-
-    $params['metadata_name_value_pairs'] = $meta_pairs;
-//    $params['order_by_metadata'] = $view_times_sort_meta;
-    if($context == "all"){ // For IOS product listing
-    }
-
     if($context == "mine" || $context ==  "user"){
-        $params['owner_guid'] = $user->guid;
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'market',
+            'owner_guid' => $user->guid,
+            'limit' => $limit,
+            'full_view' => FALSE,
+            'offset' => $offset,
+        );
     }
     if($context == "group"){
-        $params['container_guid'] = $group_guid;
+        $params = array(
+            'types' => 'object',
+            'subtypes' => 'market',
+            'container_guid'=> $group_guid,
+            'limit' => $limit,
+            'full_view' => FALSE,
+                        'offset' => $offset,
+        );
     }
+//   $latest_blogs = elgg_list_entities_from_metadata($params);
+    $latest_blogs = elgg_get_entities($params);
+        
     if($context == "friends"){
         $latest_blogs = get_user_friends_objects($user->guid, 'market', $limit, $offset);
-    } else {
-        if (!$from_seller_portal) {
-            $latest_blogs = elgg_get_entities_from_metadata($params);
-//            $latest_blogs = elgg_get_entities($params);
-        } else { // hackhack, server loop to avoid database memory leak. This should be replaced by client pagination
-            $tmp = array();
-            $latest_blogs = array();
-            $step = 50;
-            $limit = $step;
-            $offset_tmp = 0;
-            $iter_count = 0;
-            $total_steps = 10;
-            do {
-                $params = array(
-                    'types' => 'object',
-                    'subtypes' => 'market',
-                    'owner_guid' => $user->guid,
-                    'limit' => $limit,
-                    'full_view' => FALSE,
-                    'offset' => $offset_tmp,
-                );
-                $tmp = elgg_get_entities($params);
-                $offset_tmp += $step;
-                $latest_blogs = array_merge($tmp, $latest_blogs);
-                $iter_count ++;
-                if ($iter_count >= $total_steps) {
-                    break;
-                }
-            } while($tmp);
-        }
     }
-
+    
     if($latest_blogs) {
         $return['category'] = $category;
         $return['offset'] = $offset;
 
         $display_product_number = 0;
         foreach($latest_blogs as $single ) {
-
-            if (1) {
+            if (($single->marketcategory == $category) || 
+                    ($category == "all")) {
                 $blog['product_id'] = $single->guid;
 
                 $comments = $single->getAnnotations(
                      'product_comment',    // The type of annotation
-                      0,   // The number to return
-                      0,  // Any indexing offset
+                     0,   // The number to return
+                     0,  // Any indexing offset
                      'asc'   // 'asc' or 'desc' (default 'asc')
                 );
                 $num_comments = count($comments);
+//                   $num_comments = $single->getAnnotationsSum('product_comment');
 
                  $display_product_number++;
                  $blog['product_name'] = $single->title;
-                 $blog['product_price'] = $single->price; //floatval($single->price);
-
-                 $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
-                 $blog['tips_number'] = count($items);
-
+                 $blog['product_price'] = floatval($single->price);
+                 $blog['tips_number'] = $single->tips_number;
 		 //XXX: hard-code sold_count;		 		 
                  $single->sold_count = 0;
                  $blog['sold_count'] = $single->sold_count;
@@ -284,10 +117,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
                      }
                      $blog['liked'] = ($like && $like->canEdit());
                      $blog['likes_number'] = intval(likes_count(get_entity($product_id)));
-
-                     $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
-                     $blog['tips_number'] = count($items);
-
+                     $blog['tips_number'] = $single->tips_number;
                      $blog['delivery_time'] = $single->delivery_time;
 
                      $comments = $single->getAnnotations(
@@ -300,12 +130,11 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
 
                      $blog['product_description'] = $single->description;
                  } // if (from_seller_portal)
-                 $blog['sku'] = $single->sku ? $single->sku : "";
                  $blog['shipping_fee'] = $single->shipping_fee;
                  $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
                  $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
 
-                 if ($single->quantity <= 0) {
+                 if ($single->quantity < 0) {
                      $blog['quantity'] = 0;
                  } else {
                      $blog['quantity'] = $single->quantity;
@@ -316,13 +145,9 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
 
                  $post_images = unserialize($single->images);
 		 $blog['images'] = null;
-
-                 if ($post_images) {
-                     foreach ($post_images as $key => $value) {
-                         if ($value == 1) {
-//                           $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
-                             $blog['images'][] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/'.$key.'/'.'master/';
-                         }
+                 foreach ($post_images as $key => $value) {
+                     if ($value == 1) {
+                         $blog['images'][] = elgg_normalize_url("market/image/".$single->guid."/$key/"."large/");
                      }
                  }
 
@@ -332,9 +157,7 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
                  $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
                  $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
-                 if ($blog['affiliate']['is_affiliate'] == 1) {
-                     $blog['images'][] = $single->affiliate_image;
-                 }
+                 $blog['images'][0] = ($single->is_affiliate ? $single->affiliate_image : "");
 //~
 
                  $blog['likes_number'] = intval(likes_count(get_entity($single->guid)));
@@ -344,18 +167,9 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
                  $blog['product_seller']['user_id'] = $owner->guid;
 //                $blog['product_seller']['name'] = $owner->name;
                  $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['product_seller']['is_seller'] = ($owner->is_seller == "true");
                  $blog['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
-               
-                 $blog['is_recommend'] = $single->is_recommend;
-
-                 $blog['product_options'] = json_decode($single->options);
-		 if ($single->view_times) {
-                     $blog['view_times'] = $single->view_times;
-                 } else {
-                     $blog['view_times'] = 0;
-		 }
  
 //                $blog['container_guid'] = $single->container_guid;
 //                $blog['access_id'] = $single->access_id;
@@ -368,26 +182,24 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
         $return['total_number'] = $display_product_number;
     }
     else {
-        $return['category'] = $category;
-        $return['total_number'] = 0;
-        $return['products'] = array();
+        $msg = elgg_echo('market_post:none');
+        throw new InvalidParameterException($msg);
     }
 
     return $return;
 }
 
 
-expose_function('product.get_posts_common',
-                "product_get_posts_common",
+expose_function('product.get_posts',
+                "product_get_posts",
                 array(
                       'context' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
                       'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                      'affiliate_opt' => array ('type' => 'int', 'required' => false, 'default' => 2),
                       'from_seller_portal' => array ('type' => 'int', 'required' => false, 'default' => 0),
                       'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
+                      'username' => array ('type' => 'string', 'required' => false),
                     ),
                 "Get list of market posts",
                 'GET',
@@ -415,18 +227,16 @@ function product_get_detail($product_id) {
 //    $return['product_name'] = htmlspecialchars($blog->title);
     $return['product_name'] = $blog->title;
 
-    $return['images'] = array(); // TODO, set default image
     $images = unserialize($blog->images);
-    if ($images) {
-        foreach ($images as $key => $value) {
-            if ($value == 1) {
-//            $return['images'][] = elgg_normalize_url("market/image/".$blog->guid."/$key/"."large/");
-                $return['images'][] = elgg_get_config('cdn_link').'/market/image/'.$blog->guid.'/'.$key.'/'.'master/';
-            } else {
-	        $return['images'][] = ""; // TODO, add default image
-	    }
-        }
+
+    foreach ($images as $key => $value) {
+        if ($value == 1) {
+            $return['images'][] = elgg_normalize_url("market/image/".$blog->guid."/$key/"."large/");
+        } else {
+	    $return['images'][] = "";
+	}
     }
+
     // get ideas linked to this product
     $items = $blog->getEntitiesFromRelationship("sponsor", true, 0, 0);
 
@@ -436,33 +246,10 @@ function product_get_detail($product_id) {
         $return['ideas'][] = $idea;
     }
 
-    if (!$blog->view_times) {
-        $blog->view_times = 1;
-    } else {
-        $blog->view_times ++;
-    }
-    $blog->save();
-
-// get per seller setting
-    $owner_obj = get_entity($blog->owner_guid);
-    $per_seller_setting = $owner_obj->seller_setting;
-    $per_seller_setting = json_decode($per_seller_setting, true);
-    $return_policy = $per_seller_setting['return_policy'];
-
     $return['content'] = strip_tags($blog->description);
     $return['product_id'] = $product_id;
-    $return['product_price'] = $blog->price; //floatval($blog->price);
+    $return['product_price'] = floatval($blog->price);
     $return['product_description'] = $blog->description;
-/*
-    if (strstr($return['product_description'], '<strong>SKU number</strong>') == FALSE) {
-        $return['product_description'] = $return['product_description'].'<br><strong>SKU number</strong>: '.$blog->sku;
-    }
-*/
-    if (strstr($return['product_description'], '<strong>Availability</strong>') == FALSE) {
-        $return['product_description'] = $return['product_description'].'<br><strong>Availability</strong>: Ships to United States';
-    }
-    $return['product_options'] = json_decode($blog->options);
-    $return['view_times'] = $blog->view_times;
 
     $return['category'] = $blog->marketcategory;
     if ($blog->quantity < 0) {
@@ -480,21 +267,13 @@ function product_get_detail($product_id) {
 /////~
 
 // affiliated product used
-//    $return['images'][] = ($blog->is_affiliate ? $blog->affiliate_image : "");
+    $return['images'][] = ($blog->is_affiliate ? $blog->affiliate_image : "");
     $return['affiliate']['is_affiliate'] = ($blog->is_affiliate ? $blog->is_affiliate : 0);
     $return['affiliate']['affiliate_product_id'] = ($blog->affiliate_product_id ? $blog->affiliate_product_id : 0);
     $return['affiliate']['affiliate_product_url'] = ($blog->affiliate_product_url ? $blog->affiliate_product_url : "");
     $return['affiliate']['is_archived'] = ($blog->is_archived ? $blog->is_archived : 0);
     $return['affiliate']['affiliate_syncon'] = ($blog->affiliate_syncon ? $blog->affiliate_syncon : 0);
-
-    if ($return['affiliate']['is_affiliate'] == 1) {
-        $return['images'][] = $blog->affiliate_image;
-        $return['affiliate']['affiliate_image'] = $blog->affiliate_image;
-        $return['affiliate']['affiliate_name'] = $blog->affiliate_name;
-    }
-
 //~
-    $return['sku'] = $blog->sku ? $blog->sku : "";
 
     $return['sold_count'] = $blog->sold_count;
     $return['rate'] = $blog->rate;
@@ -502,7 +281,7 @@ function product_get_detail($product_id) {
     $owner = get_entity($blog->owner_guid);
     $return['product_seller']['user_id'] = $owner->guid;
     $return['product_seller']['user_name'] = $owner->username;
-    $return['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
+    $return['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
     $return['product_seller']['is_seller'] = ($owner->is_seller == "true");
     $me = get_loggedin_user();
     if ($me) {
@@ -519,21 +298,14 @@ function product_get_detail($product_id) {
                 'annotation_owner_guid' => elgg_get_logged_in_user_guid(),
                 'annotation_name' => 'likes',
         ));
-	if ($likes) {
-            $like = $likes[0];
-        } else {
-            $like = 0;
-        }
+        $like = $likes[0];
     }
     $return['liked'] = ($like && $like->canEdit());
 ////// done like checking
 
 
     $return['likes_number'] = intval(likes_count(get_entity($product_id)));
-
-    // get ideas linked to this product
-    $items = $blog->getEntitiesFromRelationship("sponsor", true, 0, 0);
-    $return['tips_number'] = count($items); //$blog->tips_number;
+    $return['tips_number'] = $blog->tips_number;
 
 /*
     $options = array(
@@ -600,7 +372,7 @@ function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
             $comment['owner']['guid'] = $owner->guid;
             $comment['owner']['name'] = $owner->name;
             $comment['owner']['username'] = $owner->username;
-            $comment['owner']['avatar_url'] = get_entity_icon_url($owner,'large');
+            $comment['owner']['avatar_url'] = get_entity_icon_url($owner,'small');
         
             $comment['time_created'] = (int)$single->time_created;
             $return[] = $comment;
@@ -648,10 +420,11 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
 
 ////////////
     // get ideas linked to this product
-    $items = $product->getEntitiesFromRelationship("sponsor", true, $limit, $offset);
-    $return['total_number'] = count($items);
+    $items = $product->getEntitiesFromRelationship("sponsor", true, 0, 0);
 
+    $total_number = 0;
     foreach ($items as $item) {
+        $total_number ++;
         $tip['tip_id'] = $item->guid;
         $tip['tip_title'] = $item->title;
         $tip['tip_thumbnail_image_url'] = $item->tip_thumbnail_image_url;
@@ -660,7 +433,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
         $owner = get_entity($item->owner_guid);
         $tip['owner']['user_id'] = $owner->guid;
         $tip['owner']['user_name'] = $owner->username;
-        $tip['owner']['user_avatar_url'] = get_entity_icon_url($owner,'large');
+        $tip['owner']['user_avatar_url'] = get_entity_icon_url($owner,'small');
         
         $tip['likes_number'] = likes_count($item);
         $options = array(
@@ -679,6 +452,7 @@ function product_get_tips_by_product($product_id, $limit = 10, $offset = 0) {
         $tip['time_created'] = (int)$item->time_created;
         $return['tips'][] = $tip;
     }
+    $return['total_number'] = $total_number;
 
     return $return;
 }
@@ -716,7 +490,7 @@ function product_get_seller_other_posts($limit = 10,
     $owner = get_entity($product_post->owner_guid);
     $seller_username = $owner->username;
 
-    $return = product_get_posts_common($context, $limit, $offset, 0/*seller+affiliate*/, 0, 0, $category, $seller_username);
+    $return = product_get_posts($context, $limit, $offset, 0, 0, $category, $seller_username);
 
     return $return;
 
@@ -744,9 +518,30 @@ expose_function('product.get_seller_other_posts',
  
 function product_search($query, $category, $offset, $limit, 
         $sort, $order, $search_type, $entity_type,
-        $entity_subtype){
-
+        $entity_subtype, $owner_guid, $container_guid){
+    
     $return = "";
+// get total number
+    $params = array(
+                    'query' => $query,
+                    'offset' => $offset,
+                    'limit' => 0,
+                    'sort' => $sort,
+                    'order' => $order,
+                    'search_type' => $search_type,
+                    'type' => $entity_type,
+                    'subtype' => $entity_subtype,
+                    'owner_guid' => $owner_guid,
+                    'container_guid' => $container_guid,
+                    );
+    $type = $entity_type;
+    $results = elgg_trigger_plugin_hook('search', $type, $params, array());
+    if ($results === FALSE) {
+        throw new InvalidParameterException("search engine returns error");
+    }
+    $return['total_number'] = $results['count'];
+
+// ~
 
     $params = array(
                     'query' => $query,
@@ -757,16 +552,20 @@ function product_search($query, $category, $offset, $limit,
                     'search_type' => $search_type,
                     'type' => $entity_type,
                     'subtype' => $entity_subtype,
+                    'owner_guid' => $owner_guid,
+                    'container_guid' => $container_guid,
                     );
     $type = $entity_type;
     $results = elgg_trigger_plugin_hook('search', $type, $params, array());
     if ($results === FALSE) {
         throw new InvalidParameterException("search engine returns error");
+        // search plugin returns error.
+        // continue;
     }
-    $return['total_number'] = count($results['entities']); //$results['count'];
-    if($results['entities']){
+    if($results['count']){
         foreach($results['entities'] as $single){
-            if (1) {
+            if (($single->marketcategory == $category) || 
+                    ($category == "all")) {
                 $blog['product_id'] = $single->guid;
                 $options = array(
                         'annotations_name' => 'product_comment',
@@ -780,23 +579,11 @@ function product_search($query, $category, $offset, $limit,
                  $num_comments = count($comments);
 
                  $blog['product_name'] = $single->title;
-                 $blog['product_price'] = $single->price; //floatval($single->price);
-
-                 $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
-                 $blog['tips_number'] = count($items);
-
+                 $blog['product_price'] = floatval($single->price);
+                 $blog['tips_number'] = $single->tips_number;
                  $blog['sold_count'] = $single->sold_count;
                  $blog['product_category'] = $single->marketcategory;
-//               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
-                 $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'master/';
-
-                 if ($single->quantity <= 0) {
-                     $blog['quantity'] = 0;
-                 } else {
-                     $blog['quantity'] = $single->quantity;
-		 }
-
-                 $blog['rate'] = $single->rate;
+                 $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['reviews_number'] = $num_comments;
@@ -804,7 +591,7 @@ function product_search($query, $category, $offset, $limit,
                  $owner = get_entity($single->owner_guid);
                  $blog['product_seller']['user_id'] = $owner->guid;
                  $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['product_seller']['is_seller'] = $owner->is_seller;
  
                  $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
@@ -812,11 +599,7 @@ function product_search($query, $category, $offset, $limit,
                  $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
                  $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
                  $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
-//                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
-
-                 if (($blog['affiliate']['is_affiliate'] == 1) && ($single->affiliate_image != "")) {
-                     $blog['product_image'] = $single->affiliate_image;
-                 }
+                 $blog['product_image'] = ($single->is_affiliate ? $single->affiliate_image : "");
            
                  $return['products'][] = $blog;
             }
@@ -836,8 +619,8 @@ expose_function('product.search',
                         'search_type' =>array('type' => 'string', 'required'=>false, 'default' => 'all'),
                         'entity_type' =>array('type' => 'string', 'required'=>false, 'default' => "object"),
                         'entity_subtype' =>array('type' => 'string', 'required'=>false, 'default' => "market"),
-//                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
-//                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
                         ),
                 "Perform a search for products",
                 'GET',
@@ -848,32 +631,9 @@ function product_post($product_id, $title, $category, $description,
     $price, $tags, $quantity, $delivery_time, $shipping_fee,
     $free_shipping_quantity_limit, $free_shipping_cost_limit,
     $is_affiliate, $affiliate_product_id, $affiliate_product_url,
-    $is_archived, $affiliate_syncon, $affiliate_image, $options,
-    $affiliate_name, $sku)
+    $is_archived, $affiliate_syncon, $affiliate_image)
 {
-
     $user = elgg_get_logged_in_user_entity();
-
-// get per-seller setting and appy them to the product
-    $seller_setting = user_get_seller_setting($user->username);
-
-    $json = json_decode($seller_setting, true);
-
-    $shipping_policy = $json['shipping_policy'];
-
-    if ($free_shipping_quantity_limit == 0) {
-        $free_shipping_quantity_limit =
-                $shipping_policy['free_shipping_quantity_limit'];
-    }
-    if ($free_shipping_cost_limit ==0) {
-        $free_shipping_cost_limit =
-                $shipping_policy['free_shipping_cost_limit'];
-    }
-    if ($shipping_fee == 0) {
-        $shipping_fee =
-                $shipping_policy['shipping_fee'];
-    }
-//~
 
     // edit or create a new entity
     if ($product_id) {
@@ -913,9 +673,6 @@ function product_post($product_id, $title, $category, $description,
         'is_archived' => $is_archived,
         'affiliate_syncon' => $affiliate_syncon,
         'affiliate_image' => $affiliate_image,
-        'options' => $options,
-        'affiliate_name' => $affiliate_name,
-        'sku' => $sku,
     );
 
     // fail if a required entity isn't set
@@ -926,9 +683,7 @@ function product_post($product_id, $title, $category, $description,
     foreach ($values as $name => $value) {
         if (in_array($name, $required) && empty($value)) {
             $error = elgg_echo("market:error:missing:$name");
-            // Because seller portal check this already. This usually means uploading timeout or image files too large
-            throw new InvalidParameterException("The total size of the images exceeds the limit. Please try to reduce the number of images posted at one time, and then you can use view/edit to add more images. You can also reduce the size of each image so that you can upload all of them at one time.");
-//            throw new InvalidParameterException("missing:$name");
+            throw new InvalidParameterException("missing:$name");
         }
        $post->$name = $value;
     }
@@ -953,8 +708,7 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload1']['name'])) && (substr_count($_FILES['upload1']['type'],'image/'))) {
             $imgdata1 = get_uploaded_file('upload1');
             market_add_image($post, $imgdata1, 1);
-//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/1/"."large/");
-            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/1/'.'master/';
+	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/1/"."large/");
         } else {
             $values['images'][] = "";
 	}
@@ -962,8 +716,7 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload2']['name'])) && (substr_count($_FILES['upload2']['type'],'image/'))) {
             $imgdata2 = get_uploaded_file('upload2');
             market_add_image($post, $imgdata2, 2);
-//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/2/"."large/");
-            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/2/'.'master/';
+	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/2/"."large/");
         } else {
             $values['images'][] = "";
 	}        
@@ -971,8 +724,7 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload3']['name'])) && (substr_count($_FILES['upload3']['type'],'image/'))) {
             $imgdata3 = get_uploaded_file('upload3');
             market_add_image($post, $imgdata3, 3);
-//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/3/"."large/");
-            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/3/'.'master/';
+	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/3/"."large/");
         } else {
             $values['images'][] = "";
 	}        
@@ -980,14 +732,13 @@ function product_post($product_id, $title, $category, $description,
         if ((isset($_FILES['upload4']['name'])) && (substr_count($_FILES['upload4']['type'],'image/'))) {
             $imgdata4 = get_uploaded_file('upload4');
             market_add_image($post, $imgdata4, 4);
-//	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/4/"."large/");
-            $values['images'][] = elgg_get_config('cdn_link').'/market/image/'.$product_id.'/4/'.'master/';
+	    $values['images'][] = elgg_normalize_url("market/image/".$product_id."/4/"."large/");
         } else {
             $values['images'][] = "";
 	}        
 
-        //  affiliate image upload
-        if($is_affiliate) {
+        //  affliate image upload
+        if(is_affiliate) {
 	    $values['images'][] = $affiliate_image;
         }
 
@@ -1004,11 +755,11 @@ expose_function('product.post',
                        'title' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'category' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'description' => array('type' => 'string', 'required' => false, 'default' => ''),
-                       'price' => array('type' => 'string', 'required' => false, 'default' => ''),
+                       'price' => array('type' => 'float', 'required' => false, 'default' => ''),
                        'tags' => array('type' => 'string', 'required' => false, 'default' => ''),
                        'quantity' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'delivery_time' => array('type' => 'string', 'required' => false, 'default' => ""),
-                       'shipping_fee' => array('type' => 'string', 'required' => false, 'default' => 0),
+                       'shipping_fee' => array('type' => 'float', 'required' => false, 'default' => 0),
                        'free_shipping_quantity_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'free_shipping_cost_limit' => array('type' => 'int', 'required' => false, 'default' => 0),
 
@@ -1018,9 +769,6 @@ expose_function('product.post',
                        'is_archived' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'affiliate_syncon' => array('type' => 'int', 'required' => false, 'default' => 0),
                        'affiliate_image' => array('type' => 'string', 'required' => false, 'default' => ""),
-                       'options' => array('type' => 'string', 'required' => false, 'default' => ""),
-                       'affiliate_name' => array('type' => 'string', 'required' => false, 'default' => ""),
-                       'sku' => array('type' => 'string', 'required' => false, 'default' => ""),
                      ),
                 "Post a product by seller",
                 "POST",
@@ -1256,178 +1004,5 @@ expose_function('product.affiliate_archive',
                      ),
                 "Archive the affiliate product.",
                 "POST",
-                true,
-                true);
-
-function recommend_set($product_id, $is_recommend) {
-    $post = get_entity($product_id);
-
-    if (!elgg_instanceof($post, 'object', 'market')) {
-        throw new InvalidParameterException('blog:error:product_not_found');
-    }
-    $user = elgg_get_logged_in_user_entity();
-
-/*
-    if (!($user &&  $user->is_admin)) {
-       throw new RegistrationException(elgg_echo('Only logged-in admin can recommend products'));
-    }
-*/
-    if(!$post->canEdit()) {
-        throw new InvalidParameterException('blog:error:cannot_edit');
-    }
-    $post->is_recommend = $is_recommend;
-    if (!$post->save()) {
-        throw new InvalidParameterException("blog:error:cannot_save");
-    }
-    $return['product_id'] = $product_id;
-    $return['is_recommend'] = $post->is_recommend;
-
-    return $return;
-}
-
-expose_function('product.recommend_set',
-                "recommend_set",
-                array( 'product_id' => array('type' => 'int', 'required' => true, 'default' => 0),
-                       'is_recommend' => array('type' => 'int', 'required' => false, 'default' => 1),
-                     ),
-                "Recommend/unrecommend a product.",
-                "POST",
-                true,
-                true);
-
-function recommend_list($category, $offset, $limit) {
-
-    if ($category == "all") {
-        $options = array(
-                    'offset' => $offset,
-                    'limit' => $limit,
-                    'types' => 'object',
-                    'subtypes' => 'market',
-                    'metadata_name_value_pairs' => array(
-                        array(
-                            'name' => 'is_recommend',
-                            'value' => 1,
-                        ),
-                     )
-                );
-    } else {
-        $options = array(
-                    'offset' => $offset,
-                    'limit' => $limit,
-                    'types' => 'object',
-                    'subtypes' => 'market',
-                    'metadata_name_value_pairs' => array(
-                        array(
-                            'name' => 'is_recommend',
-                            'value' => 1,
-                        ),
-                        array(
-                            'name' => 'marketcategory',
-                            'value' => $category,
-                            'case_sensitive' => false
-                        ),
-                     )
-                );
-    }
-    $recommended_products = elgg_get_entities_from_metadata($options);
-
-    $return['total_number'] = count($recommended_products);
-
-        foreach($recommended_products as $single){
-                $blog['product_id'] = $single->guid;
-                $options = array(
-                        'annotations_name' => 'product_comment',
-                        'guid' => $single->guid,
-                        'limit' => 0,
-                        'pagination' => false,
-                        'reverse_order_by' => true,
-                        );
-
-                 $comments = elgg_get_annotations($options);
-                 $num_comments = count($comments);
-
-                 $blog['product_name'] = $single->title;
-                 $blog['product_price'] = $single->price; //floatval($single->price);
-
-                 $items = $single->getEntitiesFromRelationship("sponsor", true, 0, 0);
-                 $blog['tips_number'] = count($items);
-
-                 $blog['sold_count'] = $single->sold_count;
-                 $blog['product_category'] = $single->marketcategory;
-                 $blog['shipping_fee'] = $single->shipping_fee;
-                 $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
-                 $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
-                 if ($single->quantity < 0) {
-                     $blog['quantity'] = 0;
-                 } else {
-                     $blog['quantity'] = $single->quantity;
-		 }
-                 $blog['rate'] = $single->rate;
-
-//               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
-                 $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'master/';
-
-                 $blog['likes_number'] = likes_count(get_entity($single->guid));
-                 $blog['reviews_number'] = $num_comments;
-
-                 $owner = get_entity($single->owner_guid);
-                 $blog['product_seller']['user_id'] = $owner->guid;
-                 $blog['product_seller']['user_name'] = $owner->username;
-                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
-                 $blog['product_seller']['is_seller'] = $owner->is_seller;
- 
-                 $blog['affiliate']['is_affiliate'] = ($single->is_affiliate ? $single->is_affiliate : 0);
-                 $blog['affiliate']['affiliate_product_id'] = ($single->affiliate_product_id ? $single->affiliate_product_id : 0);
-                 $blog['affiliate']['affiliate_product_url'] = ($single->affiliate_product_url ? $single->affiliate_product_url : "");
-                 $blog['affiliate']['is_archived'] = ($single->is_archived ? $single->is_archived : 0);
-                 $blog['affiliate']['affiliate_syncon'] = ($single->affiliate_syncon ? $single->affiliate_syncon : 0);
-
-                 if (($blog['affiliate']['is_affiliate'] == 1) && ($single->affiliate_image != "")) {
-                     $blog['product_image'] = $single->affiliate_image;
-                 }
-/*
-                 if ($single->is_affiliate) {
-                     $blog['product_image'] = $single->affiliate_image;
-                 }
-*/
-                 $blog['is_recommend'] = $single->is_recommend;
-           
-                 $return['products'][] = $blog;
-        }
-    return $return;
-}
-
-expose_function('product.recommend_list',
-                "recommend_list",
-                array( 
-                        'category' => array('type' => 'string', 'required'=>false, 'default' => 'all'),
-                        'offset' =>array('type' => 'int', 'required'=>false, 'default' => 0),
-                        'limit' =>array('type' => 'int', 'required'=>false, 'default' => 10),
-                     ),
-                "List recommended products.",
-                "GET",
-                false,
-                false);
-
-
-function product_get_search_keyword($mode) {
-    $keywords = array();
-    $return = array();
-    $return['keywords'][] = "ujena";    
-    $return['keywords'][] = "bonita";    
-    $return['keywords'][] = "cynobird";
-    $return['keywords'][] = "care";
-    $return['keywords'][] = "clothes";
-    $return['total_number'] = count($return['keywords']);
-
-    return $return;
-}
-expose_function('product.get_search_keyword',
-                "product_get_search_keyword",
-                array(
-                      'mode' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                    ),
-                "Get list of search key word",
-                'GET',
                 true,
                 true);

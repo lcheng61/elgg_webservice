@@ -60,7 +60,6 @@ class ElggDiskFilestore extends ElggFilestore {
 
 		$path = substr($fullname, 0, $ls);
 		$name = substr($fullname, $ls);
-		// @todo $name is unused, remove it or do we need to fix something?
 
 		// Try and create the directory
 		try {
@@ -109,7 +108,7 @@ class ElggDiskFilestore extends ElggFilestore {
 	 *
 	 * @param resource $f      File pointer resource
 	 * @param int      $length The number of bytes to read
-	 * @param int      $offset The number of bytes to start after
+	 * @param inf      $offset The number of bytes to start after
 	 *
 	 * @return mixed Contents of file or false on fail.
 	 */
@@ -194,33 +193,25 @@ class ElggDiskFilestore extends ElggFilestore {
 	}
 
 	/**
-	 * Get the filename as saved on disk for an ElggFile object
-	 *
-	 * Returns an empty string if no filename set
+	 * Returns the filename as saved on disk for an ElggFile object
 	 *
 	 * @param ElggFile $file File object
 	 *
 	 * @return string The full path of where the file is stored
-	 * @throws InvalidParameterException
 	 */
 	public function getFilenameOnFilestore(ElggFile $file) {
-		$owner_guid = $file->getOwnerGuid();
-		if (!$owner_guid) {
-			$owner_guid = elgg_get_logged_in_user_guid();
+		$owner = $file->getOwnerEntity();
+		if (!$owner) {
+			$owner = elgg_get_logged_in_user_entity();
 		}
 
-		if (!$owner_guid) {
+		if ((!$owner) || (!$owner->username)) {
 			$msg = elgg_echo('InvalidParameterException:MissingOwner',
 				array($file->getFilename(), $file->guid));
 			throw new InvalidParameterException($msg);
 		}
 
-		$filename = $file->getFilename();
-		if (!$filename) {
-			return '';
-		}
-
-		return $this->dir_root . $this->makeFileMatrix($owner_guid) . $filename;
+		return $this->dir_root . $this->makefileMatrix($owner->guid) . $file->getFilename();
 	}
 
 	/**
@@ -228,7 +219,7 @@ class ElggDiskFilestore extends ElggFilestore {
 	 *
 	 * @param ElggFile $file File object
 	 *
-	 * @return string
+	 * @return mixed
 	 */
 	public function grabFile(ElggFile $file) {
 		return file_get_contents($file->getFilenameOnFilestore());
@@ -242,9 +233,6 @@ class ElggDiskFilestore extends ElggFilestore {
 	 * @return bool
 	 */
 	public function exists(ElggFile $file) {
-		if (!$file->getFilename()) {
-			return false;
-		}
 		return file_exists($this->getFilenameOnFilestore($file));
 	}
 
@@ -258,13 +246,12 @@ class ElggDiskFilestore extends ElggFilestore {
 	 */
 	public function getSize($prefix = '', $container_guid) {
 		if ($container_guid) {
-			return get_dir_size($this->dir_root . $this->makeFileMatrix($container_guid) . $prefix);
+			return get_dir_size($this->dir_root . $this->makefileMatrix($container_guid) . $prefix);
 		} else {
 			return false;
 		}
 	}
 
-	// @codingStandardsIgnoreStart
 	/**
 	 * Create a directory $dirroot
 	 *
@@ -279,7 +266,6 @@ class ElggDiskFilestore extends ElggFilestore {
 
 		return $this->makeDirectoryRoot($dirroot);
 	}
-	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Create a directory $dirroot
@@ -299,7 +285,6 @@ class ElggDiskFilestore extends ElggFilestore {
 		return true;
 	}
 
-	// @codingStandardsIgnoreStart
 	/**
 	 * Multibyte string tokeniser.
 	 *
@@ -330,31 +315,30 @@ class ElggDiskFilestore extends ElggFilestore {
 		} else {
 			return str_split($string);
 		}
-	}
-	// @codingStandardsIgnoreEnd
 
-	// @codingStandardsIgnoreStart
+		return false;
+	}
+
 	/**
 	 * Construct a file path matrix for an entity.
 	 *
 	 * @param int $identifier The guide of the entity to store the data under.
 	 *
-	 * @return string The path where the entity's data will be stored.
+	 * @return str The path where the entity's data will be stored.
 	 * @deprecated 1.8 Use ElggDiskFilestore::makeFileMatrix()
 	 */
 	protected function make_file_matrix($identifier) {
 		elgg_deprecated_notice('ElggDiskFilestore::make_file_matrix() is deprecated by ::makeFileMatrix()', 1.8);
 
-		return $this->makeFileMatrix($identifier);
+		return $this->makefileMatrix($identifier);
 	}
-	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Construct a file path matrix for an entity.
 	 *
 	 * @param int $guid The guide of the entity to store the data under.
 	 *
-	 * @return string The path where the entity's data will be stored.
+	 * @return str The path where the entity's data will be stored.
 	 */
 	protected function makeFileMatrix($guid) {
 		$entity = get_entity($guid);
@@ -368,7 +352,6 @@ class ElggDiskFilestore extends ElggFilestore {
 		return "$time_created/$entity->guid/";
 	}
 
-	// @codingStandardsIgnoreStart
 	/**
 	 * Construct a filename matrix.
 	 *
@@ -380,14 +363,13 @@ class ElggDiskFilestore extends ElggFilestore {
 	 *
 	 * @param int $guid The entity to contrust a matrix for
 	 *
-	 * @return string The
+	 * @return str The
 	 */
 	protected function user_file_matrix($guid) {
 		elgg_deprecated_notice('ElggDiskFilestore::user_file_matrix() is deprecated by ::makeFileMatrix()', 1.8);
 
 		return $this->makeFileMatrix($guid);
 	}
-	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Returns a list of attributes to save to the database when saving

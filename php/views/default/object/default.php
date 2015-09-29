@@ -41,6 +41,7 @@ $params = array(
 	'title' => $title,
 	'metadata' => $metadata,
 	'subtitle' => $subtitle,
+	'tags' => $vars['entity']->tags,
 );
 $params = $params + $vars;
 $body = elgg_view('object/elements/summary', $params);

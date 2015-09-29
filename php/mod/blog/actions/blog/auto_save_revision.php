@@ -7,7 +7,7 @@
 
 $guid = get_input('guid');
 $user = elgg_get_logged_in_user_entity();
-$title = htmlspecialchars(get_input('title', '', false), ENT_QUOTES, 'UTF-8');
+$title = get_input('title');
 $description = get_input('description');
 $excerpt = get_input('excerpt');
 
@@ -63,7 +63,7 @@ if ($title && $description) {
 		if (!$auto_save) {
 			$annotation_id = $blog->annotate('blog_auto_save', $description);
 		} elseif ($auto_save instanceof ElggAnnotation && $auto_save->value != $description) {
-			$blog->deleteAnnotations('blog_auto_save');
+			$blog->clearAnnotations('blog_auto_save');
 			$annotation_id = $blog->annotate('blog_auto_save', $description);
 		} elseif ($auto_save instanceof ElggAnnotation && $auto_save->value == $description) {
 			// this isn't an error because we have an up to date annotation.

@@ -7,7 +7,7 @@
 
 $owner = elgg_get_page_owner_entity();
 if (!$owner) {
-	forward('', '404');
+	forward('pages/all');
 }
 
 // access check for closed groups
@@ -20,9 +20,10 @@ elgg_push_breadcrumb($owner->name);
 elgg_register_title_button();
 
 $content = elgg_list_entities(array(
-	'type' => 'object',
-	'subtype' => 'page_top',
+	'types' => 'object',
+	'subtypes' => 'page_top',
 	'container_guid' => elgg_get_page_owner_guid(),
+	'limit' => $limit,
 	'full_view' => false,
 ));
 if (!$content) {

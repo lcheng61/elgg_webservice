@@ -4,13 +4,11 @@
  *
  * @package    Elgg.Core
  * @subpackage Navigation
- * @since      1.8.0
+ *
+ * @since 1.8.0
  */
 class ElggMenuBuilder {
 
-	/**
-	 * @var ElggMenuItem[]
-	 */
 	protected $menu = array();
 
 	protected $selected = null;
@@ -18,16 +16,16 @@ class ElggMenuBuilder {
 	/**
 	 * ElggMenuBuilder constructor
 	 *
-	 * @param ElggMenuItem[] $menu Array of ElggMenuItem objects
+	 * @param string $name  Identifier of the menu
 	 */
-	public function __construct(array $menu) {
+	public function __construct($menu) {
 		$this->menu = $menu;
 	}
 
 	/**
 	 * Get a prepared menu array
 	 *
-	 * @param mixed $sort_by Method to sort the menu by. @see ElggMenuBuilder::sort()
+	 * @param mixed $sort_by
 	 * @return array
 	 */
 	public function getMenu($sort_by = 'text') {
@@ -82,7 +80,6 @@ class ElggMenuBuilder {
 
 	/**
 	 * Group the menu items into sections
-	 * 
 	 * @return void
 	 */
 	protected function setupSections() {
@@ -110,7 +107,6 @@ class ElggMenuBuilder {
 			$children = array();
 			// divide base nodes from children
 			foreach ($section as $menu_item) {
-				/* @var ElggMenuItem $menu_item */
 				$parent_name = $menu_item->getParentName();
 				if (!$parent_name) {
 					$parents[$menu_item->getName()] = $menu_item;
@@ -122,16 +118,13 @@ class ElggMenuBuilder {
 			// attach children to parents
 			$iteration = 0;
 			$current_gen = $parents;
-			$next_gen = null;
 			while (count($children) && $iteration < 5) {
 				foreach ($children as $index => $menu_item) {
 					$parent_name = $menu_item->getParentName();
 					if (array_key_exists($parent_name, $current_gen)) {
 						$next_gen[$menu_item->getName()] = $menu_item;
-						if (!in_array($menu_item, $current_gen[$parent_name]->getData('children'))) {
-							$current_gen[$parent_name]->addChild($menu_item);
-							$menu_item->setParent($current_gen[$parent_name]);
-						}
+						$current_gen[$parent_name]->addChild($menu_item);
+						$menu_item->setParent($current_gen[$parent_name]);
 						unset($children[$index]);
 					}
 				}
@@ -211,9 +204,6 @@ class ElggMenuBuilder {
 
 		// sort each section
 		foreach ($this->menu as $index => $section) {
-			foreach ($section as $key => $node) {
-				$section[$key]->setData('original_order', $key);
-			}
 			usort($section, $sort_callback);
 			$this->menu[$index] = $section;
 
@@ -223,12 +213,12 @@ class ElggMenuBuilder {
 				array_push($stack, $root);
 				while (!empty($stack)) {
 					$node = array_pop($stack);
-					/* @var ElggMenuItem $node */
 					$node->sortChildren($sort_callback);
 					$children = $node->getChildren();
 					if ($children) {
 						$stack = array_merge($stack, $children);
 					}
+					$p = count($stack);
 				}
 			}
 		}
@@ -237,55 +227,42 @@ class ElggMenuBuilder {
 	/**
 	 * Compare two menu items by their display text
 	 *
-	 * @param ElggMenuItem $a Menu item
-	 * @param ElggMenuItem $b Menu item
+	 * @param ElggMenuItem $a
+	 * @param ElggMenuItem $b
 	 * @return bool
 	 */
 	public static function compareByText($a, $b) {
-		$at = $a->getText();
-		$bt = $b->getText();
+		$a = $a->getText();
+		$b = $b->getText();
 
-		$result = strnatcmp($at, $bt);
-		if ($result === 0) {
-			return $a->getData('original_order') - $b->getData('original_order');
-		}
-		return $result;
+		return strnatcmp($a, $b);
 	}
 
 	/**
 	 * Compare two menu items by their identifiers
 	 *
-	 * @param ElggMenuItem $a Menu item
-	 * @param ElggMenuItem $b Menu item
+	 * @param ElggMenuItem $a
+	 * @param ElggMenuItem $b
 	 * @return bool
 	 */
 	public static function compareByName($a, $b) {
-		$an = $a->getName();
-		$bn = $b->getName();
+		$a = $a->getName();
+		$b = $b->getName();
 
-		$result = strcmp($an, $bn);
-		if ($result === 0) {
-			return $a->getData('original_order') - $b->getData('original_order');
-		}
-		return $result;
+		return strcmp($a, $b);
 	}
 
 	/**
 	 * Compare two menu items by their priority
 	 *
-	 * @param ElggMenuItem $a Menu item
-	 * @param ElggMenuItem $b Menu item
+	 * @param ElggMenuItem $a
+	 * @param ElggMenuItem $b
 	 * @return bool
-	 *
-	 * @todo change name to compareByPriority
 	 */
 	public static function compareByWeight($a, $b) {
-		$aw = $a->getWeight();
-		$bw = $b->getWeight();
+		$a = $a->getWeight();
+		$b = $b->getWeight();
 
-		if ($aw == $bw) {
-			return $a->getData('original_order') - $b->getData('original_order');
-		}
-		return $aw - $bw;
+		return $a > $b;
 	}
 }

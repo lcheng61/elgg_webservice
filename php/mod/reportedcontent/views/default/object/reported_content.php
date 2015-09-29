@@ -57,16 +57,7 @@ if ($report->state == 'archived') {
 		<p>
 			<b><?php echo elgg_echo('reportedcontent:objecttitle'); ?>:</b>
 			<?php echo $report->title; ?>
-		<p>
-			<b><?php echo elgg_echo('reportedcontent:objecturl'); ?>:</b>
-			<?php echo elgg_view('output/url', array(
-				'href' => $report->address,
-				'text' => elgg_echo('reportedcontent:visit'),
-				'is_trusted' => true,
-			));
-			?>
-		</p>
-		<p>
+			<br />
 			<?php echo elgg_view('output/url', array(
 				'href' => "#report-$report->guid",
 				'text' => elgg_echo('reportedcontent:moreinfo'),
@@ -76,6 +67,15 @@ if ($report->state == 'archived') {
 		</p>
 	</div>
 	<div class="report-details hidden" id="report-<?php echo $report->getGUID();?>">
+		<p>
+			<b><?php echo elgg_echo('reportedcontent:objecturl'); ?>:</b>
+			<?php echo elgg_view('output/url', array(
+				'href' => $report->address,
+				'text' => elgg_echo('reportedcontent:visit'),
+				'is_trusted' => true,
+			));
+			?>
+		</p>
 		<p>
 			<b><?php echo elgg_echo('reportedcontent:reason'); ?>:</b>
 			<?php echo $report->description; ?>

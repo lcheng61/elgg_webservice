@@ -3,7 +3,8 @@
  * The base class for ElggEntity extenders.
  *
  * Extenders allow you to attach extended information to an
- * ElggEntity.  Core supports two: ElggAnnotation and ElggMetadata.
+ * ElggEntity.  Core supports two: ElggAnnotation, ElggMetadata,
+ * and ElggRelationship
  *
  * Saving the extender data to database is handled by the child class.
  *
@@ -15,24 +16,9 @@
  * @link       http://docs.elgg.org/DataModel/Extenders
  * @see        ElggAnnotation
  * @see        ElggMetadata
- * 
- * @property string $type         annotation or metadata (read-only after save)
- * @property int    $id           The unique identifier (read-only)
- * @property int    $entity_guid  The GUID of the entity that this extender describes
- * @property int    $access_id    Specifies the visibility level of this extender
- * @property string $name         The name of this extender
- * @property mixed  $value        The value of the extender (int or string)
- * @property int    $time_created A UNIX timestamp of when the extender was created (read-only, set on first save)
  */
-abstract class ElggExtender extends ElggData {
-
-	/**
-	 * (non-PHPdoc)
-	 *
-	 * @see ElggData::initializeAttributes()
-	 *
-	 * @return void
-	 */
+abstract class ElggExtender extends ElggData
+{
 	protected function initializeAttributes() {
 		parent::initializeAttributes();
 
@@ -171,7 +157,7 @@ abstract class ElggExtender extends ElggData {
 	public function export() {
 		$uuid = get_uuid_from_object($this);
 
-		$meta = new ODDMetaData($uuid, guid_to_uuid($this->entity_guid), $this->attributes['name'],
+		$meta = new ODDMetadata($uuid, guid_to_uuid($this->entity_guid), $this->attributes['name'],
 			$this->attributes['value'], $this->attributes['type'], guid_to_uuid($this->owner_guid));
 		$meta->setAttribute('published', date("r", $this->time_created));
 

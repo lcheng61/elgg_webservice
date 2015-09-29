@@ -66,7 +66,7 @@ if ($old_enabled_plugins) {
 
 // invalidate caches
 elgg_invalidate_simplecache();
-elgg_reset_system_cache();
+elgg_filepath_cache_reset();
 
 // clean up.
 remove_metadata($site->guid, 'pluginorder');
@@ -92,7 +92,5 @@ $processed_upgrades[] = '2011010101.php';
 
 $processed_upgrades = array_unique($processed_upgrades);
 elgg_set_processed_upgrades($processed_upgrades);
-
-_elgg_upgrade_unlock();
 
 forward('upgrade.php');

@@ -14,7 +14,7 @@ $menu = elgg_view_menu('walled_garden', array(
 
 $login_box = elgg_view('core/account/login_box', array('module' => 'walledgarden-login'));
 
-echo <<<HTML
+$content = <<<HTML
 <div class="elgg-col elgg-col-1of2">
 	<div class="elgg-inner">
 		<h1 class="elgg-heading-walledgarden">
@@ -29,3 +29,9 @@ echo <<<HTML
 	</div>
 </div>
 HTML;
+
+echo elgg_view_module('walledgarden', '', $content, array(
+	'class' => 'elgg-walledgarden-double',
+	'header' => ' ',
+	'footer' => ' ',
+));

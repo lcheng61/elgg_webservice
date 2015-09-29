@@ -11,7 +11,7 @@
  *
  * @param mixed $object The object either an ElggEntity, ElggRelationship or ElggExtender
  *
- * @return string|false the UUID or false
+ * @return the UUID or false
  */
 function get_uuid_from_object($object) {
 	if ($object instanceof ElggEntity) {
@@ -40,6 +40,8 @@ function get_uuid_from_object($object) {
  * @return string
  */
 function guid_to_uuid($guid) {
+	global $CONFIG;
+
 	return elgg_get_site_url()  . "export/opendd/$guid/";
 }
 
@@ -51,6 +53,8 @@ function guid_to_uuid($guid) {
  * @return bool
  */
 function is_uuid_this_domain($uuid) {
+	global $CONFIG;
+
 	if (strpos($uuid, elgg_get_site_url()) === 0) {
 		return true;
 	}
@@ -63,7 +67,7 @@ function is_uuid_this_domain($uuid) {
  *
  * @param string $uuid A unique ID
  *
- * @return ElggEntity|false
+ * @return mixed
  */
 function get_entity_from_uuid($uuid) {
 	$uuid = sanitise_string($uuid);
@@ -113,19 +117,18 @@ function _process_element(ODD $odd) {
 	global $IMPORTED_DATA, $IMPORTED_OBJECT_COUNTER;
 
 	// See if anyone handles this element, return true if it is.
-	$to_be_serialised = null;
 	if ($odd) {
 		$handled = elgg_trigger_plugin_hook("import", "all", array("element" => $odd), $to_be_serialised);
+	}
 
-		// If not, then see if any of its sub elements are handled
-		if ($handled) {
-			// Increment validation counter
-			$IMPORTED_OBJECT_COUNTER ++;
-			// Return the constructed object
-			$IMPORTED_DATA[] = $handled;
+	// If not, then see if any of its sub elements are handled
+	if ($handled) {
+		// Increment validation counter
+		$IMPORTED_OBJECT_COUNTER ++;
+		// Return the constructed object
+		$IMPORTED_DATA[] = $handled;
 
-			return true;
-		}
+		return true;
 	}
 
 	return false;
@@ -164,7 +167,7 @@ function exportAsArray($guid) {
  *
  * @param int $guid The GUID.
  *
- * @return string XML
+ * @return xml
  * @see ElggEntity for an example of its usage.
  * @access private
  */
@@ -181,7 +184,7 @@ function export($guid) {
  * @param string $xml XML string
  *
  * @return bool
- * @throws ImportException if there was a problem importing the data.
+ * @throws Exception if there was a problem importing the data.
  * @access private
  */
 function import($xml) {

@@ -6,6 +6,5 @@
 echo elgg_list_entities(array(
 	'type' => 'user',
 	'subtype'=> null,
-	'full_view' => false,
-	'pagination' => false,
+	'full_view' => FALSE
 ));

@@ -19,8 +19,6 @@ if (isset($vars['class'])) {
 
 $defaults = array(
 	'value' => '',
-	'rows' => '10',
-	'cols' => '50',
 	'id' => 'elgg-input-' . rand(), //@todo make this more robust
 );
 

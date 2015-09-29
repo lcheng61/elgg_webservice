@@ -12,9 +12,27 @@
 ?>
 
 <p class="elgg-messages-exception">
-	<span title="Unrecoverable Error">
-		<?php echo elgg_echo('exception:contact_admin'); ?>
-		<br /><br />
-		Exception #<?php echo $vars['ts']; ?>.
+	<span title="<?php echo get_class($vars['object']); ?>">
+	<?php
+
+		echo nl2br($vars['object']->getMessage());
+
+	?>
 	</span>
 </p>
+
+<?php
+
+if (elgg_get_config('debug')) {
+?>
+
+<p class="elgg-messages-exception">
+	<?php
+
+		echo nl2br(htmlentities(print_r($vars['object'], true), ENT_QUOTES, 'UTF-8'));
+
+	?>
+</p>
+<?php
+
+}

@@ -3,51 +3,47 @@
  * Efficiently run operations on batches of results for any function
  * that supports an options array.
  *
- * This is usually used with elgg_get_entities() and friends,
- * elgg_get_annotations(), and elgg_get_metadata().
+ * This is usually used with elgg_get_entities() and friends, elgg_get_annotations()
+ * and elgg_get_metadata().
  *
- * If you pass a valid PHP callback, all results will be run through that
- * callback. You can still foreach() through the result set after.  Valid
- * PHP callbacks can be a string, an array, or a closure.
+ * If you pass a valid PHP callback, all results will be run through that callback.
+ * You can still foreach() through the result set after.  Valid PHP callbacks
+ * can be a string, an array, or a closure.
  * {@link http://php.net/manual/en/language.pseudo-types.php}
  *
- * The callback function must accept 3 arguments: an entity, the getter
- * used, and the options used.
+ * The callback function must accept 3 arguments: an entity, the getter used, and the options used.
  *
- * Results from the callback are stored in callbackResult. If the callback
- * returns only booleans, callbackResults will be the combined result of
- * all calls. If no entities are processed, callbackResults will be null.
+ * Results from the callback are stored in callbackResult.
+ * If the callback returns only booleans, callbackResults will be the combined
+ * result of all calls.
  *
- * If the callback returns anything else, callbackresult will be an indexed
- * array of whatever the callback returns.  If returning error handling
- * information, you should include enough information to determine which
- * result you're referring to.
+ * If the callback returns anything else, callbackresult will be an indexed array
+ * of whatever the callback returns.  If returning error handling information,
+ * you should include enough information to determine which result you're referring
+ * to.
  *
  * Don't combine returning bools and returning something else.
  *
  * Note that returning false will not stop the foreach.
  *
- * @warning If your callback or foreach loop deletes or disable entities
- * you MUST call setIncrementOffset(false) or set that when instantiating.
- * This forces the offset to stay what it was in the $options array.
- *
  * @example
  * <code>
- * // using foreach
  * $batch = new ElggBatch('elgg_get_entities', array());
- * $batch->setIncrementOffset(false);
  *
  * foreach ($batch as $entity) {
  * 	$entity->disable();
  * }
  *
- * // using both a callback
  * $callback = function($result, $getter, $options) {
- * 	var_dump("Looking at annotation id: $result->id");
+ * 	var_dump("Going to delete annotation id: $result->id");
  *  return true;
  * }
  *
  * $batch = new ElggBatch('elgg_get_annotations', array('guid' => 2), $callback);
+ *
+ * foreach ($batch as $annotation) {
+ * 	$annotation->delete();
+ * }
  * </code>
  *
  * @package    Elgg.Core
@@ -96,7 +92,7 @@ class ElggBatch
 	/**
 	 * Stop after this many results.
 	 *
-	 * @var int
+	 * @var unknown_type
 	 */
 	private $limit = 0;
 
@@ -143,27 +139,6 @@ class ElggBatch
 	public $callbackResult = null;
 
 	/**
-	 * If false, offset will not be incremented. This is used for callbacks/loops that delete.
-	 *
-	 * @var bool
-	 */
-	private $incrementOffset = true;
-
-	/**
-	 * Entities that could not be instantiated during a fetch
-	 *
-	 * @var stdClass[]
-	 */
-	private $incompleteEntities = array();
-
-	/**
-	 * Total number of incomplete entities fetched
-	 *
-	 * @var int
-	 */
-	private $totalIncompletes = 0;
-
-	/**
 	 * Batches operations on any elgg_get_*() or compatible function that supports
 	 * an options array.
 	 *
@@ -172,27 +147,19 @@ class ElggBatch
 	 *
 	 * @param string $getter     The function used to get objects.  Usually
 	 *                           an elgg_get_*() function, but can be any valid PHP callback.
-	 * @param array  $options    The options array to pass to the getter function. If limit is
-	 *                           not set, 10 is used as the default. In most cases that is not
-	 *                           what you want.
+	 * @param array  $options    The options array to pass to the getter function
 	 * @param mixed  $callback   An optional callback function that all results will be passed
 	 *                           to upon load.  The callback needs to accept $result, $getter,
 	 *                           $options.
 	 * @param int    $chunk_size The number of entities to pull in before requesting more.
 	 *                           You have to balance this between running out of memory in PHP
 	 *                           and hitting the db server too often.
-	 * @param bool   $inc_offset Increment the offset on each fetch. This must be false for
-	 *                           callbacks that delete rows. You can set this after the
-	 *                           object is created with {@see ElggBatch::setIncrementOffset()}.
 	 */
-	public function __construct($getter, $options, $callback = null, $chunk_size = 25,
-			$inc_offset = true) {
-		
+	public function __construct($getter, $options, $callback = null, $chunk_size = 25) {
 		$this->getter = $getter;
 		$this->options = $options;
 		$this->callback = $callback;
 		$this->chunkSize = $chunk_size;
-		$this->setIncrementOffset($inc_offset);
 
 		if ($this->chunkSize <= 0) {
 			$this->chunkSize = 25;
@@ -205,7 +172,7 @@ class ElggBatch
 		// if passed a callback, create a new ElggBatch with the same options
 		// and pass each to the callback.
 		if ($callback && is_callable($callback)) {
-			$batch = new ElggBatch($getter, $options, null, $chunk_size, $inc_offset);
+			$batch = new ElggBatch($getter, $options, null, $chunk_size);
 
 			$all_results = null;
 
@@ -236,22 +203,16 @@ class ElggBatch
 	}
 
 	/**
-	 * Tell the process that an entity was incomplete during a fetch
-	 *
-	 * @param stdClass $row
-	 *
-	 * @access private
-	 */
-	public function reportIncompleteEntity(stdClass $row) {
-		$this->incompleteEntities[] = $row;
-	}
-
-	/**
 	 * Fetches the next chunk of results
 	 *
 	 * @return bool
 	 */
 	private function getNextResultsChunk() {
+		// reset memory caches after first chunk load
+		if ($this->chunkIndex > 0) {
+			global $DB_QUERY_CACHE, $ENTITY_CACHE;
+			$DB_QUERY_CACHE = $ENTITY_CACHE = array();
+		}
 
 		// always reset results.
 		$this->results = array();
@@ -273,77 +234,39 @@ class ElggBatch
 			}
 
 			// if original limit < chunk size, set limit to original limit
-			// else if the number of results we'll fetch if greater than the original limit
 			if ($this->limit < $this->chunkSize) {
 				$limit = $this->limit;
-			} elseif ($this->retrievedResults + $this->chunkSize > $this->limit) {
-				// set the limit to the number of results remaining in the original limit
+			}
+
+			// if the number of results we'll fetch is greater than the original limit,
+			// set the limit to the number of results remaining in the original limit
+			elseif ($this->retrievedResults + $this->chunkSize > $this->limit) {
 				$limit = $this->limit - $this->retrievedResults;
 			}
 		}
 
-		if ($this->incrementOffset) {
-			$offset = $this->offset + $this->retrievedResults;
-		} else {
-			$offset = $this->offset + $this->totalIncompletes;
-		}
-
 		$current_options = array(
 			'limit' => $limit,
-			'offset' => $offset,
-			'__ElggBatch' => $this,
+			'offset' => $this->offset + $this->retrievedResults
 		);
 
 		$options = array_merge($this->options, $current_options);
+		$getter = $this->getter;
 
-		$this->incompleteEntities = array();
-		$this->results = call_user_func_array($this->getter, array($options));
-
-		// batch result sets tend to be large; we don't want to cache these.
-		_elgg_invalidate_query_cache();
-
-		$num_results = count($this->results);
-		$num_incomplete = count($this->incompleteEntities);
-
-		$this->totalIncompletes += $num_incomplete;
-
-		if ($this->incompleteEntities) {
-			// pad the front of the results with nulls representing the incompletes
-			array_splice($this->results, 0, 0, array_pad(array(), $num_incomplete, null));
-			// ...and skip past them
-			reset($this->results);
-			for ($i = 0; $i < $num_incomplete; $i++) {
-				next($this->results);
-			}
+		if (is_string($getter)) {
+			$this->results = $getter($options);
+		} else {
+			$this->results = call_user_func_array($getter, array($options));
 		}
 
 		if ($this->results) {
 			$this->chunkIndex++;
-
-			// let the system know we've jumped past the nulls
-			$this->resultIndex = $num_incomplete;
-
-			$this->retrievedResults += ($num_results + $num_incomplete);
-			if ($num_results == 0) {
-				// This fetch was *all* incompletes! We need to fetch until we can either
-				// offer at least one row to iterate over, or give up.
-				return $this->getNextResultsChunk();
-			}
+			$this->resultIndex = 0;
+			$this->retrievedResults += count($this->results);
 			return true;
 		} else {
 			return false;
 		}
-	}
-
-	/**
-	 * Increment the offset from the original options array? Setting to
-	 * false is required for callbacks that delete rows.
-	 *
-	 * @param bool $increment Set to false when deleting data
-	 * @return void
-	 */
-	public function setIncrementOffset($increment = true) {
-		$this->incrementOffset = (bool) $increment;
 	}
 
 	/**
@@ -396,13 +319,13 @@ class ElggBatch
 	 */
 	public function next() {
 		// if we'll be at the end.
-		if (($this->processedResults + 1) >= $this->limit && $this->limit > 0) {
+		if ($this->processedResults + 1 >= $this->limit && $this->limit > 0) {
 			$this->results = array();
 			return false;
 		}
 
 		// if we'll need new results.
-		if (($this->resultIndex + 1) >= $this->chunkSize) {
+		if ($this->resultIndex + 1 >= $this->chunkSize) {
 			if (!$this->getNextResultsChunk()) {
 				$this->results = array();
 				return false;

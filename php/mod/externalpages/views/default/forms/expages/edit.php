@@ -50,9 +50,9 @@ echo <<<EOT
 	$input_area
 </div>
 <div class="elgg-foot">
-$hidden_guid
+$hidden_value
 $hidden_type
 $submit_input
-</div>
+<div>
 EOT;
 

@@ -2,6 +2,7 @@
 /**
  * Elgg profile plugin edit default profile action removal
  *
+ * @package ElggProfile
  */
 
 $id = get_input('id');

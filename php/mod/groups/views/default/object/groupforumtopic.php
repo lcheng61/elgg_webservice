@@ -73,10 +73,7 @@ if ($full) {
 
 	$info = elgg_view_image_block($poster_icon, $list_body);
 
-	$body = elgg_view('output/longtext', array(
-		'value' => $topic->description,
-		'class' => 'clearfix',
-	));
+	$body = elgg_view('output/longtext', array('value' => $topic->description));
 
 	echo <<<HTML
 $info

@@ -21,7 +21,6 @@ abstract class ElggCache implements ArrayAccess {
 		$this->variables = array();
 	}
 
-	// @codingStandardsIgnoreStart
 	/**
 	 * Set a cache variable.
 	 *
@@ -30,13 +29,12 @@ abstract class ElggCache implements ArrayAccess {
 	 *
 	 * @return void
 	 *
-	 * @deprecated 1.8 Use ElggCache:setVariable()
+	 * @deprecated 1.8 Use ElggAccess:setVariable()
 	 */
 	public function set_variable($variable, $value) {
 		elgg_deprecated_notice('ElggCache::set_variable() is deprecated by ElggCache::setVariable()', 1.8);
 		$this->setVariable($variable, $value);
 	}
-	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Set a cache variable.
@@ -54,7 +52,6 @@ abstract class ElggCache implements ArrayAccess {
 		$this->variables[$variable] = $value;
 	}
 
-	// @codingStandardsIgnoreStart
 	/**
 	 * Get variables for this cache.
 	 *
@@ -68,7 +65,6 @@ abstract class ElggCache implements ArrayAccess {
 		elgg_deprecated_notice('ElggCache::get_variable() is deprecated by ElggCache::getVariable()', 1.8);
 		return $this->getVariable($variable);
 	}
-	// @codingStandardsIgnoreEnd
 
 	/**
 	 * Get variables for this cache.
@@ -195,8 +191,8 @@ abstract class ElggCache implements ArrayAccess {
 	 *
 	 * @see ArrayAccess::offsetSet()
 	 *
-	 * @param mixed $key   The key (offset) to assign the value to.
-	 * @param mixed $value The value to set.
+	 * @param mixed $key    The key (offset) to assign the value to.
+	 * @param mixed $value  The value to set.
 	 *
 	 * @return void
 	 */
@@ -209,7 +205,7 @@ abstract class ElggCache implements ArrayAccess {
 	 *
 	 * @see ArrayAccess::offsetGet()
 	 *
-	 * @param mixed $key The key (offset) to retrieve.
+	 * @param mixed $offset The key (offset) to retrieve.
 	 *
 	 * @return mixed
 	 */

@@ -8,8 +8,8 @@
 gatekeeper();
 
 $message = get_entity(get_input('guid'));
-if (!$message || !elgg_instanceof($message, "object", "messages")) {
-	forward('messages/inbox/' . elgg_get_logged_in_user_entity()->username);
+if (!$message) {
+	forward();
 }
 
 // mark the message as read
@@ -38,9 +38,8 @@ if ($inbox) {
 	);
 	$body_params = array('message' => $message);
 	$content .= elgg_view_form('messages/reply', $form_params, $body_params);
-	$from_user = get_user($message->fromId);
-	
-	if ((elgg_get_logged_in_user_guid() == elgg_get_page_owner_guid()) && $from_user) {
+
+	if (elgg_get_logged_in_user_guid() == elgg_get_page_owner_guid()) {
 		elgg_register_menu_item('title', array(
 			'name' => 'reply',
 			'href' => '#messages-reply-form',

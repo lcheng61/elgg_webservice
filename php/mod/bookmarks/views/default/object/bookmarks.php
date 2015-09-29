@@ -27,6 +27,7 @@ $owner_link = elgg_view('output/url', array(
 ));
 $author_text = elgg_echo('byline', array($owner_link));
 
+$tags = elgg_view('output/tags', array('tags' => $bookmark->tags));
 $date = elgg_view_friendly_time($bookmark->time_created);
 
 $comments_count = $bookmark->countComments();
@@ -63,6 +64,7 @@ if ($full && !elgg_in_context('gallery')) {
 		'title' => false,
 		'metadata' => $metadata,
 		'subtitle' => $subtitle,
+		'tags' => $tags,
 	);
 	$params = $params + $vars;
 	$summary = elgg_view('object/elements/summary', $params);
@@ -118,6 +120,7 @@ HTML;
 		'entity' => $bookmark,
 		'metadata' => $metadata,
 		'subtitle' => $subtitle,
+		'tags' => $tags,
 		'content' => $content,
 	);
 	$params = $params + $vars;

@@ -240,7 +240,7 @@ $pairs = NULL, $pair_operator = 'AND', $name_prefix = '') {
 			$i++;
 		}
 
-		$where = implode(" $pair_operator ", $pair_wheres);
+		$where = implode (" $pair_operator ", $pair_wheres);
 		if ($where) {
 			$wheres[] = "($where)";
 		}
@@ -348,6 +348,11 @@ function set_private_setting($entity_guid, $name, $value) {
 	$entity_guid = (int) $entity_guid;
 	$name = sanitise_string($name);
 	$value = sanitise_string($value);
+
+	$entity = get_entity($entity_guid);
+	if (!$entity instanceof ElggEntity) {
+		return false;
+	}
 
 	$result = insert_data("INSERT into {$CONFIG->dbprefix}private_settings
 		(entity_guid, name, value) VALUES

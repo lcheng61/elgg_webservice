@@ -11,7 +11,6 @@ $english = array(
 	*/
 
 	'messages' => "Messages",
-	'messages:unreadcount' => "%s unread",
 	'messages:back' => "back to messages",
 	'messages:user' => "%s's inbox",
 	'messages:posttitle' => "%s's messages: %s",
@@ -67,7 +66,12 @@ $english = array(
 
 	%s
 
+
 	To view your messages, click here:
+
+	%s
+
+	To send %s a message, click here:
 
 	%s
 

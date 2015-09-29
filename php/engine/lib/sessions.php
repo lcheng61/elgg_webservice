@@ -87,9 +87,6 @@ function elgg_is_admin_logged_in() {
  */
 function elgg_is_admin_user($user_guid) {
 	global $CONFIG;
-
-	$user_guid = (int)$user_guid;
-
 	// cannot use magic metadata here because of recursion
 
 	// must support the old way of getting admin from metadata
@@ -129,10 +126,6 @@ function elgg_is_admin_user($user_guid) {
 
 /**
  * Perform user authentication with a given username and password.
- *
- * @warning This returns an error message on failure. Use the identical operator to check
- * for access: if (true === elgg_authenticate()) { ... }.
- *
  *
  * @see login
  *
@@ -277,28 +270,6 @@ function check_rate_limit_exceeded($user_guid) {
 }
 
 /**
- * Generate a random cookie token used for the remember me feature.
- *
- * The first char is always "z" to indicate the value is more secure than the
- * previously generated ones.
- *
- * @return string
- */
-function _elgg_generate_remember_me_token() {
-	return 'z' . ElggCrypto::getRandomString(31);
-}
-
-/**
- * Determine if a remember me cookie is a legacy MD5 hash
- *
- * @param string $cookie_value
- * @return bool
- */
-function _elgg_is_legacy_remember_me_token($cookie_value) {
-	return (isset($cookie_value[0]) && $cookie_value[0] !== 'z');
-}
-
-/**
  * Logs in a specified ElggUser. For standard registration, use in conjunction
  * with elgg_authenticate.
  *
@@ -311,6 +282,8 @@ function _elgg_is_legacy_remember_me_token($cookie_value) {
  * @throws LoginException
  */
 function login(ElggUser $user, $persistent = false) {
+	global $CONFIG;
+
 	// User is banned, return false.
 	if ($user->isBanned()) {
 		throw new LoginException(elgg_echo('LoginException:BannedUser'));
@@ -323,8 +296,8 @@ function login(ElggUser $user, $persistent = false) {
 	$_SESSION['name'] = $user->name;
 
 	// if remember me checked, set cookie with token and store token on user
-	if ($persistent) {
-		$code = _elgg_generate_remember_me_token();
+	if (($persistent)) {
+		$code = (md5($user->name . $user->username . time() . rand()));
 		$_SESSION['code'] = $code;
 		$user->code = md5($code);
 		setcookie("elggperm", $code, (time() + (86400 * 30)), "/");
@@ -348,12 +321,6 @@ function login(ElggUser $user, $persistent = false) {
 	set_last_login($_SESSION['guid']);
 	reset_login_failure_count($user->guid); // Reset any previous failed login attempts
 
-	// if memcache is enabled, invalidate the user in memcache @see https://github.com/Elgg/Elgg/issues/3143
-	if (is_memcache_available()) {
-		// this needs to happen with a shutdown function because of the timing with set_last_login()
-		register_shutdown_function("_elgg_invalidate_memcache_for_entity", $_SESSION['guid']);
-	}
-	
 	return true;
 }
 
@@ -363,6 +330,8 @@ function login(ElggUser $user, $persistent = false) {
  * @return bool
  */
 function logout() {
+	global $CONFIG;
+
 	if (isset($_SESSION['user'])) {
 		if (!elgg_trigger_event('logout', 'user', $_SESSION['user'])) {
 			return false;
@@ -386,7 +355,7 @@ function logout() {
 	session_destroy();
 
 	// starting a default session to store any post-logout messages.
-	_elgg_session_boot(NULL, NULL, NULL);
+	session_init(NULL, NULL, NULL);
 	$_SESSION['msg'] = $old_msg;
 
 	return TRUE;
@@ -403,10 +372,14 @@ function logout() {
  *
  * @uses $_SESSION
  *
+ * @param string $event       Event name
+ * @param string $object_type Object type
+ * @param mixed  $object      Object
+ *
  * @return bool
  * @access private
  */
-function _elgg_session_boot() {
+function session_init($event, $object_type, $object) {
 	global $DB_PREFIX, $CONFIG;
 
 	// Use database for sessions
@@ -426,7 +399,7 @@ function _elgg_session_boot() {
 
 	// Generate a simple token (private from potentially public session id)
 	if (!isset($_SESSION['__elgg_session'])) {
-		$_SESSION['__elgg_session'] = ElggCrypto::getRandomString(32, ElggCrypto::CHARS_HEX);
+		$_SESSION['__elgg_session'] = md5(microtime() . rand());
 	}
 
 	// test whether we have a user session
@@ -439,7 +412,7 @@ function _elgg_session_boot() {
 		unset($_SESSION['code']);
 
 		// is there a remember me cookie
-		if (!empty($_COOKIE['elggperm'])) {
+		if (isset($_COOKIE['elggperm'])) {
 			// we have a cookie, so try to log the user in
 			$code = $_COOKIE['elggperm'];
 			$code = md5($code);
@@ -449,12 +422,6 @@ function _elgg_session_boot() {
 				$_SESSION['id'] = $user->getGUID();
 				$_SESSION['guid'] = $_SESSION['id'];
 				$_SESSION['code'] = $_COOKIE['elggperm'];
-			} else {
-				if (_elgg_is_legacy_remember_me_token($_COOKIE['elggperm'])) {
-					// may be attempt to brute force legacy low-entropy codes
-					sleep(1);
-				}
-				setcookie("elggperm", "", (time() - (86400 * 30)), "/");
 			}
 		}
 	} else {
@@ -470,15 +437,6 @@ function _elgg_session_boot() {
 			unset($_SESSION['id']);
 			unset($_SESSION['guid']);
 			unset($_SESSION['code']);
-
-			if (!empty($_COOKIE['elggperm']) && _elgg_is_legacy_remember_me_token($_COOKIE['elggperm'])) {
-				// replace user's old weaker-entropy code with new one
-				$code = _elgg_generate_remember_me_token();
-				$_SESSION['code'] = $code;
-				$user->code = md5($code);
-				$user->save();
-				setcookie("elggperm", $code, (time() + (86400 * 30)), "/");
-			}
 		}
 	}
 
@@ -486,8 +444,8 @@ function _elgg_session_boot() {
 		set_last_action($_SESSION['guid']);
 	}
 
-	elgg_register_action('login', '', 'public');
-	elgg_register_action('logout');
+	elgg_register_action("login", '', 'public');
+	elgg_register_action("logout");
 
 	// Register a default PAM handler
 	register_pam_handler('pam_auth_userpass');
@@ -501,6 +459,9 @@ function _elgg_session_boot() {
 		session_destroy();
 		return false;
 	}
+
+	// Since we have loaded a new user, this user may have different language preferences
+	register_translations(dirname(dirname(dirname(__FILE__))) . "/languages/");
 
 	return true;
 }
@@ -658,8 +619,10 @@ function _elgg_session_destroy($id) {
 		global $sess_save_path;
 
 		$sess_file = "$sess_save_path/sess_$id";
-		return @unlink($sess_file);
+		return(@unlink($sess_file));
 	}
+
+	return false;
 }
 
 /**
@@ -691,3 +654,5 @@ function _elgg_session_gc($maxlifetime) {
 
 	return true;
 }
+
+elgg_register_event_handler("boot", "system", "session_init", 20);

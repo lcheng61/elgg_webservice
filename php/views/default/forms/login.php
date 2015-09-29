@@ -20,7 +20,7 @@
 	<?php echo elgg_view('input/password', array('name' => 'password')); ?>
 </div>
 
-<?php echo elgg_view('login/extend', $vars); ?>
+<?php echo elgg_view('login/extend'); ?>
 
 <div class="elgg-foot">
 	<label class="mtm float-alt">

@@ -9,10 +9,6 @@
  * @subpackage Core
  *
  * @uses $vars['entities'] The array of ElggUser objects
- * @uses $vars['name']
- * @uses $vars['value']
- * @uses $vars['highlight']
- * @uses $vars['callback']
  */
 
 elgg_load_js('elgg.friendspicker');
@@ -78,9 +74,13 @@ if (isset($vars['formtarget'])) {
 // Sort users by letter
 if (is_array($vars['entities']) && sizeof($vars['entities'])) {
 	foreach($vars['entities'] as $user) {
-		$letter = elgg_strtoupper(elgg_substr($user->name, 0, 1));
+		if (is_callable('mb_substr')) {
+			$letter = strtoupper(mb_substr($user->name,0,1));
+		} else {
+			$letter = strtoupper(substr($user->name,0,1));
+		}
 
-		if (!elgg_substr_count($chararray, $letter)) {
+		if (!substr_count($chararray,$letter)) {
 			$letter = "*";
 		}
 		if (!isset($users[$letter])) {
@@ -162,7 +162,11 @@ if (!isset($vars['replacement'])) {
 
 // Initialise letters
 	$chararray .= "*";
-	$letter = elgg_substr($chararray, 0, 1);
+	if (is_callable('mb_substr')) {
+		$letter = mb_substr($chararray,0,1);
+	} else {
+		$letter = substr($chararray,0,1);
+	}
 	$letpos = 0;
 	while (1 == 1) {
 		?>
@@ -186,7 +190,9 @@ if (!isset($vars['replacement'])) {
 				$label = elgg_view_entity_icon($friend, 'tiny', array('use_hover' => false));
 				$options[$label] = $friend->getGUID();
 
-				if ($vars['highlight'] == 'all' && !in_array($letter,$activeletters)) {
+				if ($vars['highlight'] == 'all'
+					&& !in_array($letter,$activeletters)) {
+
 					$activeletters[] = $letter;
 				}
 
@@ -237,14 +243,23 @@ if (!isset($vars['replacement'])) {
 			</div>
 		</div>
 <?php
+			//if ($letter == 'Z') break;
 
-			$substr = elgg_substr($chararray, elgg_strlen($chararray) - 1, 1);
+			if (is_callable('mb_substr')) {
+				$substr = mb_substr($chararray,strlen($chararray) - 1,1);
+			} else {
+				$substr = substr($chararray,strlen($chararray) - 1,1);
+			}
 			if ($letter == $substr) {
 				break;
 			}
 			//$letter++;
 			$letpos++;
-			$letter = elgg_substr($chararray, $letpos, 1);
+			if (is_callable('mb_substr')) {
+				$letter = mb_substr($chararray,$letpos,1);
+			} else {
+				$letter = substr($chararray,$letpos,1);
+			}
 		}
 
 ?>
@@ -304,7 +319,7 @@ $(document).ready(function () {
 if (sizeof($activeletters) > 0)
 	//$chararray = elgg_echo('friendspicker:chararray');
 	foreach($activeletters as $letter) {
-		$tab = elgg_strpos($chararray, $letter) + 1;
+		$tab = strpos($chararray, $letter) + 1;
 ?>
 $("div#friends-picker-navigation<?php echo $friendspicker; ?> li.tab<?php echo $tab; ?> a").addClass("tabHasContent");
 <?php

@@ -2,12 +2,6 @@
 /**
  * Save blog entity
  *
- * Can be called by clicking save button or preview button. If preview button,
- * we automatically save as draft. The preview button is only available for
- * non-published drafts.
- *
- * Drafts are saved with the access set to private.
- *
  * @package Blog
  */
 
@@ -63,11 +57,7 @@ $required = array('title', 'description');
 
 // load from POST and do sanity and access checking
 foreach ($values as $name => $default) {
-	if ($name === 'title') {
-		$value = htmlspecialchars(get_input('title', $default, false), ENT_QUOTES, 'UTF-8');
-	} else {
-		$value = get_input($name, $default);
-	}
+	$value = get_input($name, $default);
 
 	if (in_array($name, $required) && empty($value)) {
 		$error = elgg_echo("blog:error:missing:$name");
@@ -79,13 +69,20 @@ foreach ($values as $name => $default) {
 
 	switch ($name) {
 		case 'tags':
-			$values[$name] = string_to_tag_array($value);
+			if ($value) {
+				$values[$name] = string_to_tag_array($value);
+			} else {
+				unset ($values[$name]);
+			}
 			break;
 
 		case 'excerpt':
 			if ($value) {
-				$values[$name] = elgg_get_excerpt($value);
+				$value = elgg_get_excerpt($value);
+			} else {
+				$value = elgg_get_excerpt($values['description']);
 			}
+			$values[$name] = $value;
 			break;
 
 		case 'container_guid':
@@ -101,6 +98,11 @@ foreach ($values as $name => $default) {
 			}
 			break;
 
+		// don't try to set the guid
+		case 'guid':
+			unset($values['guid']);
+			break;
+
 		default:
 			$values[$name] = $value;
 			break;
@@ -112,16 +114,13 @@ if ($save == false) {
 	$values['status'] = 'draft';
 }
 
-// if draft, set access to private and cache the future access
-if ($values['status'] == 'draft') {
-	$values['future_access'] = $values['access_id'];
-	$values['access_id'] = ACCESS_PRIVATE;
-}
-
 // assign values to the entity, stopping on error.
 if (!$error) {
 	foreach ($values as $name => $value) {
-		$blog->$name = $value;
+		if (FALSE === ($blog->$name = $value)) {
+			$error = elgg_echo('blog:error:cannot_save' . "$name=$value");
+			break;
+		}
 	}
 }
 
@@ -132,10 +131,10 @@ if (!$error) {
 		elgg_clear_sticky_form('blog');
 
 		// remove autosave draft if exists
-		$blog->deleteAnnotations('blog_auto_save');
+		$blog->clearAnnotations('blog_auto_save');
 
 		// no longer a brand new post.
-		$blog->deleteMetadata('new_post');
+		$blog->clearMetadata('new_post');
 
 		// if this was an edit, create a revision annotation
 		if (!$new_post && $revision_text) {
@@ -145,17 +144,13 @@ if (!$error) {
 		system_message(elgg_echo('blog:message:saved'));
 
 		$status = $blog->status;
+		$db_prefix = elgg_get_config('dbprefix');
 
 		// add to river if changing status or published, regardless of new post
 		// because we remove it for drafts.
 		if (($new_post || $old_status == 'draft') && $status == 'published') {
-			add_to_river('river/object/blog/create', 'create', $blog->owner_guid, $blog->getGUID());
+			add_to_river('river/object/blog/create', 'create', elgg_get_logged_in_user_guid(), $blog->getGUID());
 
-			// we only want notifications sent when post published
-			register_notification_object('object', 'blog', elgg_echo('blog:newpost'));
-			elgg_trigger_event('publish', 'object', $blog);
-
-			// reset the creation time for posts that move from draft to published
 			if ($guid) {
 				$blog->time_created = time();
 				$blog->save();

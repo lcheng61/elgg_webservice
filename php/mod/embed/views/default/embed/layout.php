@@ -21,20 +21,10 @@ if ($selected->getData('view')) {
 	}
 }
 
-$tab .= elgg_view('graphics/ajax_loader', array(
-	'class' => 'embed-throbber mtl',
-));
-
-$container_info = elgg_view('input/hidden', array(
-	'name' => 'embed_container_guid',
-	'value' => elgg_get_page_owner_guid(),
-));
-
 echo <<<HTML
 <div class="embed-wrapper">
 	$title
 	$menu
 	$tab
-	$container_info
 </div>
 HTML;

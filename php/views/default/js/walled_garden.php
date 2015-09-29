@@ -2,66 +2,39 @@
 /**
  * Walled garden JavaScript
  *
- * @since 1.8
+ * @todo update for new JS lib
  */
 
 $cancel_button = elgg_view('input/button', array(
 	'value' => elgg_echo('cancel'),
 	'class' => 'elgg-button-cancel mlm',
 ));
-$cancel_button = json_encode($cancel_button);
+$cancel_button = trim($cancel_button);
 
-if (0) { ?><script><?php }
 ?>
 
-elgg.provide('elgg.walled_garden');
+$(document).ready(function() {
 
-elgg.walled_garden.init = function () {
+	// add cancel button to inline forms
+	$(".elgg-walledgarden-password").find('input.elgg-button-submit').after('<?php echo $cancel_button; ?>');
+	$('.elgg-walledgarden-register').find('input.elgg-button-submit').after('<?php echo $cancel_button; ?>');
 
-	$('.forgot_link').click(elgg.walled_garden.load('lost_password'));
-	$('.registration_link').click(elgg.walled_garden.load('register'));
+	$(".forgot_link").click(function(event) {
+		event.preventDefault();
+		$(".elgg-walledgarden-password").fadeToggle();
+	});
 
-	$('input.elgg-button-cancel').live('click', function(event) {
-		var $wgs = $('.elgg-walledgarden-single');
-		if ($wgs.is(':visible')) {
-			$('.elgg-walledgarden-double').fadeToggle();
-			$wgs.fadeToggle();
-			$wgs.remove();
+	$(".registration_link").click(function(event) {
+		event.preventDefault();
+		$(".elgg-walledgarden-register").fadeToggle();
+	});
+
+	$('input.elgg-button-cancel').click(function(event) {
+		if ($(".elgg-walledgarden-password").is(':visible')) {
+			$(".forgot_link").click();
+		} else if ($('.elgg-walledgarden-register').is(':visible')) {
+			$(".registration_link").click();
 		}
 		event.preventDefault();
 	});
-};
-
-/**
- * Creates a closure for loading walled garden content through ajax
- *
- * @param {String} view Name of the walled garden view
- * @return {Object}
- */
-elgg.walled_garden.load = function(view) {
-	return function(event) {
-		var id = '#elgg-walledgarden-' + view;
-		id = id.replace('_', '-');
-		//@todo display some visual element that indicates that loading of content is running
-		elgg.get('walled_garden/' + view, {
-			'success' : function(data) {
-				var $wg = $('.elgg-body-walledgarden');
-				$wg.append(data);
-				$(id).find('input.elgg-button-submit').after(<?php echo $cancel_button; ?>);
-
-				if (view == 'register' && $wg.hasClass('hidden')) {
-					// this was a failed register, display the register form ASAP
-					$('#elgg-walledgarden-login').toggle(false);
-					$(id).toggle();
-					$wg.removeClass('hidden');
-				} else {
-					$('#elgg-walledgarden-login').fadeToggle();
-					$(id).fadeToggle();
-				}
-			}
-		});
-		event.preventDefault();
-	};
-};
-
-elgg.register_hook_handler('init', 'system', elgg.walled_garden.init);
+});

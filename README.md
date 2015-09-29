@@ -1,4 +1,4 @@
- Elgg on OpenShift
+Elgg on OpenShift
 =========================
 Elgg is an award-winning open source social networking engine that provides a robust framework on which to build all kinds of social environments, from a campus wide social network for your university, school or college or an internal collaborative platform for your organization through to a brand-building communications tool for your company and its clients.
 
@@ -40,6 +40,7 @@ Remove the /runtime/repo/php and add data so it looks like:
 
 	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/data
 
+=======================
 
 Develop branching:
 
@@ -55,7 +56,5 @@ develop -> stage -> product
 4. git commit -a -m "message"
 5. git push origin develop
 6. go to 
-=======
-
 
 

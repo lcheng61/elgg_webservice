@@ -22,8 +22,6 @@
  */
 
 function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $category, $username) {
-                     $blog['tip_thumbnail_image_url'] = str_replace("\/large\/", "\/master\/", $single->tip_thumbnail_image_url);
-
     if(!$username) {
         $user = get_loggedin_user();
     } else {
@@ -39,16 +37,8 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
-            'metadata_name_value_pairs' => array(
-                array(
-                    'name' => 'ideascategory',
-                    'value' => $category,
-                    'case_sensitive' => false
-                ),
-            )
-        );
+            );
     }
-
     if($context == "mine" || $context ==  "user"){
         $params = array(
             'types' => 'object',
@@ -57,13 +47,6 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
-            'metadata_name_value_pairs' => array(
-                array(
-                    'name' => 'ideascategory',
-                    'value' => $category,
-		    'case_sensitive' => false
-                ),
-            )
         );
     }
     if($context == "group"){
@@ -74,40 +57,26 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
             'limit' => $limit,
             'full_view' => FALSE,
             'offset' => $offset,
-            'metadata_name_value_pairs' => array(
-                array(
-                    'name' => 'ideascategory',
-                    'value' => $category,
-		    'case_sensitive' => false
-                ),
-            )
         );
     }
-    if ($category == "all") {
-        $latest_blogs = elgg_get_entities($params);
-    } else {
-        $latest_blogs = elgg_get_entities_from_metadata($params);
-    }    
+    $latest_blogs = elgg_get_entities($params);
+        
     if($context == "friends"){
-        $latest_blogs = get_user_friends_objects($user->guid, 'ideas', $limit, $offset);
+        $latest_blogs = get_user_friends_objects($user->guid, 'market', $limit, $offset);
     }
 
+    $return['total_number'] = count($latest_blogs);
+    $return['category'] = $category;
+    $return['offset'] = $offset;
+    
     if($latest_blogs) {
-        $return['category'] = $category;
-        $return['offset'] = $offset;
-        $return['total_number'] = count($latest_blogs);
-
         foreach($latest_blogs as $single ) {
-/*
             if (($single->ideascategory == $category) || 
                     ($category == "all")) {
-*/
-            if (1) {
                 $blog['tip_id'] = $single->guid;
-/*
                 $options = array(
-                        'annotations_name' => 'ideas_comment',
-                        'guid' => $single->guid,
+                        'annotations_name' => 'generic_comment',
+                        'guid' => $single->$guid,
                         'limit' => $limit,
                         'pagination' => false,
                         'reverse_order_by' => true,
@@ -115,59 +84,37 @@ function ideas_get_posts($context,  $limit = 10, $offset = 0, $group_guid, $cate
 
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
-*/
-//                 $num_comments = $single->getAnnotationsSum('ideas_comment');
-                 $comments = $single->getAnnotations(
-                     'ideas_comment',    // The type of annotation
-                     0,   // The number to return
-                     0,  // Any indexing offset
-                     'asc'   // 'asc' or 'desc' (default 'asc')
-                 );
-                 $num_comments = count($comments);
-
 
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
-//                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-                 if (!$single->tip_thumbnail_image_url) {
-                     $blog['tip_thumbnail_image_url'] = elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."master/";
-                 } else {
-//                     $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-                     $blog['tip_thumbnail_image_url'] = str_replace('/large/', '/master/', $single->tip_thumbnail_image_url);
-                 }
-
+//                 $blog['tip_category'] = $single->tip_category;
+                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+//                         elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
 
                  $owner = get_entity($single->owner_guid);
                  $blog['tip_author']['user_id'] = $owner->guid;
                  $blog['tip_author']['user_name'] = $owner->username;
-                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
+                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['tip_author']['is_seller'] = $owner->is_seller;
-
-		 if ($user) {
-                     $blog['tip_author']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
-                 } else {
-                     $blog['tip_author']['do_i_follow'] = false;
-		 }
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
+                 $blog['products_number'] = $single->products;
 
-                 $blog['products_number'] = $single->countEntitiesFromRelationship("sponsor", false);
-                 if ($single->view_times) {
-                     $blog['view_times'] = $single->view_times;
-                 } else {
-                     $blog['view_times'] = 0;
-		 }
-
-                 $return['tips'][] = $blog;
+//                $blog['container_guid'] = $single->container_guid;
+//                $blog['access_id'] = $single->access_id;
+//                $blog['time_created'] = (int)$single->time_created;
+//                $blog['time_updated'] = (int)$single->time_updated;
+//                $blog['last_action'] = (int)$single->last_action;
+                 $return[] = $blog;
             }
         }
     }
     else {
-        $return['total_number'] = 0;
-        $return['tips'] = array();
+        $msg = elgg_echo('ideas_post:none');
+        throw new InvalidParameterException($msg);
     }
 
     return $return;
@@ -182,7 +129,7 @@ expose_function('ideas.get_posts',
                       'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
                       'group_guid' => array ('type'=> 'int', 'required'=>false, 'default' =>0),
                       'category' => array ('type' => 'string', 'required' => false, 'default' => 'all'),
-                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
+                      'username' => array ('type' => 'string', 'required' => false),
                     ),
                 "Get list of idea posts",
                 'GET',
@@ -202,134 +149,38 @@ function tip_get_detail($tip_id) {
     $return = array();
 
     $blog = get_entity($tip_id);
-    if (!$blog) {
-        throw new InvalidParameterException('Cannot find this tip_id');
-    }
-/*
-    $options = array(
-        'annotations_name' => 'ideas_comment',
-        'guid' => $tip_id,
-        'limit' => 10,
-        'pagination' => false,
-        'reverse_order_by' => true,
-    );
-    $comments = elgg_get_annotations($options);
-    $num_comments = count($comments);
-*/
-//    $num_comments = $blog->getAnnotationsSum('ideas_comment');
-
-                 $comments = $blog->getAnnotations(
-                     'ideas_comment',    // The type of annotation
-                     0,   // The number to return
-                     0,  // Any indexing offset
-                     'asc'   // 'asc' or 'desc' (default 'asc')
-                 );
-                 $num_comments = count($comments);
-
 
     if (!elgg_instanceof($blog, 'object', 'ideas')) {
         $return['content'] = elgg_echo('blog:error:post_not_found');
         return $return;
     }
-    if (!$blog->view_times) {
-        $blog->view_times = 1;
-    } else {
-        $blog->view_times ++;
-    }
-    $blog->save();
 
-    $return['tip_title'] = $blog->title;
-    $return['tip_category'] = $blog->ideascategory;
-    $return['tip_thumbnail_image_url'] = $blog->tip_thumbnail_image_url;
+    $return['tip_title'] = htmlspecialchars($blog->title);
     $return['tip_id'] = $tip_id;
-
-    $return['tip_notes'] = $blog->tip_notes;
-    $return['tip_tags'] = $blog->tip_tags;
-
-    $return['view_times'] = $blog->view_times;
-
-    $return['tip_pages'] =             json_decode($blog->tip_pages, true);
-
-////// get products for seller portal
-    $return['products_number'] = $blog->countEntitiesFromRelationship("sponsor", false);
-
-    $items = $blog->getEntitiesFromRelationship("sponsor", false, 0, 0);
-    foreach ($items as $item) {
-        $product_info['id'] = $item->guid;
-        $product_info['name'] = $item->title;
-        $images = unserialize($item->images);
-        $product_info['images'] = "";
-        if ($images) {
-            foreach ($images as $key => $value) {
-                if ($value == 1) {
-//                  $product_info['images'][] = elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
-                    $product_info['images'][] = elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
-                } else {
-	            $product_info['images'][] = "";
-      	        }
-            }
-        }
-        if ($item->is_affiliate) {
-            $product_info['images'][] = $item->affiliate_image;
-        }
-        $return['products'][] = $product_info;
-    } 
-
-//////~
+    $return['tip_pages'] =           $blog->tip_pages;
+    $return['tip_video_url'] =       $blog->tip_video_url;
+    $return['tip_image_url'] =       $blog->tip_image_url;
+    $return['tip_image_caption'] =   $blog->tip_image_caption;
+    $return['tip_text'] =            $blog->tip_text;
+    $return['tip_notes'] =           $blog->tip_notes;
+    $return['products'] =            $blog->products;
 
     $owner = get_entity($blog->owner_guid);
     $return['tip_author']['user_id'] = $owner->guid;
     $return['tip_author']['user_name'] = $owner->username;
     $return['tip_author']['is_seller'] = $owner->is_seller;
-    $return['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
-
-    $me = get_loggedin_user();
-    if ($me) {
-        $return['tip_author']['do_i_follow'] = user_is_friend($me->guid, $owner->guid);;
-    } else {
-        $return['tip_author']['do_i_follow'] = false;
-    }
-
-
+    $return['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
     $return['likes_number'] = likes_count(get_entity($tip_id));
     $return['comments_number'] = $num_comments;
-
-//    $return['tip_tags'] = $blog->tags;
-
-///// check if the product has already been liked
-    $like = elgg_get_annotation_from_id($tip_id);
-    if (!$like) {
-        $likes = elgg_get_annotations(array(
-                'guid' => $tip_id,
-                'annotation_owner_guid' => elgg_get_logged_in_user_guid(),
-                'annotation_name' => 'likes',
-        ));
-	if ($likes) {
-            $like = $likes[0];
-        }
-    }
-// liked by whom
-        $liked_by_users = elgg_get_annotations(array(
-                'guid' => $tip_id,
-                'annotation_name' => 'likes',
-        ));
-        foreach ($liked_by_users as $single) {
-            $liked_by['name'] = get_user($single->owner_guid)->name;
-            $liked_by['icon'] = get_entity_icon_url(get_user($single->owner_guid),'large');
-            $liked_by_user['user'][] = $liked_by;
-        }
-        $return['liked_by'] = $liked_by_user;
-//~
-
-    $return['liked'] = ($like && $like->canEdit());
-////// done like checking
+    $return['products_number'] = $blog->products_number;
+    $return['tip_tags'] = $blog->tags;
 
     return $return;
 }
     
 expose_function('ideas.get_detail',
         "tip_get_detail",
-        array('tip_id' => array ('type' => 'int'),
+        array('tip_id' => array ('type' => 'string'),
              ),
         "Read an idea post",
         'GET',
@@ -349,203 +200,7 @@ expose_function('ideas.get_detail',
  * @return bool
  */
 
-function ideas_post_tip($message, $idea_id)
-{
-    $user = elgg_get_logged_in_user_entity();
-    if (!$user) {
-        throw new InvalidParameterException('registration:usernamenotvalid');
-    }
-    // edit or create a new entity
-    if ($idea_id) {
-        $entity = get_entity($idea_id);
-        if (elgg_instanceof($entity, 'object', 'ideas') && $entity->canEdit()) {
-            $post = $entity;
-        } else {
-            register_error(elgg_echo('ideas:error:post_not_found'));
-            throw new InvalidParameterException("ideas:error:post_not_found");
-        }
-	$post->deleteRelationships("sponsor");
-    } else {
-        $post = new ElggObject();
-        $post->subtype = 'ideas';
-        if (!$post->save()) { // to get $post->guid
-            throw new InvalidParameterException("cannot_save");
-        }
-        $idea_id = $post->guid;
-        $new_post = true;
-    }
-    $json = json_decode($message, true);
-
-    $post->tip_pages = json_encode($json['tip_pages']);
-
-    $post->title = $json['tip_title'];
-    $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
-    $post->ideascategory = $json['category'];
-
-    $post->tip_notes = $json['tip_notes'];
-    $post->tip_tags = $json['tip_tags'];
-
-    $post->products = json_encode($json['products'], true);
-
-//  $post->user_id = $json['tip_author']['user_id'];
-//  $post->user_name = $json['tip_author']['user_name'];
-//  $post->user_avatar_url = $json['tip_author']['user_avatar_url'];
-//  $post->is_seller = $json['tip_author']['is_seller'];
-
-    $post->likes_number = $json['likes_number'];
-    $post->comments_number = $json['comments_number'];
-
-    $post->access_id = ACCESS_PUBLIC;
-
-//    $return['products_string'] = $post->products;
-
-    $save_result = $post->save();
-    if (!$save_result) {
-        throw new InvalidParameterException("cannot_save");
-    }
-
-    $return['tip_title'] = $post->title;
-    $return['tip_category'] = $post->ideascategory;
-    $return['tip_thumbnail_image_url'] = $post->tip_thumbnail_image_url;
-
-    // process camera/local file upload (tip_image_local)
-    $page_num = 0;
-    $image_num = 1;
-    $idea_id = $post->guid;
-    $img_item = array();
-
-
-    elgg_load_library('ideas');
-
-
-    if ($json['tip_image_local_cover'] == "true") {
-        $file_name = "tip_image_local_cover";
-        // upload image
-        if ((isset($_FILES[$file_name]['name'])) && (substr_count($_FILES[$file_name]['type'],'image/'))) {
-            $imgdata = get_uploaded_file($file_name);
-	    ideas_add_image($post, $imgdata, "0");
-
-                $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/0/"."master/";
-//                $image_link = elgg_normalize_url("ideas/image/".$idea_id."/"."0"."/"."large/");
-
-            $json['tip_thumbnail_image_url'] = $image_link;
-            $return['tip_thumbnail_image_url'] = $image_link;
-            $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
-        } else {
-//throw new InvalidParameterException('registration:tip_image_local_cover_not_exist');
-	}
-
-        // hack for the server
-/*
-        if (!$post->tip_thumbnail_image_url) {
-            $image_num = 1;
-            $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/1/"."large/";
-            $json['tip_thumbnail_image_url'] = $image_link;
-            $return['tip_thumbnail_image_url'] = $image_link;
-            $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
-        }
-*/
-        // ~
-    }
-
-    foreach ($json['tip_pages'] as $page) {
-        if ($page['tip_image_local']) {
-            if ($page['tip_image_local'] == "true") {
-                if ($image_num > 10) {
-                    break;
-                }
-	        $file_name = "tip_image_local_".$image_num;
-
-	        // upload image
-	        if ((isset($_FILES[$file_name]['name'])) && (substr_count($_FILES[$file_name]['type'],'image/'))) {
-	            $imgdata = get_uploaded_file($file_name);
-		    ideas_add_image($post, $imgdata, $image_num);
-
-//                  $image_link = elgg_normalize_url("ideas/image/".$idea_id."/".$image_num."/"."large/");
-                    $image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."master/";
-
-                    $json['tip_pages'][$page_num]['tip_image_url'] = $image_link;
-                    $img_item[] = $image_link;
-
-// check if thumbnail is still empty. If yes, assign it
-                    // hack for the server
-                    if (!$post->tip_thumbnail_image_url) {
-			$image_link = elgg_get_config('cdn_link').'/ideas/image/'.$idea_id."/".$image_num."/"."master/";
-                        $json['tip_thumbnail_image_url'] = $image_link;
-                        $return['tip_thumbnail_image_url'] = $image_link;
-                        $post->tip_thumbnail_image_url = $json['tip_thumbnail_image_url'];
-                    }
-                    // ~
-	        } else {
-                    throw new InvalidParameterException("tip_image_local_not_exist_"."$file_name");
-		}
-	    } else {
-                $img_item[] = "";
-            }
-        } else {
-            $img_item[] = "";
-	}
-	$page_num ++;
-        $image_num ++;
-    }
-    if (!$post->tip_thumbnail_image_url) {
-        $post->tip_thumbnail_image_url = "";
-    }
-    $return['tip_thumbnail_image_url'] = $post->tip_thumbnail_image_url;
-
-    $post->tip_pages = json_encode($json['tip_pages']);
-    $return['tip_pages'] = $post->tip_pages;
-    if (!$post->save()) {
-        throw new InvalidParameterException("cannot_save_with_local_images");
-    }
-
-    $return['local_images'] = $img_item;
-
-    // process product relationship
-    foreach ($json['products_id'] as $id) {
-        $id = intval($id);
-        $product_post = get_entity($id);
-        if ($product_post) { // if the product id is a valid one
-
-            $post->addRelationship($id, "sponsor");
-
-            $return['products_id'][] = $id;
-            $return['products_name'][] = $product_post->title;
-        } else {
-            throw new InvalidParameterException("product_post($id) doesn't exist");
-        }
-    }
-
-    if ($post->save()) {
-        if ($new_post) {
-            if (!$user->points) {
-                $user->points = 0; // signup points
-            }
-//            $user->points = $user->points + 0;
-            add_to_river('river/object/market/create','create', $user->guid, $post->guid);
-        }
-    } else {
-        register_error(elgg_echo('ideas:error:cannot_save'));
-        throw new InvalidParameterException("cannot_save");
-    }
-    $return['idea_id'] = $idea_id;
-
-    return $return;
-}
-
-expose_function('ideas.post_tip',
-                "ideas_post_tip",
-                array(
-                        'message' => array ('type' => 'string', 'required' => true, 'default' => ''),
-                        'idea_id' => array ('type' => 'int', 'required' => false, 'default' => 0),
-                    ),
-                "Post a list of tips",
-                'POST',
-                true,
-                true);
-
-
-function ideas_post_tip_old($title,
+function ideas_post_tip($title,
                     $tip_thumbnail_image_url,
                     $tip_pages,
                     $tip_video_url,
@@ -584,25 +239,6 @@ function ideas_post_tip_old($title,
     $obj->ideascategory =           strip_tags($tip_category);
     $obj->products =                strip_tags($products);
 
-    // Parse products string to extract its individual product guid's.
-    $product_id_array = explode(",", $obj->products);
-
-//  echo ("obj->products is $obj->products\n");
-
-    $obj->products_number = 0;
-    foreach ($product_id_array as $id) {
-        $id = intval($id);
-//        echo ("product_id = $id\n");
-        $product_post = get_entity($id);
-        if ($product_post) { // if the product id is a valid one
-//            echo ("$id is valid\n");
-            // XXX: we assume the same product id can't be linked to the same tip.
-            $product_post->tips_number ++;
-            $product_post->tips .= "$guid,";
-        }
-        $obj->products_number ++;
-    }
-
     $guid = $obj->save();
     add_to_river('river/object/ideas/create',
             'create',
@@ -610,7 +246,25 @@ function ideas_post_tip_old($title,
             $obj->guid
     );
 
+    // Parse products string to extract its individual product guid's.
+    $product_id_array = explode(",", $obj->products);
+
+    echo ("obj->products is $obj->products\n");
+
+    foreach ($product_id_array as $id) {
+        $id = intval($id);
+        echo ("product_id = $id\n");
+        $product_post = get_entity($id);
+        if ($product_post) { // if the product id is a valid one
+            echo ("$id is valid\n");
+            // XXX: we assume the same product id can't be linked to the same tip.
+            $product_post->tips_number ++;
+            $product_post->tips .= "$guid,";
+        }
+    }
+
 //    echo ("product_post->tips = $product_post->tips\n");
+
 //    echo ("product_post->tips_number = $product_post->tips_number");
 //    echo ("guid = $guid, product_post->tips = $product_post->tips\n");
 
@@ -619,8 +273,8 @@ function ideas_post_tip_old($title,
     return $return;
 } 
     
-expose_function('ideas.post_tip_old',
-                "ideas_post_tip_old",
+expose_function('ideas.post_tip',
+                "ideas_post_tip",
                 array(
                         'title' => array ('type' => 'string', 'required' => true),
                         'tip_thumbnail_image_url' => array ('type' => 'string', 'required' => false),
@@ -650,66 +304,71 @@ expose_function('ideas.post_tip_old',
  * @return bool
  */
 
-function ideas_delete_tip($tip_id) {
+function ideas_delete_tip($tip_id, $username) {
     $return = array();
-
-    // Make sure we're logged in
-    if (!elgg_is_logged_in()) {
-        register_error(elgg_echo("ideas:notdeleted"));
-    }
-
     $blog = get_entity($tip_id);
-
+//    $return['success'] = false;
     if (!elgg_instanceof($blog, 'object', 'ideas')) {
         throw new InvalidParameterException('blog:error:post_not_found1');
     }
 
+    if(!$username) {
+        $user = get_loggedin_user();
+    } else {
+        $user = get_user_by_username($username);
+        if (!$user) {
+            throw new InvalidParameterException('registration:usernamenotvalid');
+	}
+    }
+
+    $blog = get_entity($tip_id);
     if($user->guid!=$blog->owner_guid) {
         $return['message'] = elgg_echo('blog:message:notauthorized');
     }
     // Extract the product ids from this tip and remove the current tip id from the corresponding products
 
-    $return['products'] = $blog->products;
-    $product_id_json = json_decode($blog->products, true);
-    foreach ($product_id_json as $product) {
-        $id = intval($product['product_id']);
+    $product_id_array = explode(",", $blog->products);
+//    echo ("obj->products is $blog->products\n");
+    foreach ($product_id_array as $id) {
+        $id = intval($id);
+//        echo ("product_id = $id\n");
         $product_post = get_entity($id);
         if ($product_post) { // if the product id is a valid one
-            $return['under if'] = "ok";
+//            echo ("$id is valid, to remove $tip_id from $id\n");
+
             $pattern = "/$tip_id".",/";
             $replacement = "";
             $match_limit = 1;
             $match_count = 0;
+//            echo ("before preg_replace, $product_post->tips\n");
+//            echo ("$pattern -- $replacement -- $product_post->tips\n");
             
             $product_post->tips = preg_replace($pattern, $replacement, $product_post->tips, $match_limit, $match_count);
-            $return[$id] = $product_post->tips;
+            $product_post->tips_number -= $match_count;
+	    // XXX: check if match_count is 0 which may indicate error.
+//            echo ("count = $match_count, after preg_replace, $product_post->tips\n");
         }
     } // done with removing such tips from linked products
 
     // Remove the tip object itself.
     if (elgg_instanceof($blog, 'object', 'ideas') && $blog->canEdit()) {
-
-        elgg_load_library('ideas');
-        $return = ideas_delete_post($blog);
-        if ($return) {
-            system_message(elgg_echo("ideas:deleted"));
-            $ret_msg = "product deleted";
-        } else {
-                // Error message
-            register_error(elgg_echo("ideas:notdeleted"));
-            $msg = elgg_echo('ideas:notdeleted');
-            throw new InvalidParameterException($msg);
-        }
-/*
         if ($blog->delete()) {
             $return['success'] = true;
+
+            // decrease the tips_number from the corresponding product
+            // XXX: change to array
+            $product_post = get_entity($blog->products);
+            $product_post->tips_number --;
+            if ($product_post->tip_number < 0) {
+                $product_post->tip_number == 0;
+            }    
+
             $return['message'] = elgg_echo('blog:message:deleted_post');
         } else {
             $return['message'] = elgg_echo('blog:error:cannot_delete_post');
         }
-*/
     } else {
-        $return['message'] = elgg_echo('blog:error:user_cannot_delete_tip');
+        $return['message'] = elgg_echo('blog:error:post_not_found2');
     }
 
     return $return;
@@ -718,6 +377,7 @@ function ideas_delete_tip($tip_id) {
 expose_function('ideas.delete_tip',
                 "ideas_delete_tip",
                 array('tip_id' => array ('type' => 'string'),
+                      'username' => array ('type' => 'string'),
                      ),
                 "Delete a tip and remove it from associated products",
                 'POST',
@@ -751,71 +411,56 @@ function ideas_get_products_by_tip($tip_id, $offset = 0, $limit = 10, $username)
 	}
     }
 
-    $return['tip_title'] = $tip_obj->title;
+    if($user->guid!=$tip_obj->owner_guid) {
+        $return['message'] = elgg_echo('blog:message:notauthorized');
+    }
+    // Extract the product ids from this tip and list these products.
 
-////// get products
-    $return['products_number'] = $tip_obj->countEntitiesFromRelationship("sponsor", false);
-    $items = $tip_obj->getEntitiesFromRelationship("sponsor", /*reverse_relation*/false, $limit, $offset);
-    foreach ($items as $item) {
-        $product_info['product_id'] = $item->guid;
-        $product_info['product_name'] = $item->title;
-        $product_info['product_price'] = floatval($item->price);
-        $product_info['product_category'] = $item->marketcategory;
+    $product_id_array = explode(",", $tip_obj->products);
+    foreach ($product_id_array as $id) {
+        $id = intval($id);
+        if ($id == 0) {
+            continue;
+        }
+        $product_post = get_entity($id);
+//        echo ("after product_post, id = $id, product_post = $product_post<br>");
+        if ($product_post) { // if the product id is a valid one
+                echo ("after if<br>");
+                $blog['product_id'] = $product_post->guid;
+                $options = array(
+                        'annotations_name' => 'generic_comment',
+                        'guid' => $product_post->$guid,
+                        'limit' => $limit,
+                        'pagination' => false,
+                        'reverse_order_by' => true,
+                        );
 
-/*
-        $options = array(
-                'annotations_name' => 'ideas_comment',
-                'guid' => $item->guid,
-                'limit' => $limit,
-                'pagination' => false,
-                'reverse_order_by' => true,
-        );
-        $comments = elgg_get_annotations($options);
-        $num_comments = count($comments);
-*/
-//        $num_comments = $item->getAnnotationsSum('product_comment');
-                 $comments = $item->getAnnotations(
-                     'product_comment',    // The type of annotation
-                     0,   // The number to return
-                     0,  // Any indexing offset
-                     'asc'   // 'asc' or 'desc' (default 'asc')
-                 );
+                 $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
 
+                 echo ("product_post = $product_post->title");
 
-        $product_info['tips_number'] = $item->tips_number;
-        //XXX: hard-code sold_count;		 		 
-//        $blog['sold_number'] = $item->sold_count;
-        $product_info['likes_number'] = likes_count(get_entity($item->guid));
-        $product_info['reviews_number'] = $num_comments;
+                 $blog['product_name'] = $product_post->title;
+                 $blog['product_price'] = $product_post->price;
+                 $blog['tips_number'] = $product_post->tips_number;
+		 //XXX: hard-code sold_count;		 		 
+                 $single->sold_count = 0;
+                 $blog['sold_number'] = $product_post->sold_count;
+                 $blog['product_category'] = $product_post->marketcategory;
+                 $blog['product_image'] = elgg_normalize_url("market/image/".$product_post->guid."/1/"."large/");
+                 $blog['likes_number'] = likes_count(get_entity($product_post->guid));
+                 $blog['reviews_number'] = $num_comments;
 
-        $owner = get_entity($item->owner_guid);
-        $product_info['product_seller']['user_id'] = $owner->guid;
-        $product_info['product_seller']['user_name'] = $owner->username;
-        $product_info['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'large');
-
-        $images = unserialize($item->images);
-        $product_info['images'] = "";
-        if ($images) {
-            foreach ($images as $key => $value) {
-                if ($value == 1) {
-//                  $product_info['images'][] =
-                     // elgg_normalize_url("market/image/".$item->guid."/$key/"."large/");
-                    $product_info['images'][] =
-                            elgg_get_config('cdn_link').'/market/image/'.$item->guid."/".$key."/"."large/";
-                } else {
-	            $product_info['images'][] = "";
-      	        }
-            }
+                 $owner = get_entity($product_post->owner_guid);
+                 $blog['product_seller']['user_id'] = $owner->guid;
+                 $blog['product_seller']['user_name'] = $owner->username;
+                 $blog['product_seller']['user_avatar_url'] = get_entity_icon_url($owner,'small');
+                 $blog['product_seller']['is_seller'] = $owner->is_seller;
+            
+                 $return[] = $blog;
         }
-        if ($item->is_affiliate) {
-            $product_info['images'][] = $item->affiliate_image;
-        }
-        $return['products'][] = $product_info;
-    }
-    if ($return['products_number'] == 0) {
-        $return['products'] = array();
-    }
+    } // done with listing products of that tip.
+
     return $return;
 }
     
@@ -824,11 +469,11 @@ expose_function('ideas.get_products_by_tip',
                 array('tip_id' => array ('type' => 'string', 'required' => true),
                       'offset' => array ('type' => 'integer', 'required' => false, 'default' => 0),
                       'limit' => array ('type' => 'integer', 'required' => false, 'default' => 10),
-                      'username' => array ('type' => 'string', 'required' => false, 'default' => ''),
+                      'username' => array ('type' => 'string', 'required' => false),
                      ),
                 "List products associated to one tip.",
                 'GET',
-                true,
+                false,
                 false);
 
 
@@ -837,17 +482,11 @@ expose_function('ideas.get_products_by_tip',
  *
  * @return array $results search result
  */
-/* 
+ 
 function ideas_search($query, $category, $offset, $limit, 
         $sort, $order, $search_type, $entity_type,
         $entity_subtype, $owner_guid, $container_guid){
-*/
     
-function ideas_search($query, $category, $offset, $limit, 
-        $sort, $order, $search_type, $entity_type,
-        $entity_subtype){
-
-    $return = "";
     $params = array(
                     'query' => $query,
                     'offset' => $offset,
@@ -857,30 +496,24 @@ function ideas_search($query, $category, $offset, $limit,
                     'search_type' => $search_type,
                     'type' => $entity_type,
                     'subtype' => $entity_subtype,
-//                    'owner_guid' => $owner_guid,
-//                    'container_guid' => $container_guid,
+                    'owner_guid' => $owner_guid,
+                    'container_guid' => $container_guid,
                     );
                     
     $type = $entity_type;
     $results = elgg_trigger_plugin_hook('search', $type, $params, array());
     if ($results === FALSE) {
-        throw new InvalidParameterException("search engine returns error");
+        // search plugin returns error.
+        continue;
     }
-
-    $return['total_number'] = count($results['entities']); //$results['count'];
-
     if($results['count']){
         foreach($results['entities'] as $single){
-/*
-            if (($single->ideascategory == strtolower($category)) || 
-                    (strtolower($category) == "all")) {
-*/
-            if (1) {
+            if (($single->ideascategory == $category) || 
+                    ($category == "all")) {
                 $blog['tip_id'] = $single->guid;
-/*
                 $options = array(
-                        'annotations_name' => 'ideas_comment',
-                        'guid' => $single->guid,
+                        'annotations_name' => 'generic_comment',
+                        'guid' => $single->$guid,
                         'limit' => $limit,
                         'pagination' => false,
                         'reverse_order_by' => true,
@@ -888,41 +521,25 @@ function ideas_search($query, $category, $offset, $limit,
 
                  $comments = elgg_get_annotations($options);
                  $num_comments = count($comments);
-*/
-//               $num_comments = $single->getAnnotationsSum('ideas_comment');
-
-                 $comments = $single->getAnnotations(
-                     'ideas_comment',    // The type of annotation
-                     0,   // The number to return
-                     0,  // Any indexing offset
-                     'asc'   // 'asc' or 'desc' (default 'asc')
-                 );
-                 $num_comments = count($comments);
 
                  $blog['tip_title'] = $single->title;
                  $blog['tip_category'] = $single->ideascategory;
-//               $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-                 if (!$single->tip_thumbnail_image_url) {
-                     $blog['tip_thumbnail_image_url'] = 
-                             elgg_get_config('cdn_link').'/ideas/image/'.$single->guid."/"."0"."/"."large/";
-                 } else {
-                     $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
-      		 }
-
+                 $blog['tip_thumbnail_image_url'] = $single->tip_thumbnail_image_url;
+//                         elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
 
                  $owner = get_entity($single->owner_guid);
                  $blog['tip_author']['user_id'] = $owner->guid;
                  $blog['tip_author']['user_name'] = $owner->username;
-                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'large');
+                 $blog['tip_author']['user_avatar_url'] = get_entity_icon_url($owner,'small');
                  $blog['tip_author']['is_seller'] = $owner->is_seller;
 
                  $blog['likes_number'] = likes_count(get_entity($single->guid));
                  $blog['comments_number'] = $num_comments;
                  $blog['products_number'] = $single->products;
 
-                 $return['ideas'][] = $blog;
+                 $return[] = $blog;
             }
         }
     }
@@ -931,7 +548,7 @@ function ideas_search($query, $category, $offset, $limit,
 }
 expose_function('ideas.search',
                 "ideas_search",
-                array(  'query' => array('type' => 'string', 'required'=>false, 'default'=>'lovebeauty'),
+                array(  'query' => array('type' => 'string'),
                         'category' => array('type' => 'string', 'required'=>false, 'default' => 'all'),
                         'offset' =>array('type' => 'int', 'required'=>false, 'default' => 0),
                         'limit' =>array('type' => 'int', 'required'=>false, 'default' => 10),
@@ -940,65 +557,64 @@ expose_function('ideas.search',
                         'search_type' =>array('type' => 'string', 'required'=>false, 'default' => 'all'),
                         'entity_type' =>array('type' => 'string', 'required'=>false, 'default' => "object"),
                         'entity_subtype' =>array('type' => 'string', 'required'=>false, 'default' => "ideas"),
-//                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
-//                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+                        'owner_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
+                        'container_guid' =>array('type' => 'int', 'required'=>false, 'default' => ELGG_ENTITIES_ANY_VALUE),
                         ),
                 "Perform a search for ideass",
                 'GET',
-                true,
+                false,
                 false);
 
 
+/**
+ * Web service to retrieve comments on a product post
+ *
+ * @param string $guid market product guid
+ * @param string $limit    Number of users to return
+ * @param string $offset   Indexing offset, if any
+ *
+ * @return array
+ */
+/*                    
+function product_get_comments_by_id($product_id, $limit = 10, $offset = 0){
+    $market = get_entity($product_id);
+    $options = array(
+        'annotations_name' => 'generic_comment',
+        'guid' => $product_id,
+        'limit' => $limit,
+        'pagination' => false,
+        'reverse_order_by' => true,
+    );
+    $comments = elgg_get_annotations($options);
 
-function ideas_flag($idea_id, $idea_title, $idea_author, $reporter, $details) {
-    $blog = get_entity($idea_id);
-    if (!$blog) {
-        throw new InvalidParameterException('Cannot find this idea_id');
+    if($comments){
+        foreach($comments as $single){
+            $comment['guid'] = $single->id;
+            $comment['description'] = strip_tags($single->value);
+        
+            $owner = get_entity($single->owner_guid);
+            $comment['owner']['guid'] = $owner->guid;
+            $comment['owner']['name'] = $owner->name;
+            $comment['owner']['username'] = $owner->username;
+            $comment['owner']['avatar_url'] = get_entity_icon_url($owner,'small');
+        
+            $comment['time_created'] = (int)$single->time_created;
+            $return[] = $comment;
+        }
+    } else {
+        $msg = elgg_echo('generic_comment:none');
+        throw new InvalidParameterException($msg);
     }
-    $subject = "[Lovebeauty idea-flag]#".$idea_id.": ".$idea_title; //$blog->title;
-    $spam_link = elgg_normalize_url('services/api/rest/json/?method=ideas.get_detail&tip_id='.$idea_id);
-    $spam_json = tip_get_detail($idea_id);
-    $spam_json = json_encode($spam_json);
-
-//return $spam_json;
-
-    $body =
-"
-Reporter[$reporter] complained idea_author[$idea_author].
-
-$details
-
-Problematic idea URL:
-
-$spam_link
-
-json message of the idea:
-
-$spam_json
-
-Please take action ASAP!
-
-Regards,
-Lovebeauty Team
-";
-
-
-    $from_email = "team@lovebeauty.me";
-    $to_email = "spam@lovebeauty.me";
-    $return['email_sent'] = elgg_send_email($from_email, $to_email, $subject, $body);
     return $return;
-
 }
-
-expose_function('ideas.flag',
-                "ideas_flag",
-                array(  'idea_id'     => array('type' => 'int', 'required'=>true, 'default'=>0),
-                        'idea_title'  => array('type' => 'string', 'required'=>false, 'default'=>""),
-                        'idea_author' => array('type' => 'string', 'required'=>false, 'default'=>""),
-                        'reporter'    => array('type' => 'string', 'required'=>false, 'default'=>""),
-                        'details'     => array('type' => 'string', 'required'=>false, 'default'=>""),
-                     ),
-                "Flag an inappropriate idea",
-                "POST",
-                true,
-                true);
+expose_function('product.get_comments_by_id',
+    "product_get_comments_by_id",
+    array('product_id' => array ('type' => 'string'),
+          'limit' => array ('type' => 'int', 'required' => false, 'default' => 10),
+          'offset' => array ('type' => 'int', 'required' => false, 'default' => 0),
+         ),
+    "Get comments for a market post",
+    'GET',
+    false,
+    false);    
+*/

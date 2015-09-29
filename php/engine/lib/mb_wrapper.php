@@ -11,7 +11,7 @@ if (is_callable('mb_internal_encoding')) {
  * NOTE: This differs from parse_str() by returning the results
  * instead of placing them in the local scope!
  *
- * @param string $str The string
+ * @param str $str The string
  *
  * @return array
  * @since 1.7.0

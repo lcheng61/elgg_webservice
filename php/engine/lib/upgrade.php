@@ -17,9 +17,8 @@
  * @access private
  */
 function upgrade_code($version, $quiet = FALSE) {
-	// do not remove - upgrade scripts depend on this
 	global $CONFIG;
-	
+
 	$version = (int) $version;
 	$upgrade_path = elgg_get_config('path') . 'engine/lib/upgrades/';
 	$processed_upgrades = elgg_get_processed_upgrades();
@@ -245,7 +244,7 @@ function version_upgrade() {
 
 	// No version number? Oh snap...this is an upgrade from a clean installation < 1.7.
 	// Run all upgrades without error reporting and hope for the best.
-	// See https://github.com/elgg/elgg/issues/1432 for more.
+	// See http://trac.elgg.org/elgg/ticket/1432 for more.
 	$quiet = !$dbversion;
 
 	// Note: Database upgrades are deprecated as of 1.8.  Use code upgrades.  See #1433
@@ -292,6 +291,7 @@ function elgg_upgrade_bootstrap_17_to_18() {
 		'2011010101.php',
 	);
 
+	$upgrades_17 = array();
 	$upgrade_files = elgg_get_upgrade_files();
 	$processed_upgrades = array();
 
@@ -310,56 +310,4 @@ function elgg_upgrade_bootstrap_17_to_18() {
 	}
 
 	return elgg_set_processed_upgrades($processed_upgrades);
-}
-
-/**
- * Creates a table {prefix}upgrade_lock that is used as a mutex for upgrades.
- *
- * @see _elgg_upgrade_lock()
- *
- * @return bool
- * @access private
- */
-function _elgg_upgrade_lock() {
-	global $CONFIG;
-	
-	if (!_elgg_upgrade_is_locked()) {
-		// lock it
-		insert_data("create table {$CONFIG->dbprefix}upgrade_lock (id INT)");
-		elgg_log('Locked for upgrade.', 'NOTICE');
-		return true;
-	}
-	
-	elgg_log('Cannot lock for upgrade: already locked.', 'WARNING');
-	return false;
-}
-
-/**
- * Unlocks upgrade.
- *
- * @see _elgg_upgrade_lock()
- *
- * @access private
- */
-function _elgg_upgrade_unlock() {
-	global $CONFIG;
-	delete_data("drop table {$CONFIG->dbprefix}upgrade_lock");
-	elgg_log('Upgrade unlocked.', 'NOTICE');
-}
-
-/**
- * Checks if upgrade is locked
- *
- * @return bool
- * @access private
- */
-function _elgg_upgrade_is_locked() {
-	global $CONFIG;
-
-	$is_locked = count(get_data("show tables like '{$CONFIG->dbprefix}upgrade_lock'"));
-
-	// @todo why?
-	_elgg_invalidate_query_cache();
-
-	return $is_locked;
 }

@@ -38,8 +38,7 @@ elgg.tinymce.init = function() {
 		mode : "specific_textareas",
 		editor_selector : "elgg-input-longtext",
 		theme : "advanced",
-		language : "<?php echo tinymce_get_site_language(); ?>",
-		plugins : "lists,spellchecker,autosave,fullscreen,paste,inlinepopups",
+		plugins : "spellchecker,autosave,fullscreen,paste",
 		relative_urls : false,
 		remove_script_host : false,
 		document_base_url : elgg.config.wwwroot,
@@ -66,18 +65,6 @@ elgg.tinymce.init = function() {
 				var text = elgg.echo('tinymce:word_count') + strip.split(' ').length + ' ';
 				tinymce.DOM.setHTML(tinymce.DOM.get(tinyMCE.activeEditor.id + '_path_row'), text);
 			});
-
-			ed.onInit.add(function(ed) {
-				// prevent Firefox from dragging/dropping files into editor
-				if (tinymce.isGecko) {
-					tinymce.dom.Event.add(ed.getBody().parentNode, "drop", function(e) {
-						if (e.dataTransfer.files.length > 0) {
-							e.preventDefault();
-						}
-					});
-				}
-			});
-
 		},
 		content_css: elgg.config.wwwroot + 'mod/tinymce/css/elgg_tinymce.css'
 	});

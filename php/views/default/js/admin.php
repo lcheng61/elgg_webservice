@@ -4,9 +4,8 @@
  *
  * @since 1.8
  */
-
-if (0) { ?><script><?php }
 ?>
+//<script>
 elgg.provide('elgg.admin');
 
 elgg.admin.init = function () {
@@ -17,6 +16,9 @@ elgg.admin.init = function () {
 	$('.elgg-system-messages li').live('click', function() {
 		$(this).stop().slideUp('medium');
 	});
+
+	// plugin screenshot modal
+	$('.elgg-plugin-screenshot a').click(elgg.admin.displayPluginScreenshot);
 
 	// draggable plugin reordering
 	$('#elgg-plugin-list > ul').sortable({
@@ -48,7 +50,7 @@ elgg.admin.init = function () {
 
 	// admin notices delete ajax
 	$('a.elgg-admin-notice').click(elgg.admin.deleteNotice);
-};
+}
 
 /**
  * Save the plugin order after a move event.
@@ -72,6 +74,48 @@ elgg.admin.movePlugin = function(e, ui) {
 };
 
 /**
+ * Display a plugin screenshot.
+ *
+ * @param {Object} e The event object.
+ * @return void
+ */
+elgg.admin.displayPluginScreenshot = function(e) {
+	e.preventDefault();
+	var lb = $('.elgg-plugin-screenshot-lightbox');
+
+	if (lb.length < 1) {
+		$('body').append('<div class="elgg-plugin-screenshot-lightbox"></div>');
+		lb = $('.elgg-plugin-screenshot-lightbox');
+
+		lb.click(function() {
+			lb.hide();
+		});
+
+		$(document).click(function(e) {
+			var target = $(e.target);
+			if (target.is('a') && target.hasClass('elgg-plugin-screenshot-lightbox')) {
+				lb.hide();
+				e.preventDefault();
+			}
+		});
+	}
+
+	var html = '<img class="pas" src="' + $(this).attr('href') + '">';
+	var desc = $(this).find('img').attr('alt');
+
+	if (desc) {
+		html = '<h2 class="pam">' + desc + '</h2>' + html;
+	}
+
+	lb.html(html);
+
+	top_pos = $(window).scrollTop() + 10 + 'px';
+	left_pos = $(window).scrollLeft() + 5 + 'px';
+
+	lb.css('top', top_pos).css('left', left_pos).show();
+};
+
+/**
  * In-line editing for custom profile fields
  *
  * @param string   value    The new value
@@ -89,7 +133,7 @@ elgg.admin.editProfileField = function(value, settings) {
 
 	elgg.action('profile/fields/edit', data);
 	return value;
-};
+}
 
 /**
  * Save the plugin profile order after a move event.
@@ -105,7 +149,7 @@ elgg.admin.moveProfileField = function(e, ui) {
 	elgg.action('profile/fields/reorder', {
 		fieldorder: orderStr
 	});
-};
+}
 
 /**
  * Fires the ajax action to delete the admin notice then hides the notice.
@@ -121,6 +165,6 @@ elgg.admin.deleteNotice = function(e) {
 			$container.slideUp('medium');
 		}
 	});
-};
+}
 
 elgg.register_hook_handler('init', 'system', elgg.admin.init, 1000);

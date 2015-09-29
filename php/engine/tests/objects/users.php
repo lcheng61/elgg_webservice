@@ -41,6 +41,9 @@ class ElggCoreUserTest extends ElggCoreUnitTest {
 		parent::__destruct();
 	}
 
+	/**
+	 * A basic test that will be called and fail.
+	 */
 	public function testElggUserConstructor() {
 		$attributes = array();
 		$attributes['guid'] = NULL;
@@ -65,9 +68,6 @@ class ElggCoreUserTest extends ElggCoreUnitTest {
 		$attributes['code'] = NULL;
 		$attributes['banned'] = 'no';
 		$attributes['admin'] = 'no';
-		$attributes['prev_last_action'] = NULL;
-		$attributes['last_login'] = NULL;
-		$attributes['prev_last_login'] = NULL;
 		ksort($attributes);
 
 		$entity_attributes = $this->user->expose_attributes();
@@ -138,14 +138,14 @@ class ElggCoreUserTest extends ElggCoreUnitTest {
 		$guid = $this->user->save();
 
 		// delete object
-		$this->assertIdentical(true, $this->user->delete());
+		$this->assertTrue($this->user->delete());
 
 		// check GUID not in database
 		$this->assertFalse($this->fetchUser($guid));
 	}
 
 	public function testElggUserNameCache() {
-		// issue https://github.com/elgg/elgg/issues/1305
+		// Trac #1305
 
 		// very unlikely a user would have this username
 		$name = (string)time();
@@ -159,22 +159,6 @@ class ElggCoreUserTest extends ElggCoreUnitTest {
 		$this->assertFalse($user);
 	}
 
-	public function testGetUserByUsernameAcceptsUrlEncoded() {
-		$username = (string)time();
-		$this->user->username = $username;
-		$guid = $this->user->save();
-
-		// percent encode first letter
-		$first_letter = $username[0];
-		$first_letter = str_pad('%' . dechex(ord($first_letter)), 2, '0', STR_PAD_LEFT);
-		$username =   $first_letter . substr($username, 1);
-
-		$user = get_user_by_username($username);
-		$this->assertTrue((bool) $user);
-		$this->assertEqual($guid, $user->guid);
-
-		$this->user->delete();
-	}
 
 	public function testElggUserMakeAdmin() {
 		global $CONFIG;

@@ -32,60 +32,6 @@ $english = array(
 	
 	//A resolution to json convertion error (for river)
 	'river:update:user:default' => ' updated their profile ',
-
-
-	'product_review:email:subject' => 'You have a new review!',
-	'product_review:email:body2' => "You have a new review on your product \"%s\" from %s. It reads:
-
-
-%s
-
-Rate: %s
-
-To reply or view the original item, click here:
-
-%s
-
-To view %s's profile, click here:
-
-%s
-
-You cannot reply to this email.",
-
-	'product_review:email:body' => "You have a new review on your product \"%s\" from %s. It reads:
-
-
-%s
-
-Rate: %s
-
-You cannot reply to this email.",
-
-	'idea_comment:email:subject' => 'You have a new comment!',
-	'idea_comment:email:body2' => "You have a new comment on your idea \"%s\" from %s. It reads:
-
-
-%s
-
-
-To reply or view the original item, click here:
-
-%s
-
-To view %s's profile, click here:
-
-%s
-
-You cannot reply to this email.",
-
-	'idea_comment:email:body' => "You have a new comment on your idea \"%s\" from %s. It reads:
-
-
-%s
-
-
-You cannot reply to this email.",
-
 );
 				
 add_translation("en", $english);

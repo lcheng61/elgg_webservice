@@ -18,13 +18,17 @@ elgg_register_event_handler('init', 'system', 'thewire_init');
  * The Wire initialization
  */
 function thewire_init() {
+	global $CONFIG;
+
+	// this can be removed in favor of activate/deactivate scripts
+	if (!update_subtype('object', 'thewire', 'ElggWire')) {
+		add_subtype('object', 'thewire', 'ElggWire');
+	}
 
 	// register the wire's JavaScript
 	$thewire_js = elgg_get_simplecache_url('js', 'thewire');
 	elgg_register_simplecache_view('js/thewire');
 	elgg_register_js('elgg.thewire', $thewire_js, 'footer');
-
-	elgg_register_ajax_view('thewire/previous');
 
 	// add a site navigation item
 	$item = new ElggMenuItem('thewire', elgg_echo('thewire'), 'thewire/all');
@@ -37,7 +41,7 @@ function thewire_init() {
 	elgg_register_plugin_hook_handler('register', 'menu:entity', 'thewire_setup_entity_menu_items');
 	
 	// Extend system CSS with our own styles, which are defined in the thewire/css view
-	elgg_extend_view('css/elgg', 'thewire/css');
+	elgg_extend_view('css', 'thewire/css');
 
 	//extend views
 	elgg_extend_view('activity/thewire', 'thewire/activity_view');
@@ -62,13 +66,11 @@ function thewire_init() {
 	elgg_register_plugin_hook_handler('notify:entity:message', 'object', 'thewire_notify_message');
 
 	// Register actions
-	$action_base = elgg_get_plugins_path() . 'thewire/actions';
+	$action_base = $CONFIG->pluginspath . 'thewire/actions';
 	elgg_register_action("thewire/add", "$action_base/add.php");
 	elgg_register_action("thewire/delete", "$action_base/delete.php");
 
 	elgg_register_plugin_hook_handler('unit_test', 'system', 'thewire_test');
-
-	elgg_register_event_handler('upgrade', 'system', 'thewire_run_upgrades');
 }
 
 /**
@@ -79,8 +81,7 @@ function thewire_init() {
  * thewire/owner/<username>     View this user's wire posts
  * thewire/following/<username> View the posts of those this user follows
  * thewire/reply/<guid>         Reply to a post
- * thewire/view/<guid>          View a post
- * thewire/thread/<id>          View a conversation thread
+ * thewire/view/<guid>          View a conversation thread
  * thewire/tag/<tag>            View wire posts tagged with <tag>
  *
  * @param array $page From the page_handler function
@@ -105,13 +106,6 @@ function thewire_page_handler($page) {
 
 		case "owner":
 			include "$base_dir/owner.php";
-			break;
-
-		case "view":
-			if (isset($page[1])) {
-				set_input('guid', $page[1]);
-			}
-			include "$base_dir/view.php";
 			break;
 
 		case "thread":
@@ -223,7 +217,7 @@ function thewire_filter($text) {
 
 	// usernames
 	$text = preg_replace(
-				'/(^|[^\w])@([\p{L}\p{Nd}._]+)/u',
+				'/(^|[^\w])@([\w]+)/',
 				'$1<a href="' . $CONFIG->wwwroot . 'thewire/owner/$2">@$2</a>',
 				$text);
 
@@ -314,7 +308,7 @@ function thewire_save_post($text, $userid, $access_id, $parent_guid = 0, $method
  */
 function thewire_send_response_notification($guid, $parent_guid, $user) {
 	$parent_owner = get_entity($parent_guid)->getOwnerEntity();
-	$user = elgg_get_logged_in_user_entity();
+	$user = get_loggedin_user();
 
 	// check to make sure user is not responding to self
 	if ($parent_owner->guid != $user->guid) {
@@ -463,13 +457,4 @@ function thewire_test($hook, $type, $value, $params) {
 	global $CONFIG;
 	$value[] = $CONFIG->pluginspath . 'thewire/tests/regex.php';
 	return $value;
-}
-
-function thewire_run_upgrades() {
-	$path = dirname(__FILE__) . '/upgrades/';
-	$files = elgg_get_upgrade_files($path);
-	
-	foreach ($files as $file) {
-		include $path . $file;
-	}
 }

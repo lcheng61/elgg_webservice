@@ -95,20 +95,17 @@ function get_number_users($show_deactivated = false) {
  * @return string
   */
 function get_online_users() {
-	$limit = max(0, (int) get_input("limit", 10));
-	$offset = max(0, (int) get_input("offset", 0));
-	
-	$count = find_active_users(600, $limit, $offset, true);
-	$objects = find_active_users(600, $limit, $offset);
+	$offset = get_input('offset', 0);
+	$count = find_active_users(600, 10, $offset, true);
+	$objects = find_active_users(600, 10, $offset);
 
 	if ($objects) {
 		return elgg_view_entity_list($objects, array(
 			'count' => $count,
-			'limit' => $limit,
-			'offset' => $offset
+			'offset' => $offset,
+			'limit' => 10
 		));
 	}
-	return '';
 }
 
 /**

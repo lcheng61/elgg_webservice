@@ -55,9 +55,8 @@ if ($can_edit) {
 }
 
 $widget_header = <<<HEADER
-	<div class="elgg-widget-handle clearfix"><h3>$title</h3>
+	<h3>$title</h3>
 	$controls
-	</div>
 HEADER;
 
 $widget_body = <<<BODY

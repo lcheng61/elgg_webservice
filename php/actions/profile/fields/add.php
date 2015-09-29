@@ -2,6 +2,7 @@
 /**
  * Elgg profile plugin edit default profile action
  *
+ * @package ElggProfile
  */
 
 $label = get_input('label');

@@ -93,7 +93,6 @@ class ElggFile extends ElggObject {
 			$container_guid = $this->container_guid;
 		}
 		$fs = $this->getFilestore();
-		// @todo add getSize() to ElggFilestore
 		return $fs->getSize($prefix, $container_guid);
 	}
 
@@ -128,11 +127,9 @@ class ElggFile extends ElggObject {
 	 * @param mixed $default A default. Useful to pass what the browser thinks it is.
 	 * @since 1.7.12
 	 *
-	 * @note If $file is provided, this may be called statically
-	 *
 	 * @return mixed Detected type on success, false on failure.
 	 */
-	public function detectMimeType($file = null, $default = null) {
+	static function detectMimeType($file = null, $default = null) {
 		if (!$file) {
 			if (isset($this) && $this->filename) {
 				$file = $this->filename;
@@ -181,8 +178,6 @@ class ElggFile extends ElggObject {
 	 * @param string $mode Either read/write/append
 	 *
 	 * @return resource File handler
-	 *
-	 * @throws IOException|InvalidParameterException
 	 */
 	public function open($mode) {
 		if (!$this->getFilename()) {
@@ -275,14 +270,9 @@ class ElggFile extends ElggObject {
 	 */
 	public function delete() {
 		$fs = $this->getFilestore();
-		
-		$result = $fs->delete($this);
-		
-		if ($this->getGUID() && $result) {
-			$result = parent::delete();
+		if ($fs->delete($this)) {
+			return parent::delete();
 		}
-		
-		return $result;
 	}
 
 	/**
@@ -295,7 +285,6 @@ class ElggFile extends ElggObject {
 	public function seek($position) {
 		$fs = $this->getFilestore();
 
-		// @todo add seek() to ElggFilestore
 		return $fs->seek($this->handle, $position);
 	}
 
@@ -358,8 +347,6 @@ class ElggFile extends ElggObject {
 	 * a filestore as recorded in metadata or the system default.
 	 *
 	 * @return ElggFilestore
-	 *
-	 * @throws ClassNotFoundException
 	 */
 	protected function getFilestore() {
 		// Short circuit if already set.
@@ -372,6 +359,7 @@ class ElggFile extends ElggObject {
 		// need to get all filestore::* metadata because the rest are "parameters" that
 		// get passed to filestore::setParameters()
 		if ($this->guid) {
+			$db_prefix = elgg_get_config('dbprefix');
 			$options = array(
 				'guid' => $this->guid,
 				'where' => array("n.string LIKE 'filestore::%'"),
@@ -400,7 +388,6 @@ class ElggFile extends ElggObject {
 
 			$this->filestore = new $filestore();
 			$this->filestore->setParameters($parameters);
-			// @todo explain why $parameters will always be set here (PhpStorm complains)
 		}
 
 		// this means the entity hasn't been saved so fallback to default

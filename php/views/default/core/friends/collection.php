@@ -43,7 +43,7 @@ if ($friends) {
 
 	echo elgg_view('input/friendspicker', array(
 		'entities' => $friends,
-		'value' => $vars['collection']->members,
+		'value' => $members,
 		'content' => $content,
 		'replacement' => '',
 		'friendspicker' => $vars['friendspicker'],

@@ -3,7 +3,7 @@
  * Reset user password form
  */
 
-echo elgg_autop(elgg_echo('user:resetpassword:reset_password_confirm'));
+echo autop(elgg_echo('user:resetpassword:reset_password_confirm'));
 
 echo elgg_view('input/hidden', array(
 	'name' => 'u',

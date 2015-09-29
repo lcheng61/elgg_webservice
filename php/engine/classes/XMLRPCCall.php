@@ -18,7 +18,7 @@ class XMLRPCCall {
 	 * @param string $xml XML
 	 */
 	function __construct($xml) {
-		$this->parse($xml);
+		$this->_parse($xml);
 	}
 
 	/**
@@ -45,7 +45,7 @@ class XMLRPCCall {
 	 *
 	 * @return void
 	 */
-	private function parse($xml) {
+	private function _parse($xml) {
 		$xml = xml_to_object($xml);
 
 		// sanity check

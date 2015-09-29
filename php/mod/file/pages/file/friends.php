@@ -7,7 +7,7 @@
 
 $owner = elgg_get_page_owner_entity();
 if (!$owner) {
-	forward('', '404');
+	forward('file/all');
 }
 
 elgg_push_breadcrumb(elgg_echo('file'), "file/all");

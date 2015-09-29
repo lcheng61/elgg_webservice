@@ -7,9 +7,7 @@
 if ($vars['search_type'] == 'tag') {
 	$tag = get_input('tag');
 
-	$display_query = _elgg_get_display_query($tag);
-
-	$title = elgg_echo('members:title:searchtag', array($display_query));
+	$title = elgg_echo('members:title:searchtag', array($tag));
 
 	$options = array();
 	$options['query'] = $tag;
@@ -19,20 +17,11 @@ if ($vars['search_type'] == 'tag') {
 	$results = elgg_trigger_plugin_hook('search', 'tags', $options, array());
 	$count = $results['count'];
 	$users = $results['entities'];
-	$content = elgg_view_entity_list($users, array(
-		'count' => $count,
-		'offset' => $offset,
-		'limit' => $limit,
-		'full_view' => false,
-		'list_type_toggle' => false,
-		'pagination' => true,
-	));
+	$content = elgg_view_entity_list($users, $count, $offset, $limit, false, false, true);
 } else {
 	$name = sanitize_string(get_input('name'));
 
-	$display_query = _elgg_get_display_query($name);
-
-	$title = elgg_echo('members:title:searchname', array($display_query));
+	$title = elgg_echo('members:title:searchname', array($name));
 
 	$db_prefix = elgg_get_config('dbprefix');
 	$params = array(

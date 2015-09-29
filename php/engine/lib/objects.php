@@ -31,7 +31,6 @@ function get_object_entity_as_row($guid) {
  * @param string $description The object's description
  *
  * @return bool
- * @access private
  */
 function create_object_entity($guid, $title, $description) {
 	global $CONFIG;
@@ -53,8 +52,11 @@ function create_object_entity($guid, $title, $description) {
 			if ($result != false) {
 				// Update succeeded, continue
 				$entity = get_entity($guid);
-				elgg_trigger_event('update', $entity->type, $entity);
-				return $guid;
+				if (elgg_trigger_event('update', $entity->type, $entity)) {
+					return $guid;
+				} else {
+					$entity->delete();
+				}
 			}
 		} else {
 			// Update failed, attempt an insert.
@@ -93,16 +95,16 @@ function get_object_sites($object_guid, $limit = 10, $offset = 0) {
 	return elgg_get_entities_from_relationship(array(
 		'relationship' => 'member_of_site',
 		'relationship_guid' => $object_guid,
-		'type' => 'site',
+		'types' => 'site',
 		'limit' => $limit,
-		'offset' => $offset,
+		'offset' => $offset
 	));
 }
 
 /**
  * Runs unit tests for ElggObject
  *
- * @param string  $hook   unit_test
+ * @param sting  $hook   unit_test
  * @param string $type   system
  * @param mixed  $value  Array of tests
  * @param mixed  $params Params

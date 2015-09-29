@@ -7,7 +7,7 @@
 
 $page_owner = elgg_get_page_owner_entity();
 if (!$page_owner) {
-	forward('', '404');
+	forward('bookmarks/all');
 }
 
 elgg_push_breadcrumb($page_owner->name, "bookmarks/owner/$page_owner->username");

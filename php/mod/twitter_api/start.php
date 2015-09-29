@@ -20,7 +20,6 @@ function twitter_api_init() {
 	//elgg_extend_view('metatags', 'twitter_api/metatags');
 	elgg_extend_view('css/elgg', 'twitter_api/css');
 	elgg_extend_view('css/admin', 'twitter_api/css');
-	elgg_extend_view('js/elgg', 'twitter_api/js');
 
 	// sign on with twitter
 	if (twitter_api_allow_sign_on_with_twitter()) {
@@ -35,10 +34,8 @@ function twitter_api_init() {
 	// register Walled Garden public pages
 	elgg_register_plugin_hook_handler('public_pages', 'walled_garden', 'twitter_api_public_pages');
 
-	// push wire post messages to twitter
-	if (elgg_get_plugin_setting('wire_posts', 'twitter_api') == 'yes') {
-		elgg_register_plugin_hook_handler('status', 'user', 'twitter_api_tweet');
-	}
+	// push status messages to twitter
+	elgg_register_plugin_hook_handler('status', 'user', 'twitter_api_tweet');
 
 	$actions = dirname(__FILE__) . '/actions/twitter_api';
 	elgg_register_action('twitter_api/interstitial_settings', "$actions/interstitial_settings.php", 'logged_in');
@@ -63,7 +60,7 @@ function twitter_api_pagehandler_deprecated($page) {
  * Serves pages for twitter.
  *
  * @param array $page
- * @return bool
+ * @return void
  */
 function twitter_api_pagehandler($page) {
 	if (!isset($page[0])) {
@@ -117,6 +114,13 @@ function twitter_api_tweet($hook, $type, $returnvalue, $params) {
 
 	// @todo - allow admin to select origins?
 
+	// check admin settings
+	$consumer_key = elgg_get_plugin_setting('consumer_key', 'twitter_api');
+	$consumer_secret = elgg_get_plugin_setting('consumer_secret', 'twitter_api');
+	if (!($consumer_key && $consumer_secret)) {
+		return;
+	}
+
 	// check user settings
 	$user_id = $params['user']->getGUID();
 	$access_key = elgg_get_plugin_user_setting('access_key', $user_id, 'twitter_api');
@@ -125,22 +129,24 @@ function twitter_api_tweet($hook, $type, $returnvalue, $params) {
 		return;
 	}
 
-	$api = twitter_api_get_api_object($access_key, $access_secret);
-	if (!$api) {
-		return;
-	}
-
-	$api->post('statuses/update', array('status' => $params['message']));
+	// send tweet
+	$api = new TwitterOAuth($consumer_key, $consumer_secret, $access_key, $access_secret);
+	$response = $api->post('statuses/update', array('status' => $params['message']));
 }
 
 /**
  * Get tweets for a user.
  *
- * @param int   $user_guid The Elgg user GUID
+ * @param int   $user_id The Elgg user GUID
  * @param array $options
- * @return array
  */
 function twitter_api_fetch_tweets($user_guid, $options = array()) {
+	// check admin settings
+	$consumer_key = elgg_get_plugin_setting('consumer_key', 'twitter_api');
+	$consumer_secret = elgg_get_plugin_setting('consumer_secret', 'twitter_api');
+	if (!($consumer_key && $consumer_secret)) {
+		return FALSE;
+	}
 
 	// check user settings
 	$access_key = elgg_get_plugin_user_setting('access_key', $user_guid, 'twitter_api');
@@ -149,11 +155,8 @@ function twitter_api_fetch_tweets($user_guid, $options = array()) {
 		return FALSE;
 	}
 
-	$api = twitter_api_get_api_object($access_key, $access_secret);
-	if (!$api) {
-		return FALSE;
-	}
-
+	// fetch tweets
+	$api = new TwitterOAuth($consumer_key, $consumer_secret, $access_key, $access_secret);
 	return $api->get('statuses/user_timeline', $options);
 }
 
@@ -164,7 +167,6 @@ function twitter_api_fetch_tweets($user_guid, $options = array()) {
  * @param string $type
  * @param array  $return_value
  * @param array  $params
- * @return array
  */
 function twitter_api_public_pages($hook, $type, $return_value, $params) {
 	$return_value[] = 'twitter_api/forward';

@@ -37,7 +37,7 @@ if ($filehandler->open("read")) {
 }
 
 if (!$success) {
-	$path = elgg_get_site_url() . "mod/ideas/graphics/noimage{$size}.jpg";
+	$path = elgg_get_site_url() . "mod/ideas/graphics/noimage{$size}.png";
 	header("Location: $path");
 	exit;
 }

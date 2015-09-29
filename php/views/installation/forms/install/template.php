@@ -23,7 +23,7 @@ foreach ($variables as $field => $params) {
 }
 
 $submit_params = array(
-	'value' => elgg_echo('install:next'),
+	'value' => elgg_echo('next'),
 );
 $form_body .= elgg_view('input/submit', $submit_params);
 

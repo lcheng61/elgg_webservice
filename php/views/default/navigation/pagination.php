@@ -8,7 +8,7 @@
  * @uses int    $vars['offset']     The offset in the list
  * @uses int    $vars['limit']      Number of items per page
  * @uses int    $vars['count']      Number of items in list
- * @uses string $vars['base_url']   Base URL to use in links
+ * @uses string $vars['baseurl']    Base URL to use in links
  * @uses string $vars['offset_key'] The string to use for offet in the URL
  */
 
@@ -25,15 +25,7 @@ if (!$limit = (int) elgg_extract('limit', $vars, 10)) {
 
 $count = (int) elgg_extract('count', $vars, 0);
 $offset_key = elgg_extract('offset_key', $vars, 'offset');
-// some views pass an empty string for base_url
-if (isset($vars['base_url']) && $vars['base_url']) {
-	$base_url = $vars['base_url'];
-} else if (isset($vars['baseurl']) && $vars['baseurl']) {
-	elgg_deprecated_notice("Use 'base_url' instead of 'baseurl' for the navigation/pagination view", 1.8);
-	$base_url = $vars['baseurl'];
-} else {
-	$base_url = current_page_url();
-}
+$base_url = elgg_extract('baseurl', $vars, current_page_url());
 
 $num_pages = elgg_extract('num_pages', $vars, 10);
 $delta = ceil($num_pages / 2);
@@ -113,12 +105,7 @@ foreach ($pages->items as $page) {
 	} else {
 		$page_offset = (($page - 1) * $limit);
 		$url = elgg_http_add_url_query_elements($base_url, array($offset_key => $page_offset));
-		$link = elgg_view('output/url', array(
-			'href' => $url,
-			'text' => $page,
-			'is_trusted' => true,
-		));
-		echo "<li>$link</li>";
+		echo "<li><a href=\"$url\">$page</a></li>";
 	}
 }
 

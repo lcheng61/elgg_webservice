@@ -203,15 +203,14 @@ function user_file_matrix($guid) {
 	return "$time_created/$user->guid/";
 }
 
-global $ENTITY_CACHE, $CONFIG;
+global $DB_QUERY_CACHE, $DB_PROFILE, $ENTITY_CACHE;
 /**
  * Upgrade file locations
  */
 $users = mysql_query("SELECT guid, username
 	FROM {$CONFIG->dbprefix}users_entity WHERE username != ''");
 while ($user = mysql_fetch_object($users)) {
-	$ENTITY_CACHE = array();
-	_elgg_invalidate_query_cache();
+	$DB_QUERY_CACHE = $DB_PROFILE = $ENTITY_CACHE = array();
 
 	$to = $CONFIG->dataroot . user_file_matrix($user->guid);
 	foreach (array('1_0', '1_1', '1_6') as $version) {

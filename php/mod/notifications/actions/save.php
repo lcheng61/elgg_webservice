@@ -6,18 +6,9 @@
  * @package ElggNotifications
  */
 
-$current_user = elgg_get_logged_in_user_entity();
-
-$guid = (int) get_input('guid', 0);
-if (!$guid || !($user = get_entity($guid))) {
-	forward();
-}
-if (($user->guid != $current_user->guid) && !$current_user->isAdmin()) {
-	forward();
-}
+$user = elgg_get_logged_in_user_entity();
 
 global $NOTIFICATION_HANDLERS;
-$subscriptions = array();
 foreach($NOTIFICATION_HANDLERS as $method => $foo) {
 	$subscriptions[$method] = get_input($method.'subscriptions');
 	$personal[$method] = get_input($method.'personal');

@@ -7,12 +7,7 @@
  * @uses $vars['entity'] ElggGroup object
  */
 
-$entities = elgg_get_config('registered_entities');
-
-if (!empty($entities['object'])) {
-	echo elgg_list_entities(array(
-		'type' => 'object',
-		'subtypes' => $entities['object'],
-		'container_guid' => $vars['entity']->getGUID(),
-	));
-}
+echo elgg_list_entities(array(
+	'type' => 'object',
+	'container_guid' => $vars['entity']->getGUID(),
+));

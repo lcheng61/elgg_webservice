@@ -6,32 +6,22 @@
  * @subpackage Core
  *
  * @uses $vars['id']     CSS id
- * @uses $vars['class']  Optional additional CSS class
  * @uses $vars['hidden'] Begin hidden? (true)
  */
 
-$attributes = array();
-
 if (isset($vars['id'])) {
-	$attributes['id'] = $vars['id'];
-}
-
-$class = 'elgg-ajax-loader';
-if (isset($vars['class'])) {
-	$class = "$class {$vars['class']}";
+	$id = "id=\"{$vars['id']}\"";
 }
 
 if (elgg_extract('hidden', $vars, true)) {
-	$class = "$class hidden";
+	$hidden = 'hidden';
+} else {
+	$hidden = '';
 }
-
-$attributes['class'] = $class;
-
-$attrs = elgg_format_attributes($attributes);
 
 $loader = <<< END
 
-<div $attrs></div>
+<div class="elgg-ajax-loader $hidden" $id></div>
 
 END;
 

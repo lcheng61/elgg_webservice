@@ -10,10 +10,7 @@
 /**
  * Retrieve the system log based on a number of parameters.
  *
- * @todo too many args, and the first arg is too confusing
- *
  * @param int|array $by_user    The guid(s) of the user(s) who initiated the event.
- *                              Use 0 for unowned entries. Anything else falsey means anyone.
  * @param string    $event      The event you are searching on.
  * @param string    $class      The class of object it effects.
  * @param string    $type       The type
@@ -24,12 +21,11 @@
  * @param int       $timebefore Lower time limit
  * @param int       $timeafter  Upper time limit
  * @param int       $object_id  GUID of an object
- * @param string    $ip_address The IP address.
+ *
  * @return mixed
  */
-function get_system_log($by_user = "", $event = "", $class = "", $type = "", $subtype = "", $limit = 10,
-						$offset = 0, $count = false, $timebefore = 0, $timeafter = 0, $object_id = 0,
-						$ip_address = "") {
+function get_system_log($by_user = "", $event = "", $class = "", $type = "", $subtype = "",
+$limit = 10, $offset = 0, $count = false, $timebefore = 0, $timeafter = 0, $object_id = 0) {
 
 	global $CONFIG;
 
@@ -41,18 +37,16 @@ function get_system_log($by_user = "", $event = "", $class = "", $type = "", $su
 	} else {
 		$by_user = (int)$by_user;
 	}
-	
 	$event = sanitise_string($event);
 	$class = sanitise_string($class);
 	$type = sanitise_string($type);
 	$subtype = sanitise_string($subtype);
-	$ip_address = sanitise_string($ip_address);
 	$limit = (int)$limit;
 	$offset = (int)$offset;
 
 	$where = array();
 
-	if ($by_user_orig !== "" && $by_user_orig !== false && $by_user_orig !== null) {
+	if ($by_user_orig !== "") {
 		if (is_int($by_user)) {
 			$where[] = "performed_by_guid=$by_user";
 		} else if (is_array($by_user)) {
@@ -81,9 +75,6 @@ function get_system_log($by_user = "", $event = "", $class = "", $type = "", $su
 	if ($object_id) {
 		$where[] = "object_id = " . ((int) $object_id);
 	}
-	if ($ip_address) {
-		$where[] = "ip_address = '$ip_address'";
-	}
 
 	$select = "*";
 	if ($count) {
@@ -100,8 +91,7 @@ function get_system_log($by_user = "", $event = "", $class = "", $type = "", $su
 	}
 
 	if ($count) {
-		$numrows = get_data_row($query);
-		if ($numrows) {
+		if ($numrows = get_data_row($query)) {
 			return $numrows->count;
 		}
 	} else {
@@ -158,8 +148,9 @@ function get_object_from_log_entry($entry_id) {
  * This is called by the event system and should not be called directly.
  *
  * @param object $object The object you're talking about.
- * @param string $event  The event being logged
- * @return void
+ * @param string $event  String The event being logged
+ *
+ * @return mixed
  */
 function system_log($object, $event) {
 	global $CONFIG;
@@ -167,13 +158,6 @@ function system_log($object, $event) {
 	static $cache_size = 0;
 
 	if ($object instanceof Loggable) {
-
-		/* @var ElggEntity|ElggExtender $object */
-		if (datalist_get('version') < 2012012000) {
-			// this is a site that doesn't have the ip_address column yet
-			return;
-		}
-
 		// reset cache if it has grown too large
 		if (!is_array($log_cache) || $cache_size > 500) {
 			$log_cache = array();
@@ -187,18 +171,6 @@ function system_log($object, $event) {
 		$object_subtype = $object->getSubtype();
 		$event = sanitise_string($event);
 		$time = time();
-
-		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                        $var = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-			$ip_address = array_pop($var);
-		} elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-                        $var = explode(',', $_SERVER['HTTP_X_REAL_IP']);
-			$ip_address = array_pop($var);
-		} else {
-			$ip_address = $_SERVER['REMOTE_ADDR'];
-		}
-		$ip_address = sanitise_string($ip_address);
-
 		$performed_by = elgg_get_logged_in_user_guid();
 
 		if (isset($object->access_id)) {
@@ -222,16 +194,18 @@ function system_log($object, $event) {
 		if (!isset($log_cache[$time][$object_id][$event])) {
 			$query = "INSERT DELAYED into {$CONFIG->dbprefix}system_log
 				(object_id, object_class, object_type, object_subtype, event,
-				performed_by_guid, owner_guid, access_id, enabled, time_created, ip_address)
+				performed_by_guid, owner_guid, access_id, enabled, time_created)
 			VALUES
 				('$object_id','$object_class','$object_type', '$object_subtype', '$event',
-				$performed_by, $owner_guid, $access_id, '$enabled', '$time', '$ip_address')";
+				$performed_by, $owner_guid, $access_id, '$enabled', '$time')";
 
 			insert_data($query);
 
 			$log_cache[$time][$object_id][$event] = true;
 			$cache_size += 1;
 		}
+
+		return true;
 	}
 }
 

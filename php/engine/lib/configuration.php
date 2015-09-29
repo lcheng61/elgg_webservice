@@ -3,9 +3,8 @@
  * Elgg configuration procedural code.
  *
  * Includes functions for manipulating the configuration values stored in the database
- * Plugin authors should use the {@link elgg_get_config()}, {@link elgg_set_config()},
- * {@link elgg_save_config()}, and {@unset_config()} functions to access or update
- * config values.
+ * Plugin authors should use the {@link get_config()}, {@link set_config()},
+ * and {@unset_config()} functions to access or update config values.
  *
  * Elgg's configuration is split among 2 tables and 1 file:
  * - dbprefix_config
@@ -36,7 +35,6 @@ function elgg_get_site_url($site_guid = 0) {
 	if (!$site instanceof ElggSite) {
 		return false;
 	}
-	/* @var ElggSite $site */
 
 	return $site->url;
 }
@@ -92,29 +90,23 @@ function elgg_get_config($name, $site_guid = 0) {
 		return $CONFIG->$name;
 	}
 
-	if ($site_guid === null) {
+	if ($site_guid === NULL) {
 		// installation wide setting
 		$value = datalist_get($name);
 	} else {
-		// hit DB only if we're not sure if value exists or not
-		if (!isset($CONFIG->site_config_loaded)) {
-			// site specific setting
-			if ($site_guid == 0) {
-				$site_guid = (int) $CONFIG->site_id;
-			}
-			$value = get_config($name, $site_guid);
-		} else {
-			$value = null;
+		// site specific setting
+		if ($site_guid == 0) {
+			$site_guid = (int) $CONFIG->site_id;
 		}
+		$value = get_config($name, $site_guid);
 	}
 
-	// @todo document why we don't cache false
-	if ($value === false) {
-		return null;
+	if ($value !== false) {
+		$CONFIG->$name = $value;
+		return $value;
 	}
 
-	$CONFIG->$name = $value;
-	return $value;
+	return null;
 }
 
 /**
@@ -139,7 +131,7 @@ function elgg_set_config($name, $value) {
 /**
  * Save a configuration setting
  *
- * @param string $name      Configuration name (cannot be greater than 255 characters)
+ * @param string $name      Configuration name (cannot be greater than 32 characters)
  * @param mixed  $value     Configuration value. Should be string for installation setting
  * @param int    $site_guid NULL for installation setting, 0 for default site
  *
@@ -174,7 +166,7 @@ function elgg_save_config($name, $value, $site_guid = 0) {
 /**
  * Check that installation has completed and the database is populated.
  *
- * @throws InstallationException|DatabaseException
+ * @throws InstallationException
  * @return void
  * @access private
  */
@@ -182,7 +174,7 @@ function verify_installation() {
 	global $CONFIG;
 
 	if (isset($CONFIG->installed)) {
-		return;
+		return $CONFIG->installed;
 	}
 
 	try {
@@ -228,9 +220,9 @@ function datalist_get($name) {
 
 	$name = trim($name);
 
-	// cannot store anything longer than 255 characters in db, so catch here
-	if (elgg_strlen($name) > 255) {
-		elgg_log("The name length for configuration variables cannot be greater than 255", "ERROR");
+	// cannot store anything longer than 32 characters in db, so catch here
+	if (elgg_strlen($name) > 32) {
+		elgg_log("The name length for configuration variables cannot be greater than 32", "ERROR");
 		return false;
 	}
 
@@ -287,7 +279,7 @@ function datalist_get($name) {
 function datalist_set($name, $value) {
 	global $CONFIG, $DATALIST_CACHE;
 
-	// cannot store anything longer than 255 characters in db, so catch before we set
+	// cannot store anything longer than 32 characters in db, so catch before we set
 	if (elgg_strlen($name) > 255) {
 		elgg_log("The name length for configuration variables cannot be greater than 255", "ERROR");
 		return false;
@@ -310,7 +302,7 @@ function datalist_set($name, $value) {
 		. " set name = '{$sanitised_name}', value = '{$sanitised_value}'"
 		. " ON DUPLICATE KEY UPDATE value='{$sanitised_value}'");
 
-	if ($success !== FALSE) {
+	if ($success) {
 		$DATALIST_CACHE[$name] = $value;
 		return true;
 	} else {
@@ -333,7 +325,7 @@ function datalist_set($name, $value) {
  * This will cause the run once function to be run on all installations.  To perform
  * additional upgrades, create new functions for each release.
  *
- * @warning The function name cannot be longer than 255 characters long due to
+ * @warning The function name cannot be longer than 32 characters long due to
  * the current schema for the datalist table.
  *
  * @internal A datalist entry $functioname is created with the value of time().
@@ -408,7 +400,7 @@ function unset_config($name, $site_guid = 0) {
  * @param string $value     Its value
  * @param int    $site_guid Optionally, the GUID of the site (current site is assumed by default)
  *
- * @return bool
+ * @return 0
  * @todo The config table doens't have numeric primary keys so insert_data returns 0.
  * @todo Use "INSERT ... ON DUPLICATE KEY UPDATE" instead of trying to delete then add.
  * @see unset_config()
@@ -420,9 +412,9 @@ function set_config($name, $value, $site_guid = 0) {
 
 	$name = trim($name);
 
-	// cannot store anything longer than 255 characters in db, so catch before we set
-	if (elgg_strlen($name) > 255) {
-		elgg_log("The name length for configuration variables cannot be greater than 255", "ERROR");
+	// cannot store anything longer than 32 characters in db, so catch before we set
+	if (elgg_strlen($name) > 32) {
+		elgg_log("The name length for configuration variables cannot be greater than 32", "ERROR");
 		return false;
 	}
 
@@ -483,12 +475,10 @@ function get_config($name, $site_guid = 0) {
 			break;
 	}
 
-	// @todo these haven't really been implemented in Elgg 1.8. Complete in 1.9.
 	// show dep message
 	if ($new_name) {
-		//	$msg = "Config value $name has been renamed as $new_name";
 		$name = $new_name;
-		//	elgg_deprecated_notice($msg, $dep_version);
+		elgg_deprecated_notice($msg, $dep_version);
 	}
 
 	// decide from where to return the value
@@ -527,10 +517,10 @@ function get_all_config($site_guid = 0) {
 	$site_guid = (int) $site_guid;
 
 	if ($site_guid == 0) {
-		$site_guid = (int) $CONFIG->site_guid;
+		$site_guid = (int) $CONFIG->site_id;
 	}
 
-	if ($result = get_data("SELECT * FROM {$CONFIG->dbprefix}config WHERE site_guid = $site_guid")) {
+	if ($result = get_data("SELECT * from {$CONFIG->dbprefix}config where site_guid = {$site_guid}")) {
 		foreach ($result as $r) {
 			$name = $r->name;
 			$value = $r->value;
@@ -543,51 +533,37 @@ function get_all_config($site_guid = 0) {
 }
 
 /**
- * Loads configuration related to this site
+ * Sets defaults for or attempts to autodetect some common config values and
+ * loads them into $CONFIG.
  *
- * This loads from the config database table and the site entity
+ * @return true
  * @access private
  */
-function _elgg_load_site_config() {
-	global $CONFIG;
-
-	$CONFIG->site_guid = (int) datalist_get('default_site');
-	$CONFIG->site_id = $CONFIG->site_guid;
-	$CONFIG->site = get_entity($CONFIG->site_guid);
-	if (!$CONFIG->site) {
-		throw new InstallationException(elgg_echo('InstallationException:SiteNotInstalled'));
-	}
-
-	$CONFIG->wwwroot = $CONFIG->site->url;
-	$CONFIG->sitename = $CONFIG->site->name;
-	$CONFIG->sitedescription = $CONFIG->site->description;
-	$CONFIG->siteemail = $CONFIG->site->email;
-	$CONFIG->url = $CONFIG->wwwroot;
-
-	get_all_config();
-	// gives hint to elgg_get_config function how to approach missing values
-	$CONFIG->site_config_loaded = true;
-}
-
-/**
- * Loads configuration related to Elgg as an application
- *
- * This loads from the datalists database table
- * @access private
- */
-function _elgg_load_application_config() {
+function set_default_config() {
 	global $CONFIG;
 
 	$install_root = str_replace("\\", "/", dirname(dirname(dirname(__FILE__))));
+
+	// @todo this seldom works right.
+	$pathpart = str_replace("//", "/", str_replace($_SERVER['DOCUMENT_ROOT'], "", $install_root));
+	if (substr($pathpart, 0, 1) != "/") {
+		$pathpart = "/" . $pathpart;
+	}
+	$www_root = "http://" . $_SERVER['HTTP_HOST'] . $pathpart;
+
 	$defaults = array(
 		'path'			=>	"$install_root/",
 		'view_path'		=>	"$install_root/views/",
 		'plugins_path'	=>	"$install_root/mod/",
+		'wwwroot'		=> 	$www_root,
+		'url'			=>	$www_root,
+		'site_name'		=>	'New Elgg site',
 		'language'		=>	'en',
 
-		// compatibility with old names for plugins not using elgg_get_config()
+		// compatibility with old names for ppl not using get_config()
 		'viewpath'		=>	"$install_root/views/",
 		'pluginspath'	=>	"$install_root/mod/",
+		'sitename'		=>	'New Elgg site',
 	);
 
 	foreach ($defaults as $name => $value) {
@@ -595,6 +571,25 @@ function _elgg_load_application_config() {
 			$CONFIG->$name = $value;
 		}
 	}
+
+	$CONFIG->context = array();
+
+	return true;
+}
+
+/**
+ * Loads values into $CONFIG.
+ *
+ * If Elgg is installed, this function pulls all rows from dbprefix_config
+ * and cherry picks some values from dbprefix_datalists.  This also extracts
+ * some commonly used values from the default site object.
+ *
+ * @elgg_event boot system
+ * @return true|null
+ * @access private
+ */
+function configuration_boot() {
+	global $CONFIG;
 
 	$path = datalist_get('path');
 	if (!empty($path)) {
@@ -610,23 +605,22 @@ function _elgg_load_application_config() {
 	} else {
 		$CONFIG->simplecache_enabled = 1;
 	}
-	$system_cache_enabled = datalist_get('system_cache_enabled');
-	if ($system_cache_enabled !== false) {
-		$CONFIG->system_cache_enabled = $system_cache_enabled;
+	$viewpath_cache_enabled = datalist_get('viewpath_cache_enabled');
+	if ($viewpath_cache_enabled !== false) {
+		$CONFIG->viewpath_cache_enabled = $viewpath_cache_enabled;
 	} else {
-		$CONFIG->system_cache_enabled = 1;
+		$CONFIG->viewpath_cache_enabled = 1;
 	}
+	if (isset($CONFIG->site) && ($CONFIG->site instanceof ElggSite)) {
+		$CONFIG->wwwroot = $CONFIG->site->url;
+		$CONFIG->sitename = $CONFIG->site->name;
+		$CONFIG->sitedescription = $CONFIG->site->description;
+		$CONFIG->siteemail = $CONFIG->site->email;
+	}
+	$CONFIG->url = $CONFIG->wwwroot;
 
-	// initialize context here so it is set before the get_input call
-	$CONFIG->context = array();
-
-	// needs to be set before system, init for links in html head
-	$viewtype = get_input('view', 'default');
-	$lastcached = datalist_get("simplecache_lastcached_$viewtype");
-	$CONFIG->lastcache = $lastcached;
-
-	$CONFIG->i18n_loaded_from_cache = false;
-
-	// this must be synced with the enum for the entities table
-	$CONFIG->entity_types = array('group', 'object', 'site', 'user');
+	// Load default settings from database
+	get_all_config();
 }
+
+elgg_register_event_handler('boot', 'system', 'configuration_boot', 10);

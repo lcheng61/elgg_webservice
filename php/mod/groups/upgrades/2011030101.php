@@ -9,7 +9,6 @@ $topics = elgg_get_entities(array(
 	'type' => 'object',
 	'subtype' => 'groupforumtopic',
 	'limit' => 5,
-	'order_by' => 'e.time_created asc',
 ));
 
 // if not topics, no upgrade required
@@ -26,16 +25,11 @@ foreach ($topics as $topic) {
 
 
 /**
- * Condense first annotation into object
+ * Condense annotation into object
  *
  * @param ElggObject $topic
  */
 function groups_2011030101($topic) {
-
-	// do not upgrade topics that have already been upgraded
-	if ($topic->description) {
-		return true;
-	}
 
 	$annotation = $topic->getAnnotations('group_topic_post', 1);
 	if (!$annotation) {
@@ -49,14 +43,8 @@ function groups_2011030101($topic) {
 	return $annotation[0]->delete();
 }
 
-$previous_access = elgg_set_ignore_access(true);
-$options = array(
-	'type' => 'object',
-	'subtype' => 'groupforumtopic',
-	'limit' => 0,
-);
+$options = array('type' => 'object', 'subtype' => 'groupforumtopic');
 $batch = new ElggBatch('elgg_get_entities', $options, 'groups_2011030101', 100);
-elgg_set_ignore_access($previous_access);
 
 if ($batch->callbackResult) {
 	error_log("Elgg Groups upgrade (2011030101) succeeded");

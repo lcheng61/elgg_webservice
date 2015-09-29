@@ -48,11 +48,6 @@ $content .= elgg_view_form('register', $form_params, $body_params);
 
 $content .= elgg_view('help/register');
 
-if (elgg_get_config('walled_garden')) {
-	elgg_load_css('elgg.walled_garden');
-	$body = elgg_view_layout('walled_garden', array('content' => $content));
-	echo elgg_view_page($title, $body, 'walled_garden');
-} else {
-	$body = elgg_view_layout('one_column', array('content' => $content));
-	echo elgg_view_page($title, $body);
-}
+$body = elgg_view_layout("one_column", array('content' => $content));
+
+echo elgg_view_page($title, $body);

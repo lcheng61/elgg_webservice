@@ -4,13 +4,12 @@
  */
 
 // loop through all users checking collections and notifications
-global $ENTITY_CACHE, $CONFIG;
+global $DB_QUERY_CACHE, $DB_PROFILE, $ENTITY_CACHE, $CONFIG;
 global $NOTIFICATION_HANDLERS;
 $users = mysql_query("SELECT guid, username FROM {$CONFIG->dbprefix}users_entity
 	WHERE username != ''");
 while ($user = mysql_fetch_object($users)) {
-	$ENTITY_CACHE = array();
-	_elgg_invalidate_query_cache();
+	$DB_QUERY_CACHE = $DB_PROFILE = $ENTITY_CACHE = array();
 
 	$user = get_entity($user->guid);
 	foreach ($NOTIFICATION_HANDLERS as $method => $foo) {

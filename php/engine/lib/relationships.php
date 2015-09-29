@@ -12,7 +12,7 @@
  *
  * @param stdClass $row Database row from the relationship table
  *
- * @return ElggRelationship|stdClass
+ * @return stdClass or ElggMetadata
  * @access private
  */
 function row_to_elggrelationship($row) {
@@ -28,7 +28,7 @@ function row_to_elggrelationship($row) {
  *
  * @param int $id The ID of a relationship
  *
- * @return ElggRelationship|false
+ * @return mixed
  */
 function get_relationship($id) {
 	global $CONFIG;
@@ -109,7 +109,7 @@ function add_entity_relationship($guid_one, $relationship, $guid_two) {
  * @param string $relationship The type of relationship
  * @param int    $guid_two     The GUID of the entity the relationship is with
  *
- * @return ElggRelationship|false Depending on success
+ * @return object|false Depending on success
  */
 function check_entity_relationship($guid_one, $relationship, $guid_two) {
 	global $CONFIG;
@@ -123,7 +123,7 @@ function check_entity_relationship($guid_one, $relationship, $guid_two) {
 			AND relationship='$relationship'
 			AND guid_two=$guid_two limit 1";
 
-	$row = row_to_elggrelationship(get_data_row($query));
+	$row = get_data_row($query);
 	if ($row) {
 		return $row;
 	}
@@ -158,7 +158,7 @@ function remove_entity_relationship($guid_one, $relationship, $guid_two) {
 			and relationship='$relationship'
 			and guid_two=$guid_two";
 
-		return (bool)delete_data($query);
+		return delete_data($query);
 	} else {
 		return false;
 	}
@@ -220,7 +220,7 @@ function remove_entity_relationships($guid_one, $relationship = "", $inverse = f
  * @param int  $guid                 The GUID of the relationship owner
  * @param bool $inverse_relationship Inverse relationship owners?
  *
- * @return ElggRelationship[]
+ * @return mixed
  */
 function get_entity_relationships($guid, $inverse_relationship = FALSE) {
 	global $CONFIG;
@@ -239,15 +239,6 @@ function get_entity_relationships($guid, $inverse_relationship = FALSE) {
  * Also accepts all options available to elgg_get_entities() and
  * elgg_get_entities_from_metadata().
  *
- * To ask for entities that do not have a particulat relationship to an entity,
- * use a custom where clause like the following:
- *
- * 	$options['wheres'][] = "NOT EXISTS (
- *			SELECT 1 FROM {$db_prefix}entity_relationships
- *				WHERE guid_one = e.guid
- *				AND relationship = '$relationship'
- *		)";
- *
  * @see elgg_get_entities
  * @see elgg_get_entities_from_metadata
  *
@@ -259,7 +250,7 @@ function get_entity_relationships($guid, $inverse_relationship = FALSE) {
  *
  * 	inverse_relationship => BOOL Inverse the relationship
  *
- * @return ElggEntity[]|mixed If count, int. If not count, array. false on errors.
+ * @return mixed If count, int. If not count, array. false on errors.
  * @since 1.7.0
  */
 function elgg_get_entities_from_relationship($options) {
@@ -299,7 +290,7 @@ function elgg_get_entities_from_relationship($options) {
 			$options['selects'] = array();
 		}
 
-		$select = array('r.id');
+		$select = array('r.*');
 
 		$options['selects'] = array_merge($options['selects'], $select);
 	}
@@ -316,7 +307,7 @@ function elgg_get_entities_from_relationship($options) {
  *                                     Provide in table.column format.
  * @param string $relationship         Relationship string
  * @param int    $relationship_guid    Entity guid to check
- * @param bool $inverse_relationship Inverse relationship check?
+ * @param string $inverse_relationship Inverse relationship check?
  *
  * @return mixed
  * @since 1.7.0
@@ -363,7 +354,7 @@ $relationship_guid = NULL, $inverse_relationship = FALSE) {
 /**
  * Returns a viewable list of entities by relationship
  *
- * @param array $options Options array for retrieval of entities
+ * @param array $options
  *
  * @see elgg_list_entities()
  * @see elgg_get_entities_from_relationship()
@@ -381,7 +372,7 @@ function elgg_list_entities_from_relationship(array $options = array()) {
  *
  * @param array $options An options array compatible with
  *                       elgg_get_entities_from_relationship()
- * @return ElggEntity[]|mixed int If count, int. If not count, array. false on errors.
+ * @return mixed int If count, int. If not count, array. false on errors.
  * @since 1.8.0
  */
 function elgg_get_entities_from_relationship_count(array $options = array()) {
@@ -398,7 +389,7 @@ function elgg_get_entities_from_relationship_count(array $options = array()) {
  *
  * @param array $options Options array
  *
- * @return string
+ * @return array
  * @since 1.8.0
  */
 function elgg_list_entities_from_relationship_count($options) {
@@ -408,15 +399,15 @@ function elgg_list_entities_from_relationship_count($options) {
 /**
  * Sets the URL handler for a particular relationship type
  *
- * @param string $relationship_type The relationship type.
  * @param string $function_name     The function to register
+ * @param string $relationship_type The relationship type.
  *
  * @return bool Depending on success
  */
 function elgg_register_relationship_url_handler($relationship_type, $function_name) {
 	global $CONFIG;
 
-	if (!is_callable($function_name, true)) {
+	if (!is_callable($function_name)) {
 		return false;
 	}
 
@@ -499,7 +490,7 @@ function already_attached($guid_one, $guid_two) {
  * @param int    $guid Entity GUID
  * @param string $type The type of object to return e.g. 'file', 'friend_of' etc
  *
- * @return ElggEntity[]
+ * @return an array of objects
  * @access private
  */
 function get_attachments($guid, $type = "") {
@@ -507,7 +498,7 @@ function get_attachments($guid, $type = "") {
 					'relationship' => 'attached',
 					'relationship_guid' => $guid,
 					'inverse_relationship' => false,
-					'type' => $type,
+					'types' => $type,
 					'subtypes' => '',
 					'owner_guid' => 0,
 					'order_by' => 'time_created desc',
@@ -571,8 +562,9 @@ function import_relationship_plugin_hook($hook, $entity_type, $returnvalue, $par
 	if ($element instanceof ODDRelationship) {
 		$tmp = new ElggRelationship();
 		$tmp->import($element);
+
+		return $tmp;
 	}
-	return $tmp;
 }
 
 /**
@@ -585,10 +577,11 @@ function import_relationship_plugin_hook($hook, $entity_type, $returnvalue, $par
  *
  * @elgg_event_handler export all
  * @return mixed
- * @throws InvalidParameterException
  * @access private
  */
 function export_relationship_plugin_hook($hook, $entity_type, $returnvalue, $params) {
+	global $CONFIG;
+
 	// Sanity check values
 	if ((!is_array($params)) && (!isset($params['guid']))) {
 		throw new InvalidParameterException(elgg_echo('InvalidParameterException:GUIDNotForExport'));
@@ -622,14 +615,14 @@ function export_relationship_plugin_hook($hook, $entity_type, $returnvalue, $par
  * @access private
  */
 function relationship_notification_hook($event, $type, $object) {
-	/* @var ElggRelationship $object */
+
 	$user_one = get_entity($object->guid_one);
-	/* @var ElggUser $user_one */
+	$user_two = get_entity($object->guid_two);
 
 	return notify_user($object->guid_two,
 			$object->guid_one,
-			elgg_echo('friend:newfriend:subject', array($user_one->username)),
-			elgg_echo("friend:newfriend:body", array($user_one->username))
+			elgg_echo('friend:newfriend:subject', array($user_one->name)),
+			elgg_echo("friend:newfriend:body", array($user_one->name, $user_one->getURL()))
 	);
 }
 

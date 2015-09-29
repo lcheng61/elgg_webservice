@@ -23,8 +23,6 @@ function developers_init() {
 	elgg_register_js('jquery.jstree', 'mod/developers/vendors/jsTree/jquery.jstree.js', 'footer');
 	elgg_register_css('jquery.jstree', 'mod/developers/vendors/jsTree/themes/default/style.css');
 
-	elgg_load_js('jquery.form');
-
 	elgg_register_js('elgg.dev', 'js/developers/developers.js', 'footer');
 	elgg_load_js('elgg.dev');
 }
@@ -63,7 +61,6 @@ function developers_setup_menu() {
 	if (elgg_in_context('admin')) {
 		elgg_register_admin_menu_item('develop', 'inspect', 'develop_tools');
 		elgg_register_admin_menu_item('develop', 'preview', 'develop_tools');
-		elgg_register_admin_menu_item('develop', 'unit_tests', 'develop_tools');
 
 		elgg_register_menu_item('page', array(
 			'name' => 'dev_settings',
@@ -77,8 +74,8 @@ function developers_setup_menu() {
 }
 
 /**
- * Clear all the strings so the raw descriptor strings are displayed
- */
+* Clear all the strings so the raw descriptor strings are displayed
+*/
 function developers_clear_strings() {
 	global $CONFIG;
 
@@ -89,15 +86,6 @@ function developers_clear_strings() {
 
 /**
  * Post-process a view to add wrapper comments to it
- * 
- * 1. Only process views served with the 'default' viewtype.
- * 2. Does not wrap views that begin with js/ or css/ as they are not HTML.
- * 3. Does not wrap views that are images (start with icon/). Is this still true?
- * 4. Does not wrap input and output views (why?).
- * 5. Does not wrap html head or the primary page shells
- * 
- * @warning this will break views in the default viewtype that return non-HTML data
- * that do not match the above restrictions.
  */
 function developers_wrap_views($hook, $type, $result, $params) {
 	if (elgg_get_viewtype() != "default") {
@@ -131,8 +119,8 @@ function developers_wrap_views($hook, $type, $result, $params) {
 }
 
 /**
- * Log the events and plugin hooks
- */
+* Log the events and plugin hooks
+*/
 function developers_log_events($name, $type) {
 
 	// filter out some very common events
@@ -178,14 +166,13 @@ function developers_theme_preview_controller($page) {
 
 	$pages = array(
 		'buttons',
-		'components',
-		'forms',
-		'grid',
+		'components', 
+		'forms', 
+		'grid', 
 		'icons',
-		'modules',
-		'navigation',
-		'typography',
-		'miscellaneous'
+		'modules', 
+		'navigation', 
+		'typography', 
 	);
 	
 	foreach ($pages as $page_name) {

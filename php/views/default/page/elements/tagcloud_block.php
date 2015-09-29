@@ -20,10 +20,8 @@ if ($owner_entity && elgg_instanceof($owner_entity, 'group')) {
 	return true;
 }
 
-$type = 'object';
-
 $options = array(
-	'type' => $type,
+	'type' => 'object',
 	'subtype' => elgg_extract('subtypes', $vars, ELGG_ENTITIES_ANY_VALUE),
 	'owner_guid' => $owner_guid,
 	'threshold' => 0,

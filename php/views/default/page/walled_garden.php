@@ -5,12 +5,6 @@
  * Used for the walled garden index page
  */
 
-$is_sticky_register = elgg_is_sticky_form('register');
-$wg_body_class = 'elgg-body-walledgarden';
-if ($is_sticky_register) {
-	$wg_body_class .= ' hidden';
-}
-
 // Set the content type
 header("Content-type: text/html; charset=UTF-8");
 ?>
@@ -24,17 +18,10 @@ header("Content-type: text/html; charset=UTF-8");
 	<div class="elgg-page-messages">
 		<?php echo elgg_view('page/elements/messages', array('object' => $vars['sysmessages'])); ?>
 	</div>
-	<div class="<?php echo $wg_body_class; ?>">
+	<div class="elgg-body-walledgarden">
 		<?php echo $vars['body']; ?>
 	</div>
 </div>
-<?php if ($is_sticky_register): ?>
-<script type="text/javascript">
-elgg.register_hook_handler('init', 'system', function() {
-	$('.registration_link').trigger('click');
-});
-</script>
-<?php endif; ?>
 <?php echo elgg_view('page/elements/foot'); ?>
 </body>
 </html>

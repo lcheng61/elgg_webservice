@@ -3,7 +3,7 @@
  * Install completion page
  */
 
-echo elgg_autop(elgg_echo('install:complete:instructions'));
+echo autop(elgg_echo('install:complete:instructions'));
 
 ?>
 

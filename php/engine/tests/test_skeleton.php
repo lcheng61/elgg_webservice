@@ -49,6 +49,9 @@ class ElggCoreSkeletonTest extends ElggCoreUnitTest {
 		parent::__destruct();
 	}
 
+	/**
+	 * A basic test that will be called and fail.
+	 */
 	public function testFailure() {
 		$this->assertTrue(FALSE);
 	}
