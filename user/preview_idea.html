@@ -1,0 +1,33 @@
+<div class="modal fade" id="previewIdea" aria-labelledby="title">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="title">Preview Idea</h4>
+			</div>
+			<div class="modal-body">
+				<div id="preview_idea_id"></div>
+				<div id="preview_idea_category"></div>
+				<div id="preview_idea_tags"></div>
+				<br />
+				<div id="preview_idea_content"></div>
+				<br />
+				<br />
+				<div id="preview_idea_products_panel" class="panel panel-primary tile" style="height: 240px;">
+					<div class="tile__name" id="editable">
+						<div>Products</div>
+					</div>
+					<div class="panel-body">
+						<!--the sortable product list-->
+						<ul id="preview_idea_editableProductList" class="sortable">
+						</ul>
+
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<title>LoveBeauty seller portal</title>
+
+		<!-- Bootstrap Core CSS -->
+		<link href="../seller/css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- MetisMenu CSS -->
+		<link href="../seller/css/plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
+
+		<!-- Custom CSS -->
+		<link href="../seller/css/sb-admin-2.css" rel="stylesheet">
+
+		<!-- Morris Charts CSS -->
+		<link href="../seller/css/plugins/morris.css" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="../seller/font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+		<!-- jquery ui -->
+		<link rel="stylesheet" href="../seller/css/plugins/jquery-ui/jquery-ui.theme.min.css">
+		<link rel="stylesheet" href="../seller/css/plugins/jquery-ui/jquery-ui.min.css">
+
+		<!-- Multiselect -->
+		<link href="//fonts.googleapis.com/css?family=Roboto:300" rel="stylesheet" type="text/css" />
+		<link rel="stylesheet" type="text/css" href="../seller/css/plugins/jquery-multiselect/jquery.multiselect.css" />
+		<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/ui-lightness/jquery-ui.css" />
+
+		<link rel="stylesheet" href="../seller/css/lovebeauty.css" />
+
+		<!--<link rel="stylesheet" href="css/plugins/dataTables.bootstrap.css">-->
+		<!--<link rel="stylesheet" href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">-->
+		<link rel="stylesheet" href="../seller/css/plugins/jquery.dataTables.min.css">
+
+		<link rel="stylesheet" href="../seller/css/plugins/bootstrap-dialog/bootstrap-dialog.min.css" />
+
+		<!-- 2 CSS files are required: -->
+		<!--   * Tag-it's base CSS (jquery.tagit.css). -->
+		<!--   * Any theme CSS (either a jQuery UI theme such as "flick", or one that's bundled with Tag-it, e.g. tagit.ui-zendesk.css as in this example.) -->
+		<!-- The base CSS and tagit.ui-zendesk.css theme are scoped to the Tag-it widget, so they shouldn't affect anything else in your site, unlike with jQuery UI themes. -->
+		<link href="../seller/css/plugins/tagit/jquery.tagit.css" rel="stylesheet" type="text/css">
+		<link href="../seller/css/plugins/tagit/tagit.ui-zendesk.css" rel="stylesheet" type="text/css">
+
+		<style>
+			.richeditor {
+				border: 1px solid #2BA9E1;
+				text-align: left;
+				padding: 5px;
+				overflow: hidden;
+				display: flex;
+				white-space: pre-line;
+				/*width: 400px;
+				display: inline-block;*/
+			}
+			.panel-body img {
+				display: block;
+				margin: auto;
+			}
+			textarea {
+				resize: none;
+			}
+			#linear img {
+				display: inline;
+				height: 50px;
+				width: 50px;
+				border-radius: 0px;
+			}
+			#richeditorDialog .modal-dialog {
+				width: 60%;
+				height: 70%;
+			}
+			.embed-style {
+				border: 1px;
+			}
+			
+			.image_page_img {
+				width:300px;
+				height:160px;
+			}
+		</style>
+
+		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		<!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+	    <!-- jQuery Version 1.11.0 -->
+	    <script src="../seller/js/plugins/jquery-1.11.1.min.js"></script>
+	    <script> 
+		    $(function(){
+		      	$("#includedNav").load("nav.html"); 
+		      	$('#preview_container').load("preview_idea.html"); 
+		      
+		      	//For logout command.
+			  	$(document).on('click', '#signout', function() {
+					logout();
+				});
+		    });
+	    </script>     
+
+	</head>
+
+	<body>
+
+		<div id="wrapper">
+
+			<div id="includedNav"></div>
+
+			<div id="page-wrapper">
+				<div class="row">
+					<div class="col-lg-12">
+						<h1 class="page-header" id="page_title">Add idea</h1>
+					</div>
+					<!-- /.col-lg-12-->
+				</div>
+
+				<div class="row">
+					<div class="col-lg-1 col-lg-offset-11">
+						<a href="help_idea.html">Help</a>
+					</div>
+					<!-- /.col-lg-1 -->
+				</div>
+
+				<!-- /.row 0 for category and tags-->
+				<input name="tags" id="allowSpacesTagsResult" value="" type="hidden">
+				<div class="row">
+					<div class="col-lg-12">
+						<label>Title</label>
+						<input class="form-control" name="title" placeholder="Idea title" id="title" data-validation="required" data-validation-error-msg="You have to give the product name.">
+
+					</div>
+				</div>
+
+				<br />
+				<div class="row">
+					<div class="col-lg-6">
+						<label>Category</label>
+						<select class="form-control" id="category" name="category" value="fashion">
+							<option>fashion</option>
+							<option>makeup</option>
+							<option>nails</option>
+							<option>hair</option>
+							<option>others</option>
+						</select>
+					</div>
+
+					<div class="col-lg-6">
+						<label>Tags (space is allowed)</label>
+						<ul id="allowSpacesTags"></ul>
+					</div>
+				</div>
+
+				<!-- /.row first-->
+				<div class="row">
+					<!--<div class="col-lg-4">
+						<div class="panel panel-primary tile" style="height: 400px;">
+							<div class="tile__name">
+								<div>Cover</div>
+							</div>
+							<div class="panel-body">
+								<img class="image_page_img" src="" id="cover_img" />
+								<br/>
+								<pre class="richeditor" style="height: 50px;" id="cover_caption">
+									<p>Click to change caption.</p>
+								</pre>
+								<button type="button" id="change" class="btn btn-primary btn-default btn-block">Change Image</button>
+								<br/><input type="file" onchange='fileUploadOnChange(this)'>
+							</div>
+						</div>
+					
+					</div>-->
+
+					<div class="col-lg-4">
+						<div class="panel panel-primary tile" style="height: 400px;">
+							<div class="tile__name" id="editable">
+								<div>Products</div>
+							</div>
+							<div class="panel-body">
+								<div class="form-group input-group" style="border: 0px;">
+									<input type="text" class="form-control" id="input-search" placeholder="search prodcuts">
+									<span class="input-group-btn">
+                          				<button class="btn btn-default" type="button" id="search"><i class="fa fa-search"></i></button>
+                    			</span>
+								</div>
+
+								<!--the sortable product list-->
+								<ul id="editableProductList" class="sortable">
+								</ul>
+
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- /#row first -->
+
+				<!-- /.row add buttons-->
+				<div class="row">
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
+						<button type="button" id="add_video_page" class="btn btn-primary btn-default btn-block">Add Video Page</button>
+					</div>
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
+						<button type="button" id="add_Image_page" class="btn btn-primary btn-default btn-block">Add Image Page</button>
+					</div>
+
+					<div class="col-lg-2">
+						<!-- /.col-lg-2 -->
+						<button type="button" id="add_text_page" class="btn btn-primary btn-default btn-block">Add Text Page</button>
+					</div>
+
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-3">
+					</div>
+				</div>
+
+				<!-- /.row second for new added pages-->
+				<div class="row" id="multi2">
+				</div>
+				<!-- /#row second -->
+
+				<!-- /.row Info and produc page line-->
+				<!--<div class="row">
+					<div class="panel panel-primary tile" style="height: 400px;">
+						<div class="tile__name" id="editable">
+							<div>Info</div>
+						</div>
+						<div class="panel-body">
+							<div class="richeditor" style="height: 310px;" id="info_content">
+								<p>Click to edit idea information page such as adding contact...</p>
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-primary tile" style="height: 400px;">
+						<div class="tile__name" id="editable">
+							<div>Products</div>
+						</div>
+						<div class="panel-body">
+							<div class="form-group input-group" style="border: 0px;">
+								<input type="text" class="form-control" id="input-search" placeholder="search prodcuts">
+								<span class="input-group-btn">
+                          				<button class="btn btn-default" type="button" id="search"><i class="fa fa-search"></i></button>
+                    			</span>
+							</div>
+
+							
+							<ul id="editableProductList" class="sortable">
+							</ul>
+
+						</div>
+					</div>
+				</div>-->
+				<!-- /#row Info and product page line -->
+				
+				 <!--<embed width="360" height="240" src="https://www.youtube.com/v/WuBHtYeYANc" type="application/x-shockwave-flash" border="1px"/>-->
+				<!--<iframe width="420" height="345" src="http://www.youtube.com/embed/XGSy3_Czz8k"></iframe>-->			
+
+
+
+				<br />
+				<br />
+				<!-- /.row submit button line-->
+				<div class="row">
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
+						<button type="button" id="preview_idea" class="btn btn-warning btn-block" data-toggle="modal" data-target="#previewIdea">Preview</button>
+					</div>
+					
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
+						<button type="button" id="save_idea" class="btn btn-warning btn-block" data-toggle="modal">Save</button>
+					</div>
+					
+					<!-- /.col-lg-2 -->
+					<div class="col-lg-2">
+						<button type="button" id="submit_idea" class="btn btn-primary btn-success btn-block">Submit</button>
+					</div>
+				</div>
+
+				<div id="myModal" class="modal fade">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								<h4 class="modal-title">Select products</h4>
+							</div>
+							<div class="modal-body">
+								<div class="row">
+
+									<div class="col-lg-12">
+										<select id="divselktr" name="divselktr" multiple="multiple"></select>
+										<br/>
+										<br/>
+										<br/>
+										<br/>
+										<br/>
+										<br/>
+									</div>
+
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+								<button type="button" class="btn btn-success" id="select_products">Select</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="richeditorDialog" class="modal fade">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								<h4 class="modal-title">Edit content</h4>
+							</div>
+							<div class="modal-body">
+								<textarea id="richeditor" name="richeditor"></textarea>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+								<button type="button" class="btn btn-success" id="save_content">Save</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!--Preview idea modal-->
+				<div id="preview_container"></div>
+
+
+				<br />
+				<br />
+
+			</div>
+			<!-- /#page-wrapper -->
+
+		</div>
+		<!-- /#wrapper -->
+
+		<!--//the form used to submit locale files to server.-->
+		<form name="files" id="submit_files" method="post" enctype="multipart/form-data"></form>
+
+
+		<!-- Bootstrap Core JavaScript -->
+		<script src="../seller/js/plugins/bootstrap.min.js"></script>
+
+		<!-- Metis Menu Plugin JavaScript -->
+		<script src="../seller/js/plugins/metisMenu/metisMenu.min.js"></script>
+
+		<!-- JQuery UI -->
+		<script src="../seller/js/plugins/jquery-ui/jquery-ui.min.js"></script>
+
+		<!-- dataTable -->
+		<script src="../seller/js/plugins/dataTables/jquery.dataTables.min.js"></script>
+
+		<script src="../seller/js/plugins/bootstrap-dialog/bootstrap-dialog.min.js"></script>
+		<script src="../seller/js/plugins/jquery-form/jquery.form.min.js"></script>
+
+		<script src="../seller/js/plugins/sortable/Sortable.min.js"></script>
+
+		<script type="text/javascript" src="../seller/js/plugins/jquery-multiselect/jquery.multiselect.filter.js"></script>
+		<script type="text/javascript" src="../seller/js/plugins/jquery-multiselect/jquery.multiselect.js"></script>
+		<script type="text/javascript">
+			$(function() {
+				//$("select").multiselect();
+				$('#divselktr').multiselect();
+			});
+		</script>
+
+		<script src="../seller/ckeditor/ckeditor.js"></script>
+		<script src="../seller/ckeditor/adapters/jquery.js"></script>
+
+		<!-- tagit -->
+		<script src="../seller/js/plugins/tagit/tag-it.js" type="text/javascript"></script>
+		<!--<script src="http://webspirited.com/tagit/js/tagit.js"></script>-->
+
+		<!-- Custom Theme JavaScript -->
+		<script src="../seller/js/lovebeauty.js"></script>
+		<script src="../seller/js/edit_tip.js"></script>
+
+	</body>
+
+</html>
