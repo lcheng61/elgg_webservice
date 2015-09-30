@@ -107,18 +107,37 @@ nav ul.nav li a:active a:visited {
 /* ====================== MAIN ========================= */
 
 #main {
-	background: url(../images/first_bg.png) 0 0;
-	background-size: 100% cover;
+	background: url(../images/first_bg.png);
+	/*background-size: contain;*/
 	/* width and height, can be %, px or whatever. */
-	
-	min-height: 730px;
-	-webkit-background-size: cover;
-	-moz-background-size: cover;
-	background-position: center;
+	width: 100%;
+	height: auto;
+	/*-webkit-background-size: contain;
+	-moz-background-size: contain;
+	background-position: center;*/
 	/* Internet Explorer 7/8 */
 	
-	background-attachment: fixed;
+	/*background-attachment: fixed;*/
 }
+/* For width 400px and larger: */
+
+@media only screen and (min-width: 600px) {
+	#main {
+		background: url(../images/first_bg.png) 0 0;
+		background-size: 100% cover;
+		/* width and height, can be %, px or whatever. */
+		
+		height: 800px;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		background-position: center;
+		/* Internet Explorer 7/8 */
+		
+		background-attachment: fixed;
+	}
+}
+
+
 #main .cont-wrapper {
 	position: relative;
 	width: 100%;
@@ -302,7 +321,6 @@ nav ul.nav li a:active a:visited {
 	top: -400px;
 	margin-bottom: -400px;
 }
-
 /* ======= Seller SECTION =========== */
 
 #seller {
@@ -315,7 +333,6 @@ nav ul.nav li a:active a:visited {
 	/* Internet Explorer 7/8 */
 	
 	background-attachment: fixed;
-	
 	padding-bottom: 20px;
 }
 #seller h2 {
@@ -333,7 +350,6 @@ nav ul.nav li a:active a:visited {
 	font-family: "Roboto-Regular";
 	text-align: center;
 }
-
 /* ================= PARTNERS SECTION ======================== */
 
 #partners {
@@ -348,7 +364,6 @@ nav ul.nav li a:active a:visited {
 #contact .btn {
 	width: 100%;
 }
-
 #partners h2 {
 	color: #000;
 	margin-top: 30px;
@@ -357,12 +372,10 @@ nav ul.nav li a:active a:visited {
 	text-align: center;
 	font-weight: 700;
 }
-
 #partners img {
 	height: 100px;
 	width: 100%;
 }
-
 /* ================= CONTACT SECTION ======================== */
 
 #contact {
@@ -425,7 +438,6 @@ nav ul.nav li a:active a:visited {
 	font-size: 18px;
 	font-family: "Roboto-Regular";
 }
-
 /* ============================= FOOTER =============================== */
 
 footer {
