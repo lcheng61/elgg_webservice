@@ -1694,10 +1694,12 @@ function user_register_facebook($msg) {
 
     // create new user
     if (!$user) {
+
         $email= $fbData['user_profile']['email'];
         $users= get_user_by_email($email);
 
-        if(!$users) {
+	// consider the corner case that facebook profile doesn't contain email
+        if(!$users || (empty($fbData['user_profile']['email']))) {
             // Elgg-ify facebook credentials
             if(!empty($fbData['user_profile']['username'])) {
                 $username = $fbData['user_profile']['username'];
@@ -1713,7 +1715,11 @@ function user_register_facebook($msg) {
             $user = new ElggUser();
             $user->username = $username;
             $user->name = $name;
-            $user->email = $email;
+	    if (!empty($fbData['user_profile']['email'])) {
+	        $user->email = $email;
+            } else { // if facebook profile doesn't contain email, do this
+	        $user->email = "unknown@unknown.com";
+	    }
             $user->access_id = ACCESS_PUBLIC;
             $user->salt = generate_random_cleartext_password();
             $user->password = generate_user_password($user, $password);
@@ -1741,7 +1747,7 @@ function user_register_facebook($msg) {
 
             $return['status'] = "email used before, won't copy facebook data";
             $return['username'] = $user->username;
-            $token = create_user_token_same($username, 527040);
+            $token = create_user_token_same($user->username, 527040);
             $return['token'] = $token;
         }
     }
