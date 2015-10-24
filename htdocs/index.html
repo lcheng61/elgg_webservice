@@ -24,6 +24,80 @@
       		<script src="bootstrap/assets/js/html5shiv.js"></script>
       		<script src="bootstrap/assets/js/respond.min.js"></script>
     	<![endif]-->
+
+		<style media="screen" type="text/css">
+			.rebate {
+				top: 50px;
+				width: 100%;
+				height: 230px;
+				position: absolute;
+				background: url(assets/images/rebate/rebate-banner.jpg);
+				background-size: cover;
+				background-repeat: no-repeat;
+			}
+			.rebate .rebate-content {
+				top: 50px;
+				width: 680px;
+				left: 50px;
+				position: absolute;
+				text-align: center;
+			}
+			.rebate .rebate-content .rebate-title {
+				font-family: "Roboto-Light";
+				font-size: 40px;
+				padding-right: 80px;
+				color: #FFFFFF;
+			}
+			.rebate .rebate-content .rebate-subtitle {
+				font-family: "Roboto-Light";
+				font-size: 20px;
+				padding-right: 80px;
+				color: #FFFFFF;
+			}
+			.rebate .rebate-content .btn {
+				width: 129px;
+				height: 43px;
+				border: 2px solid #FFFFFF;
+				float: right;
+				background-color: rgba(0, 0, 0, 0) !important;
+				margin-top: 20px;
+				color: #FFFFFF;
+				font-size: 18px;
+				font-family: "Roboto-Light";
+			}
+			@media (max-width: 991px) {
+				.rebate .rebate-content {
+					top: 30px;
+					width: 600px;
+					left: 10px;
+					position: absolute;
+					text-align: center;
+				}
+				.rebate .rebate-content .rebate-title {
+					font-family: "Roboto-Light";
+					font-size: 30px;
+					padding-right: 40px;
+					color: #FFFFFF;
+				}
+				.rebate .rebate-content .rebate-subtitle {
+					font-family: "Roboto-Light";
+					font-size: 18px;
+					padding-right: 40px;
+					color: #FFFFFF;
+				}
+				.rebate .rebate-content .btn {
+					width: 100px;
+					height: 38px;
+					border: 2px solid #FFFFFF;
+					float: right;
+					background-color: rgba(0, 0, 0, 0) !important;
+					margin-top: 20px;
+					color: #FFFFFF;
+					font-size: 16px;
+					font-family: "Roboto-Light";
+				}
+			}
+		</style>
 	</head>
 
 	<body data-spy="scroll" data-target="#navigation">
@@ -63,8 +137,15 @@
 			<!-- ======================= main page ========================= -->
 
 			<div id="main">
-				<div style="left:10px;top: 50px;position: absolute;">
-					<a href="rebate.html"><img src="assets/images/rebate/rebate_logo.png"></a>
+				<div class="rebate">
+					<div class="rebate-content">
+						<div class="rebate-title">Big swimming suites rebate events</div>
+						<div class="rebate-subtitle">Up to 5-% off for fashion brand UjENA, big saving trip starts at this event.</div>
+						<a href="rebate.html">
+							<button type="button" id="submit-contactus" class="btn btn-db">More detail</button>
+						</a>
+					</div>
+
 				</div>
 				<div class="container">
 
@@ -158,9 +239,10 @@
 						</div>
 
 					</div>
-				</div><!-- end container -->
+				</div>
+				<!-- end container -->
 			</div>
-			
+
 			<!-- ========================= Partners ================================ -->
 			<div id="partners" data-speed="8">
 				<div class="container">
@@ -220,12 +302,10 @@
 					</div>
 					<!-- end row -->
 
-					
-				</div><!-- end container -->
+				</div>
+				<!-- end container -->
 			</div>
 		</div>
-
-
 
 		<!-- ========================== CONTACT =========================== -->
 
