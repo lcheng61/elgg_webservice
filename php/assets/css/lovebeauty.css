@@ -110,38 +110,20 @@ nav ul.nav li a:active a:visited {
 	background: url(../images/first_bg.png);
 	/*background-size: contain;*/
 	/* width and height, can be %, px or whatever. */
-	width: 100%;
-	height: auto;
-	/*-webkit-background-size: contain;
-	-moz-background-size: contain;
-	background-position: center;*/
-	/* Internet Explorer 7/8 */
 	
-	/*background-attachment: fixed;*/
+	width: 100%;
+	/*The height without rebate banner 
+	height: auto;*/
+	
+	height: 650px;
 }
-/* For width 400px and larger: */
-
-@media only screen and (min-width: 600px) {
-	#main {
-		background: url(../images/first_bg.png) 0 0;
-		background-size: 100% cover;
-		/* width and height, can be %, px or whatever. */
-		
-		height: 800px;
-		-webkit-background-size: cover;
-		-moz-background-size: cover;
-		background-position: center;
-		/* Internet Explorer 7/8 */
-		
-		background-attachment: fixed;
-	}
-}
-
 
 #main .cont-wrapper {
 	position: relative;
 	width: 100%;
-	top: 350px;
+	top: 400px;
+	/*the top value without rebate banner*/
+	/*top: 350px;*/
 }
 #main p {
 	text-align: center;
@@ -477,7 +459,9 @@ footer .sn-links a {
 		min-height: 500px !important;
 	}
 	#main .cont-wrapper {
-		top: 100px;
+		top: 500px;
+		/*Below is the top value without rebate banner*/
+		/*top: 100px;*/
 	}
 	#main p.intro {
 		text-align: center;
@@ -538,7 +522,7 @@ footer .sn-links a {
 		min-height: 600px;
 	}
 	#main .cont-wrapper {
-		top: 110px;
+		top: 350px;
 	}
 	#main p.intro {
 		text-align: center;
@@ -555,5 +539,22 @@ footer .sn-links a {
 @media (min-width: 768px) {
 	#home .text {
 		top: 0;
+	}
+}
+
+/* For width 400px and larger: */
+@media only screen and (min-width: 600px) {
+	#main {
+		background: url(../images/first_bg.png) 0 0;
+		background-size: 100% cover;
+		/* width and height, can be %, px or whatever. */
+		
+		height: 800px;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		background-position: center;
+		/* Internet Explorer 7/8 */
+		
+		background-attachment: fixed;
 	}
 }
