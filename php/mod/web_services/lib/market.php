@@ -348,6 +348,10 @@ function product_get_posts_common($context, $limit = 10, $offset = 0, $affiliate
                  $blog['product_seller']['is_seller'] = ($owner->is_seller == "true");
                  $blog['product_seller']['do_i_follow'] = user_is_friend($user->guid, $owner->guid);
                
+                 $blog['product_seller']['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
+                 $blog['product_seller']['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
+
+
                  $blog['is_recommend'] = $single->is_recommend;
 
                  $blog['product_options'] = json_decode($single->options);
@@ -510,6 +514,10 @@ function product_get_detail($product_id) {
     } else {
         $return['product_seller']['do_i_follow'] = false;
     }
+
+    $return['product_seller']['free_shipping_quantity_limit'] = $blog->free_shipping_quantity_limit;
+    $return['product_seller']['free_shipping_cost_limit'] = $blog->free_shipping_cost_limit;
+
 ///// check if the product has already been liked
     $like = elgg_get_annotation_from_id($product_id);
 
