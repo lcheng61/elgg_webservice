@@ -798,6 +798,11 @@ function product_search($query, $category, $offset, $limit,
 //               $blog['product_image'] = elgg_normalize_url("market/image/".$single->guid."/1/"."large/");
                  $blog['product_image'] = elgg_get_config('cdn_link').'/market/image/'.$single->guid.'/1/'.'master/';
 
+                 $blog['sku'] = $single->sku ? $single->sku : "";
+                 $blog['shipping_fee'] = $single->shipping_fee;
+                 $blog['free_shipping_quantity_limit'] = $single->free_shipping_quantity_limit;
+                 $blog['free_shipping_cost_limit'] = $single->free_shipping_cost_limit;
+
                  if ($single->quantity <= 0) {
                      $blog['quantity'] = 0;
                  } else {
