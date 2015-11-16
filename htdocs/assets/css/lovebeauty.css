@@ -1,6 +1,8 @@
 /*
  * Description: LoveBeauty theme styles
  */
+
+
 /* Table of Contents
 ==================================================
 
@@ -17,6 +19,8 @@
 	#MEDIA QUERIES
 
 ==================================================*/
+
+
 /* ==================== Fonts ================== */
 
 @font-face {
@@ -24,33 +28,40 @@
 	src: local(Roboto Thin), url("../font/roboto/Roboto-Thin.woff2") format("woff2"), url("../font/roboto/Roboto-Thin.woff") format("woff"), url("../font/roboto/Roboto-Thin.ttf") format("truetype");
 	font-weight: 200;
 }
+
 @font-face {
 	font-family: "Roboto-Light";
 	src: local(Roboto Light), url("../font/roboto/Roboto-Light.woff2") format("woff2"), url("../font/roboto/Roboto-Light.woff") format("woff"), url("../font/roboto/Roboto-Light.ttf") format("truetype");
 	font-weight: 300;
 }
+
 @font-face {
 	font-family: "Roboto-Regular";
 	src: local(Roboto Regular), url("../font/roboto/Roboto-Regular.woff2") format("woff2"), url("../font/roboto/Roboto-Regular.woff") format("woff"), url("../font/roboto/Roboto-Regular.ttf") format("truetype");
 	font-weight: 400;
 }
+
 @font-face {
 	font-family: "Roboto-Medium";
 	src: url("../font/roboto/Roboto-Medium.woff2") format("woff2"), url("../font/roboto/Roboto-Medium.woff") format("woff"), url("../font/roboto/Roboto-Medium.ttf") format("truetype");
 	font-weight: 500;
 }
+
 @font-face {
 	font-family: "Roboto-Bold";
 	src: url("../font/roboto/Roboto-Bold.woff2") format("woff2"), url("../font/roboto/Roboto-Bold.woff") format("woff"), url("../font/roboto/Roboto-Bold.ttf") format("truetype");
 	font-weight: 700;
 }
+
+
 /* ==================== GENERAL ================== */
 
 body {
 	/*height: 100%;*/
-	
 	color: #3d505f;
 }
+
+
 /* ====================== HEADER ========================= */
 
 header {
@@ -61,6 +72,7 @@ header {
 	z-index: 200;
 	width: 100%;
 }
+
 header p#logo {
 	margin: 0;
 	padding: 15px 0;
@@ -73,49 +85,62 @@ header p#logo {
 	background: url(../images/logo.png) no-repeat 0 0;
 	background-position: left center;
 }
+
 nav ul.nav {
 	text-align: right;
 	padding-top: 5px;
 	font-family: "Roboto-Thin";
 	font-size: 16px;
 }
+
 nav ul.nav li {
 	display: inline;
 	margin: 0 5px;
 }
+
 nav ul.nav li:last-child {
 	margin-right: 0;
 }
+
 nav ul.nav li.active a {
 	color: #f1784d;
 	background: rgba(0, 0, 0, 0);
 	text-decoration: none;
 }
+
 nav ul.nav li a {
 	color: #ffffff;
 }
+
 nav ul.nav li a:hover {
 	color: #ff0000;
 	background: rgba(0, 0, 0, 0);
 	text-decoration: none;
 }
+
 nav ul.nav li a:active a:visited {
 	color: #f1784d;
 	background: rgba(0, 0, 0, 0);
 	text-decoration: none;
 }
+
+
 /* ====================== MAIN ========================= */
 
 #main {
 	background: url(../images/first_bg.png);
+	/*background: url(../images/first_bg.png) 0 0;*/
 	/*background-size: contain;*/
 	/* width and height, can be %, px or whatever. */
-	
 	width: 100%;
 	/*The height without rebate banner 
 	height: auto;*/
-	
-	height: 650px;
+	height: 1000px;
+	background-size: 100% cover;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	background-position: center;
+	background-attachment: fixed;
 }
 
 #main .cont-wrapper {
@@ -125,9 +150,34 @@ nav ul.nav li a:active a:visited {
 	/*the top value without rebate banner*/
 	/*top: 350px;*/
 }
+
+#main .video-wrapper {
+	position: relative;
+	width: 100%;
+	top: 350px;
+	z-index:10;
+
+/*padding-bottom:56.25%;
+	padding-top:30px;
+	height:0;
+	overflow:hidden;*/
+}
+
+#lovebeauty-video {
+	width: 560px;
+	height: 340px;
+	max-width:100%;
+	/*position:absolute;*/
+	/*top:0;
+	left:0;*/
+	/*width:100%;
+	height:100%;*/
+}
+
 #main p {
 	text-align: center;
 }
+
 #main p.intro {
 	font-family: "Roboto-Bold";
 	font-size: 50px;
@@ -136,27 +186,26 @@ nav ul.nav li a:active a:visited {
 	font-weight: 400;
 	/*padding: 10px 0 10px 0px;*/
 	/*    color: #CC00FF;*/
-	
 	color: #FFFFFF;
 	margin-bottom: 10px;
 	position: relative;
 	text-shadow: 2px 4px 4px rgba(0, 0, 0, 0.5);
 }
+
 #main p.intro_detail {
 	font-family: "Roboto-Regular";
 	font-size: 18px;
 	/*line-height: 30px;
 	letter-spacing: -1px;
 	font-weight: 300;*/
-	
 	padding: 10px 0 40px 0px;
 	/*    color: #CC00FF;*/
-	
 	color: #FFFFFF;
 	margin-bottom: 10px;
 	position: relative;
 	/*text-shadow: 2px 4px 4px rgba(0, 0, 0, 0.5);*/
 }
+
 .iphone_dowload_button {
 	color: #fff;
 	background-color: #CA09F2;
@@ -170,13 +219,15 @@ nav ul.nav li a:active a:visited {
 	-o-transition: background-color 0.5s ease;
 	transition: background-color 0.5s ease;
 }
+
 .iphone_dowload_button:hover {
 	text-decoration: none;
 	color: #fff;
 	/*background: #3d505f;*/
-	
 	background: #f1784d;
 }
+
+
 /* ================================ highlights SECTION =================================== */
 
 #highlights {
@@ -185,12 +236,14 @@ nav ul.nav li a:active a:visited {
 	height: 100%;
 	margin-bottom: 0;
 }
+
 #highlights .ipad {
 	top: 0px;
 	position: relative;
 	text-align: right;
 	overflow: hidden;
 }
+
 #highlights .ipad img {
 	position: relative;
 	opacity: 0;
@@ -202,6 +255,7 @@ nav ul.nav li a:active a:visited {
 	-o-transition: all 1s ease;
 	transition: all 1s ease;
 }
+
 #highlights .ipad.anim img {
 	opacity: 1;
 	-webkit-transform: translateX(-480px);
@@ -209,6 +263,7 @@ nav ul.nav li a:active a:visited {
 	-o-transform: translateX(-480px);
 	transform: translateX(-480px);
 }
+
 #highlights .text {
 	position: relative;
 	opacity: 0;
@@ -219,6 +274,7 @@ nav ul.nav li a:active a:visited {
 	-o-transition: all 1.5s ease;
 	transition: all 1.5s ease;
 }
+
 #highlights .text.anim {
 	opacity: 1;
 	-webkit-transform: translateX(50px);
@@ -226,6 +282,7 @@ nav ul.nav li a:active a:visited {
 	-o-transform: translateX(50px);
 	transform: translateX(50px);
 }
+
 #highlights .text h2 {
 	font-family: "Roboto-Medium";
 	font-size: 30px;
@@ -233,20 +290,22 @@ nav ul.nav li a:active a:visited {
 	color: #2f2e2e;
 	text-align: right;
 }
+
 .hightlight-detail {
 	/*width: 440px;*/
-	
 	font-family: "Roboto-Regular";
 	font-size: 14px;
 	color: #2f2e2e;
 	float: right;
 }
+
 #highlights .ipad-left {
 	position: relative;
 	text-align: left;
 	overflow: hidden;
 	top: -200px;
 }
+
 #highlights .ipad-left img {
 	position: relative;
 	opacity: 0;
@@ -258,6 +317,7 @@ nav ul.nav li a:active a:visited {
 	-o-transition: all 1s ease;
 	transition: all 1s ease;
 }
+
 #highlights .ipad-left.anim img {
 	opacity: 1;
 	-webkit-transform: translateX(500px);
@@ -265,6 +325,7 @@ nav ul.nav li a:active a:visited {
 	-o-transform: translateX(500px);
 	transform: translateX(500px);
 }
+
 #highlights .text-right {
 	position: relative;
 	opacity: 0;
@@ -274,6 +335,7 @@ nav ul.nav li a:active a:visited {
 	-o-transition: all 1.5s ease;
 	transition: all 1.5s ease;
 }
+
 #highlights .text-right.anim {
 	opacity: 1;
 	-webkit-transform: translateX(-500px);
@@ -281,6 +343,7 @@ nav ul.nav li a:active a:visited {
 	-o-transform: translateX(-500px);
 	transform: translateX(-500px);
 }
+
 #highlights .text-right h2 {
 	font-family: "Roboto-Medium";
 	font-size: 30px;
@@ -288,21 +351,25 @@ nav ul.nav li a:active a:visited {
 	color: #2f2e2e;
 	text-align: left;
 }
+
 .hightlight-detail-right {
 	/*width: 440px;*/
-	
 	font-family: "Roboto-Regular";
 	font-size: 14px;
 	color: #2f2e2e;
 	text-align: left;
 }
+
 #highlights .text-moveup {
 	top: -180px;
 }
+
 #highlights .ipad-moveup {
 	top: -400px;
 	margin-bottom: -400px;
 }
+
+
 /* ======= Seller SECTION =========== */
 
 #seller {
@@ -313,10 +380,10 @@ nav ul.nav li a:active a:visited {
 	background-size: cover;
 	background-position: center;
 	/* Internet Explorer 7/8 */
-	
 	background-attachment: fixed;
 	padding-bottom: 20px;
 }
+
 #seller h2 {
 	color: #fff;
 	margin-top: 130px;
@@ -326,12 +393,15 @@ nav ul.nav li a:active a:visited {
 	font-weight: 700;
 	text-shadow: 0px 1px 1px black;
 }
+
 #seller .seller-detail {
 	color: #fff;
 	font-size: 20px;
 	font-family: "Roboto-Regular";
 	text-align: center;
 }
+
+
 /* ================= PARTNERS SECTION ======================== */
 
 #partners {
@@ -340,12 +410,15 @@ nav ul.nav li a:active a:visited {
 	text-align: center;
 	border-bottom: 1px solid #ccc;
 }
+
 #contact p {
 	margin: 10px 0;
 }
+
 #contact .btn {
 	width: 100%;
 }
+
 #partners h2 {
 	color: #000;
 	margin-top: 30px;
@@ -354,10 +427,13 @@ nav ul.nav li a:active a:visited {
 	text-align: center;
 	font-weight: 700;
 }
+
 #partners img {
 	height: 100px;
 	width: 100%;
 }
+
+
 /* ================= CONTACT SECTION ======================== */
 
 #contact {
@@ -367,13 +443,13 @@ nav ul.nav li a:active a:visited {
 	background-size: cover;
 	background-position: center;
 	/* Internet Explorer 7/8 */
-	
 	background-attachment: fixed;
 	padding: 40px 0 60px 0;
 	text-align: center;
 	min-height: 570px;
 	border-bottom: 1px solid #ccc;
 }
+
 #contact h2 {
 	color: #fff;
 	margin-top: 80px;
@@ -383,6 +459,7 @@ nav ul.nav li a:active a:visited {
 	font-weight: 700;
 	text-shadow: 0px 1px 1px black;
 }
+
 #contact p {
 	color: #fff;
 	font-size: 18px;
@@ -390,6 +467,7 @@ nav ul.nav li a:active a:visited {
 	text-align: center;
 	margin: 10px 0;
 }
+
 #contact input {
 	background-color: rgba(0, 0, 0, 0) !important;
 	border: 0;
@@ -399,6 +477,7 @@ nav ul.nav li a:active a:visited {
 	font-size: 18px;
 	font-family: "Roboto-Regular";
 }
+
 #contact textarea {
 	background-color: rgba(0, 0, 0, 0) !important;
 	border: 0;
@@ -409,6 +488,7 @@ nav ul.nav li a:active a:visited {
 	font-size: 18px;
 	font-family: "Roboto-Regular";
 }
+
 #contact .btn {
 	width: 100px;
 	height: 44px;
@@ -420,6 +500,8 @@ nav ul.nav li a:active a:visited {
 	font-size: 18px;
 	font-family: "Roboto-Regular";
 }
+
+
 /* ============================= FOOTER =============================== */
 
 footer {
@@ -427,22 +509,32 @@ footer {
 	padding: 10px 0;
 	text-align: center;
 }
+
 footer p {
 	margin: 10px 0 0 0;
 	color: #fff;
 }
+
 footer .sn-links {
 	margin: 0;
 	text-align: right;
 }
+
 footer .sn-links a {
 	color: #fff;
 }
+
+
 /* ==================================== MEDIA QUERIES ==================================== */
+
+
 /* Extra small devices (phones, up to 480px) */
+
+
 /* No media query since this is the default in Bootstrap */
 
-@media (max-width: 480px) {
+
+/*@media (max-width: 480px) {
 	header {
 		min-height: 50px;
 	}
@@ -453,15 +545,12 @@ footer .sn-links a {
 	header a.mini-nav {
 		position: relative;
 		top: -8px;
-		/* 	line-height: 0; */
 	}
 	#main {
 		min-height: 500px !important;
 	}
 	#main .cont-wrapper {
 		top: 500px;
-		/*Below is the top value without rebate banner*/
-		/*top: 100px;*/
 	}
 	#main p.intro {
 		text-align: center;
@@ -475,8 +564,10 @@ footer .sn-links a {
 	footer .sn-links {
 		text-align: center;
 	}
-}
-@media (max-width: 991px) {
+}*/
+
+
+/*@media (max-width: 991px) {
 	header a.mini-nav {
 		font-size: 28px;
 		color: #fff;
@@ -519,7 +610,7 @@ footer .sn-links a {
 	#main {
 		background-attachment: scroll;
 		background-position-x: -100px;
-		min-height: 600px;
+		min-height: 800px;
 	}
 	#main .cont-wrapper {
 		top: 350px;
@@ -533,28 +624,65 @@ footer .sn-links a {
 	#home .ipad {
 		top: 140px;
 	}
-}
-/* Small devices (tablets, 768px and up) */
+}*/
 
-@media (min-width: 768px) {
-	#home .text {
-		top: 0;
-	}
-}
 
-/* For width 400px and larger: */
-@media only screen and (min-width: 600px) {
+/* Large screen device */
+
+@media (min-width: 1200px) {
 	#main {
 		background: url(../images/first_bg.png) 0 0;
 		background-size: 100% cover;
-		/* width and height, can be %, px or whatever. */
-		
 		height: 800px;
 		-webkit-background-size: cover;
 		-moz-background-size: cover;
 		background-position: center;
-		/* Internet Explorer 7/8 */
-		
 		background-attachment: fixed;
 	}
 }
+
+@media (min-width: 768px) and (max-width: 1200) {
+	#main {
+		background: url(../images/first_bg.png) 0 0;
+		background-size: 100% cover;
+		height: 1000px;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		background-position: center;
+		background-attachment: fixed;
+	}
+}
+
+@media (max-width: 768px) {
+	#lovebeauty-video {
+		width: auto;
+		height: 240px;
+	}
+}
+
+
+/* Small devices (tablets, 768px and up) */
+
+
+/*@media (min-width: 768px) {
+	#home .text {
+		top: 0;
+	}
+}*/
+
+
+/* For width 400px and larger: */
+
+
+/*@media only screen and (min-width: 600px) {
+	#main {
+		background: url(../images/first_bg.png) 0 0;
+		background-size: 100% cover;
+		
+		height: 1000px;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		background-position: center;	
+		background-attachment: fixed;
+	}
+}*/
