@@ -8,7 +8,7 @@
 		<meta name="author" content="">
 		<link rel="shortcut icon" href="assets/images/logo.png">
 
-		<title>Love Beauty</title>
+		<title>LoveBeauty</title>
 
 		<link rel="stylesheet" href="assets/font-awesome-4.4.0/css/font-awesome.min.css">
 
@@ -34,17 +34,18 @@
 				background: url(assets/images/rebate/rebate-banner.jpg);
 				background-size: cover;
 				background-repeat: no-repeat;
+				z-index:10;
 			}
 			.rebate .rebate-content {
 				top: 50px;
-				width: 680px;
+				width: 600px;
 				left: 50px;
 				position: absolute;
 				text-align: center;
 			}
 			.rebate .rebate-content .rebate-title {
 				font-family: "Roboto-Light";
-				font-size: 40px;
+				font-size: 30px;
 				padding-right: 80px;
 				color: #FFFFFF;
 			}
@@ -65,7 +66,7 @@
 				font-size: 18px;
 				font-family: "Roboto-Light";
 			}
-			@media (max-width: 991px) {
+			@media (max-width: 768px) {
 				.rebate .rebate-content {
 					top: 30px;
 					width: 600px;
@@ -75,13 +76,13 @@
 				}
 				.rebate .rebate-content .rebate-title {
 					font-family: "Roboto-Light";
-					font-size: 30px;
+					font-size: 24px;
 					padding-right: 40px;
 					color: #FFFFFF;
 				}
 				.rebate .rebate-content .rebate-subtitle {
 					font-family: "Roboto-Light";
-					font-size: 18px;
+					font-size: 16px;
 					padding-right: 40px;
 					color: #FFFFFF;
 				}
@@ -94,6 +95,38 @@
 					margin-top: 20px;
 					color: #FFFFFF;
 					font-size: 16px;
+					font-family: "Roboto-Light";
+				}
+			}
+			@media (max-width: 600px) {
+				.rebate .rebate-content {
+					top: 30px;
+					width: 320px;
+					left: 10px;
+					position: absolute;
+					text-align: center;
+				}
+				.rebate .rebate-content .rebate-title {
+					font-family: "Roboto-Light";
+					font-size: 18px;
+					padding-right: 40px;
+					color: #FFFFFF;
+				}
+				.rebate .rebate-content .rebate-subtitle {
+					font-family: "Roboto-Light";
+					font-size: 14px;
+					padding-right: 40px;
+					color: #FFFFFF;
+				}
+				.rebate .rebate-content .btn {
+					width: 100px;
+					height: 38px;
+					border: 2px solid #FFFFFF;
+					float: right;
+					background-color: rgba(0, 0, 0, 0) !important;
+					margin-top: 20px;
+					color: #FFFFFF;
+					font-size: 14px;
 					font-family: "Roboto-Light";
 				}
 			}
@@ -142,22 +175,31 @@
 						<div class="rebate-title">Big swimming suites rebate events</div>
 						<div class="rebate-subtitle">Up to 50% off for fashion brand UjENA, big saving trip starts at this event.</div>
 						<a href="rebate.html">
-							<button type="button" id="submit-contactus" class="btn btn-db">More detail</button>
+							<button type="button" class="btn btn-db">More detail</button>
 						</a>
+						
 					</div>
 
 				</div>
-				<div class="container">
+				
+				<!--<div class="container">-->
 
 					<div class="row">
-						<div class="cont-wrapper">
-							<p class="intro">LoveBeauty</p>
-							<p class="intro_detail">Beauty inspiration from experts, fun shopping experience, and engagement with people who have the same interests.</p>
-							<p class="btn-wrp"><a class="iphone_dowload_button" href="https://itunes.apple.com/us/app/lovebeauty/id955373916?mt=8"><i class="fa fa-apple"></i> &nbsp;iOS App</a></p>
+						<div class="col-lg-6 col-md-12 col-sm-12 col-xs-12" style="text-align:center;">
+							<div class="video-wrapper">
+								<iframe id="lovebeauty-video" src="https://www.youtube.com/embed/IUTSDtVLm3U?wmode=opaque" frameborder="0" allowfullscreen></iframe>
+								<!--<object data="https://www.youtube.com/embed/IUTSDtVLm3U" id="lovebeauty-video"></object>-->
+							</div><!-- end cont wrapper -->
 						</div>
-						<!-- end cont wrapper -->
+						<div class="col-lg-6 col-md-12 col-sm-12 col-sx-12"  style="text-align:center;">
+							<div class="cont-wrapper">
+								<p class="intro">LoveBeauty</p>
+								<p class="intro_detail">Beauty inspiration from experts, fun shopping experience, and engagement with people who have the same interests.</p>
+								<p class="btn-wrp"><a class="iphone_dowload_button" href="https://itunes.apple.com/us/app/lovebeauty/id955373916?mt=8"><i class="fa fa-apple"></i> &nbsp;iOS App</a></p>
+							</div><!-- end cont wrapper -->
+						</div>
 					</div>
-				</div>
+				<!--</div>-->
 				<!-- end container -->
 			</div>
 			<!-- end row -->
