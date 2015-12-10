@@ -155,9 +155,8 @@ nav ul.nav li a:active a:visited {
 	position: relative;
 	width: 100%;
 	top: 350px;
-	z-index:10;
-
-/*padding-bottom:56.25%;
+	z-index: 10;
+	/*padding-bottom:56.25%;
 	padding-top:30px;
 	height:0;
 	overflow:hidden;*/
@@ -166,7 +165,7 @@ nav ul.nav li a:active a:visited {
 #lovebeauty-video {
 	width: 560px;
 	height: 340px;
-	max-width:100%;
+	max-width: 100%;
 	/*position:absolute;*/
 	/*top:0;
 	left:0;*/
@@ -192,6 +191,8 @@ nav ul.nav li a:active a:visited {
 	text-shadow: 2px 4px 4px rgba(0, 0, 0, 0.5);
 }
 
+
+
 #main p.intro_detail {
 	font-family: "Roboto-Regular";
 	font-size: 18px;
@@ -212,6 +213,7 @@ nav ul.nav li a:active a:visited {
 	font-family: "Roboto-Light";
 	font-size: 20px;
 	padding: 10px 25px;
+	margin: 5px 10px;
 	font-weight: 600;
 	cursor: pointer;
 	-webkit-transition: background-color 0.5s ease;
@@ -657,6 +659,20 @@ footer .sn-links a {
 	#lovebeauty-video {
 		width: auto;
 		height: 240px;
+	}
+	.iphone_dowload_button {
+		color: #fff;
+		background-color: #CA09F2;
+		font-family: "Roboto-Light";
+		font-size: 14px;
+		padding: 10px 10px;
+		margin: 5px 5px;
+		font-weight: 500;
+		cursor: pointer;
+		-webkit-transition: background-color 0.5s ease;
+		-moz-transition: background-color 0.5s ease;
+		-o-transition: background-color 0.5s ease;
+		transition: background-color 0.5s ease;
 	}
 }
 
