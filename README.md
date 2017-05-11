@@ -7,24 +7,21 @@ More information can be found on the official elgg website at http://elgg.org
 Running on OpenShift
 --------------------
 
-Create an account at http://openshift.redhat.com/
+Create an account at https://www.openshift.com
 
-Create a PHP application
+Create a php application with mysql
 
-	rhc app create -a elgg -t php-5.3
+	rhc app create elgg php-5.3 mysql-5.1
 
-Add mysql support to your application
-    
-	rhc app cartridge add -a elgg -c mysql-5.1
-Make a note of the username, password, and host name as you will need to use these to complete the Piwik installation on OpenShift
+Make a note of the mysql, username, password, and host name as you will need to use these to complete the Piwik installation on OpenShift
 
 Add this upstream elgg quickstart repo
 
 	cd elgg 
-	git remote add upstream -m master https://github.com/emagic/Lovebeautyserver.git
+	git remote add upstream -m master git://github.com/openshift-quickstart/elgg-openshift-quickstart.git
 	git pull -s recursive -X theirs upstream master
 
-Then push the repo upstream to OpenShift
+Push back to your OpenShift repo
 
 	git push
 
@@ -32,13 +29,8 @@ That's it for the code, you can now install your application at:
 
 	http://elgg-lovebeauty.rhcloud.com
 
-When the installation asks you for your data directory, use the same information as for the Elgg installation which should look something like this:
-
-	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/runtime/repo/php/
-
-Remove the /runtime/repo/php and add data so it looks like:
-
-	/var/lib/stickshift/A BUNCH OF RANDOM CHARACTERS/elgg/data
+When the installation asks you for your data directory, use the value of the
+environment variable $OPENSHIFT_DATA_DIR
 
 
 Develop branching:
