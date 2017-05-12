@@ -35,21 +35,21 @@ if (!isset($CONFIG)) {
  * @global string $CONFIG->dbuser
  * @name $CONFIG->dbuser
  */
-$CONFIG->dbuser = 'admincD7eK3V';
+$CONFIG->dbuser = '{{dbuser}}';
 
 /**
  * The database password
  *
  * @global string $CONFIG->dbpass
  */
-$CONFIG->dbpass = 'jn_z2dIv3Pts';
+$CONFIG->dbpass = '{{dbpassword}}';
 
 /**
  * The database name
  *
  * @global string $CONFIG->dbname
  */
-$CONFIG->dbname = 'silver';
+$CONFIG->dbname = '{{dbname}}';
 
 /**
  * The database host.
@@ -58,7 +58,7 @@ $CONFIG->dbname = 'silver';
  *
  * @global string $CONFIG->dbhost
  */
-$CONFIG->dbhost = '557e541fe0b8cd85d7000097-lovebeautyapp.rhcloud.com:41766';
+$CONFIG->dbhost = '{{dbhost}}';
 
 /**
  * The database prefix
@@ -69,7 +69,7 @@ $CONFIG->dbhost = '557e541fe0b8cd85d7000097-lovebeautyapp.rhcloud.com:41766';
  *
  * @global string $CONFIG->dbprefix
  */
-$CONFIG->dbprefix = 'elgg_';
+$CONFIG->dbprefix = '{{dbprefix}}';
 
 
 /**
