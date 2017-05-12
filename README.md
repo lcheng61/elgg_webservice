@@ -39,6 +39,14 @@ That's it for the code, you can now install your application at:
 When the installation asks you for your data directory, use the value of the
 environment variable $OPENSHIFT_DATA_DIR. You can ssh to the openshift app to get the value
 
+To edit and update remote repository:
+
+        emacs README.md 
+        git commit -a -m "update README.md"
+        # push to remote openshift target
+        git push grace grace:master --force
+        # push to remote github
+        git push origin grace:grace
 
 
 
