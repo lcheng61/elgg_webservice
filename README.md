@@ -23,12 +23,14 @@ Add this upstream elgg quickstart repo
 	rm -rf grace
         git clone https://www.github.com/lcheng61/elgg_webservice
         cd elgg_webservice
-        # add remote openshift target (copied from openshift) and name it - e.g., grace
-	git remote add grace -f ssh://q543223453asdf@grace-domain.rhcloud.com/~/git/grace.git/
+        # add remote openshift target (copied from openshift) and name it - e.g., openshift
+	git remote add openshift -f ssh://q543223453asdf@grace-domain.rhcloud.com/~/git/grace.git/
         # switch to the branch grace of the elgg_webservice
         git checkout grace
-        # push the current elgg_webservice to the remote Openshift target namely grace forcibly.
-	git push grace master --force
+        # push the current elgg_webservice to the remote Openshift target namely openshift forcibly.
+	git push openshift master --force
+        # push to your github
+	git push origin grace:master
 
 That's it for the code, you can now install your application at:
 
